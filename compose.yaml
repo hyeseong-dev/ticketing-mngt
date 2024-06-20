@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: db_container
+    ports:
+      - ${MYSQL_BINDING_PORT}:${MYSQL_PORT}  # 호스트와 컨테이너 간의 포트 매핑
+    environment:
+      environment:
+      SPRING_PROFILES_ACTIVE: dev
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: ${MYSQL_TZ}
+    volumes:
+      - ${MYSQL_DATA_PATH}:/var/lib/mysql # 데이터 영구 저장을 위한 볼륨 마운트
+      - ${MYSQL_CUSTOM_CONFIG_PATH}:/etc/mysql/conf.d
+      - ${MYSQL_DEFAULT_CONFIG_FILE}:/etc/my.cnf
+      - ${MYSQL_INIT_SCRIPTS_PATH}:/docker-entrypoint-initdb.d  # 초기화 스크립트 마운트
+    networks:
+      - ticket_network
+    restart: always
+
+
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - 8080:8080
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=dev
+#      - SPRING_DATASOURCE_URL=jdbc:mysql://${TICKETING_MYSQL_HOST}:${TICKETING_MYSQL_PORT}/${TICKETING_MYSQL_DB_NAME}
+#      - SPRING_DATASOURCE_USERNAME=${TICKETING_MYSQL_USERNAME}
+#      - SPRING_DATASOURCE_PASSWORD=${TICKETING_MYSQL_PASSWORD}
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    networks:
+#      - ticket_network
+
+networks:
+  ticket_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

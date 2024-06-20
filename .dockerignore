@@ -1,0 +1,49 @@
+# DB Docker directory
+db/
+mysql/
+init_scripts/
+
+# exclude critical info
+.env
+
+temp/
+
+# Ignore node_modules
+node_modules
+
+# Ignore Gradle build files
+.gradle
+build/
+
+# Ignore IntelliJ IDEA project files
+.idea/
+
+# Ignore Eclipse project files
+.project
+.classpath
+.settings/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore other OS system files
+Thumbs.db
+
+# Ignore Docker-related files
+docker-compose.yml
+Dockerfile
+
+# Ignore the src directory as it's not needed for the db service
+src/
+
+# Ignore other unnecessary directories
+HELP.md
+build.gradle
+gradle/
+gradlew
+gradlew.bat
+settings.gradle
