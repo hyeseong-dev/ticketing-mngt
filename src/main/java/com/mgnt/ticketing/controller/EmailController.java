@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.controller;
 
+import com.mgnt.ticketing.dto.response.ResponseMessage;
 import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +23,9 @@ public class EmailController {
                 user.setEmailVerified(true);
                 userRepository.save(user);
             });
-            return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
+            return ResponseEntity.ok(ResponseMessage.EMAIL_VERIFICATION_SUCCESS);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("이메일 인증에 실패했습니다.");
+            return ResponseEntity.badRequest().body(ResponseMessage.EMAIL_VERIFICATION_FAILED);
         }
     }
 }
