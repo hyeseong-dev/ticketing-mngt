@@ -1,34 +1,36 @@
-debug: false
-management.endpoints.web.exposure.include: "*"
+debug: true # 디버그 모드를 비활성화합니다.
+management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트를 노출합니다.
 
 logging:
   level:
-    com.fc.springprojectboard: debug
-    org.springframework.web.servlet: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
+#    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
+#    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
 
 spring:
   application:
-    name: ticketing
+    name: ticketing # 애플리케이션 이름을 'ticketing'으로 설정합니다.
 
   datasource:
-    url: jdbc:mysql://localhost:13306/
-    username: developer
-    password: 12345
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:13306/ # 데이터베이스 URL을 설정합니다.
+    username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
+    password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
 
   jpa:
-    defer-datasource-initialization: true
-    hibernate.ddl-auto: none
-    show-sql: true
+    defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
+    hibernate.ddl-auto: none # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
+    show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
     properties:
-      hibernate.format_sql: true
-      hibernate.default_batch_fetch_size: 100
+      hibernate:
+        format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
+        show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
+      hibernate.default_batch_fetch_size: 1000 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
 
-  sql:
-    init:
-      mode: always
+  #  sql:
+  #    init:
+  #      mode: always # 애플리케이션 시작 시마다 SQL 스크립트를 실행합니다.
 
-  data.rest:
-    base-path: /api
-    detection-strategy: annotated
+#  data.rest:
+#    base-path: /api # Spring Data REST 엔드포인트의 기본 경로를 '/api'로 설정합니다.
+#    detection-strategy: annotated # 엔티티가 어노테이션으로 표시된 경우에만 REST 리소스로 노출합니다.
