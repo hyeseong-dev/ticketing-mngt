@@ -31,4 +31,9 @@ public class LoginResponseDto extends ResponseDto {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
     }
 
+    public static ResponseEntity<ResponseDto> failure(String code, String message) {
+        ResponseDto result = new ResponseDto(ResponseCode.UNVERIFIED_EMAIL, ResponseMessage.UNVERIFIED_EMAIL);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+    }
+
 }

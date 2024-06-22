@@ -1,6 +1,7 @@
 package com.mgnt.ticketing.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -42,7 +43,8 @@ public class JwtUtils {
     /**
      * 액세스 토큰의 유효기간 (1일: 86400000ms)
      */
-    public final long ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000L; // 1일
+//    public final long ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000L; // 1일
+    public final long ACCESS_TOKEN_EXPIRATION_TIME = 20 * 1000L; // 20초(For TEST)
 
     /**
      * 리프레시 토큰의 유효기간 (7일: 604800000ms)
@@ -116,7 +118,7 @@ public class JwtUtils {
     }
 
     /**
-     * 토큰에서 사용자 이름을 추출합니다.
+     * 토큰에서 사용자 email을 추출합니다.
      *
      * @param token JWT 토큰 문자열
      * @return 추출된 사용자 이름
@@ -145,8 +147,16 @@ public class JwtUtils {
      * @return 토큰이 유효한지 여부
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) &&! isTokenExpired(token));
+        try {
+            final String username = extractUsername(token);
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired: {}", e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            log.error("Token validation error: {}", e.getMessage(), e);
+            return false;
+        }
     }
 
     /**
@@ -155,7 +165,16 @@ public class JwtUtils {
      * @param token JWT 토큰 문자열
      * @return 토큰이 만료되었는지 여부
      */
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractClaims(token, Claims::getExpiration).before(new Date());
+    }
+
+    public boolean isTokenValidIgnoreExpiry(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        try {
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            return username.equals(userDetails.getUsername());
+        }
     }
 }

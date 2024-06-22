@@ -15,11 +15,13 @@ public interface ResponseMessage {
     String EMAIL_VERIFICATION_FAILED = "Email verification failed.";
 
     // Auth
+    String UNVERIFIED_EMAIL = "Unverified email.";
     String SIGN_UP_SUCCESS = "Sign up successful.";
     String LOGIN_SUCCESS = "Login successful.";
-    String SIGN_UP_FAILED = "Sign up failed.";
+    String LOGOUT_SUCCESS = "Logout successful.";
     String LOGIN_FAILED = "Login information mismatch.";
     String INVALID_CREDENTIALS = "Invalid email or password.";  // 추가
+    String INVALID_REQUEST = "Invalid request";
 
     //SERVER
     String INTERNAL_ERROR = "Internal error.";

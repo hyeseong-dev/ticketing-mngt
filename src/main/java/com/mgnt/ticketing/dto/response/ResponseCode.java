@@ -15,11 +15,14 @@ public interface ResponseCode {
     String EMAIL_VERIFICATION_FAILED = "EVF";
 
     // Auth
+    String UNVERIFIED_EMAIL = "UE";
     String SIGN_UP_SUCCESS = "SUS";
     String SIGN_UP_FAILED = "SUF";
     String LOGIN_FAILED = "LF";
-    String LOGIN_SUCCESS = "LS";  // 추가
+    String LOGIN_SUCCESS = "LIS";  // 추가
+    String LOGOUT_SUCCESS = "LOS";  // 추가
     String INVALID_CREDENTIALS = "IC";  // 추가
+    String INVALID_REQUEST = "IR";
 
     // SERVER
     String INTERNAL_ERROR = "IE";

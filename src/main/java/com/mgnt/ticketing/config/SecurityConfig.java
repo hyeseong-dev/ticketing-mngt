@@ -46,8 +46,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(authorizeHttpRequests ->
                 authorizeHttpRequests
-                        .requestMatchers("/**").permitAll() // 모든 요청을 허용
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/email/token", "/api/auth/refresh").permitAll()
+                        .anyRequest().authenticated() // 그 외의 요청은 인증 필요
         );
 
         // CORS 설정 추가
