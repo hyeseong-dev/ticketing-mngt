@@ -11,32 +11,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @Getter
-@NoArgsConstructor
-@Builder
+@AllArgsConstructor
 public class SignUpResponseDto extends ResponseDto {
-
-    private String code;
-    private String message;
 
     private SignUpResponseDto(String code, String message) {
         super(code, message);
-        this.code = code;
-        this.message = message;
     }
 
     public static ResponseEntity<SignUpResponseDto> success() {
-        SignUpResponseDto result = SignUpResponseDto.builder()
-                .code(ResponseCode.SUCCESS)
-                .message(ResponseMessage.SUCCESS)
-                .build();
+        SignUpResponseDto result = new SignUpResponseDto(ResponseCode.SUCCESS, ResponseMessage.SUCCESS);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    public static ResponseEntity<SignUpResponseDto> duplicateEmail() {
-        SignUpResponseDto result = SignUpResponseDto.builder()
-                .code(ResponseCode.DUPLICATED_EMAIL)
-                .message(ResponseMessage.DUPLICATED_EMAIL)
-                .build();
+    public static ResponseEntity<ResponseDto> duplicatedEmail() {
+        ResponseDto result = new ResponseDto(ResponseCode.DUPLICATED_EMAIL, ResponseMessage.DUPLICATED_EMAIL);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
+    public static ResponseEntity<ResponseDto> failure() {
+        ResponseDto result = new ResponseDto(ResponseCode.INTERNAL_ERROR, ResponseMessage.INTERNAL_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
     }
 }

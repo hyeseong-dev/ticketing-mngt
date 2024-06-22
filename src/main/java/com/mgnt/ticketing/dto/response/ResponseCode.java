@@ -17,6 +17,10 @@ public interface ResponseCode {
     // Auth
     String SIGN_UP_SUCCESS = "SUS";
     String SIGN_UP_FAILED = "SUF";
-    String SIGN_IN_FAILED = "SF";
+    String LOGIN_FAILED = "LF";
+    String LOGIN_SUCCESS = "LS";  // 추가
+    String INVALID_CREDENTIALS = "IC";  // 추가
 
+    // SERVER
+    String INTERNAL_ERROR = "IE";
 }
