@@ -6,16 +6,18 @@ import com.mgnt.ticketing.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/email")
 @RequiredArgsConstructor
 public class EmailController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/api/email/token")
+    @GetMapping("/token")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         try {
             String email = EncryptionUtil.decrypt(token);

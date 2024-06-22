@@ -42,7 +42,7 @@ public class JwtUtils {
     /**
      * 액세스 토큰의 유효기간 (1일: 86400000ms)
      */
-    public final long ACCESS_TOKEN_EXPIRATINO_TIME = 24 * 60 * 60 * 1000L; // 1일
+    public final long ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000L; // 1일
 
     /**
      * 리프레시 토큰의 유효기간 (7일: 604800000ms)
@@ -87,14 +87,15 @@ public class JwtUtils {
      * @return 생성된 액세스 토큰 문자열
      */
     public String generateAccessToken(UserDetails userDetails) {
-        Date date = new Date();
+        Date now = new Date();
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(date.getTime() + ACCESS_TOKEN_EXPIRATINO_TIME))
+                .issuedAt(now)
+                .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_EXPIRATION_TIME))
                 .signWith(key)
                 .compact();
     }
+
 
     /**
      * 리프레시 토큰을 생성합니다.
