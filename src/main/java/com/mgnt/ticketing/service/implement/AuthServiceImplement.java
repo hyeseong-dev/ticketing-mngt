@@ -156,7 +156,7 @@ public class AuthServiceImplement implements AuthService {
         }
     }
 
-
+    @Transactional
     @Override
     public ResponseEntity<? super LoginResponseDto> refresh(String accessToken, HttpServletRequest request) {
         try {
@@ -167,35 +167,33 @@ public class AuthServiceImplement implements AuthService {
             final String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
             String userEmail = jwtUtils.extractUsername(token);
 
-            if (userEmail != null) {
-                UserDetails userDetails = userRepository.findByEmail(userEmail)
-                        .map(UserDetailsImpl::new)
-                        .orElseThrow(() -> new UsernameNotFoundException(ResponseMessage.INVALID_CREDENTIALS));
+            if (userEmail == null)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDto(ResponseCode.INVALID_REQUEST, ResponseMessage.INVALID_REQUEST));
 
-                if (jwtUtils.isTokenExpired(token)) {
-                    String newAccessToken = jwtUtils.generateAccessToken(userDetails);
-                    String newRefreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userDetails);
+            UserDetails userDetails = userRepository.findByEmail(userEmail)
+                    .map(UserDetailsImpl::new)
+                    .orElseThrow(() -> new UsernameNotFoundException(ResponseMessage.INVALID_CREDENTIALS));
 
-                    refreshTokenRepository.deleteByUser_Email(userEmail);
+            String newAccessToken = jwtUtils.generateAccessToken(userDetails);
+            String newRefreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userDetails);
 
-                    RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-                    refreshTokenEntity.setUser(userRepository.findByEmail(userEmail).get());
-                    refreshTokenEntity.setToken(newRefreshToken);
-                    refreshTokenEntity.setIp(request.getRemoteAddr());
-                    refreshTokenEntity.setDeviceInfo(request.getHeader("User-Agent"));
-                    refreshTokenEntity.setExpiryDate(LocalDateTime.now().plusDays(7));
-                    refreshTokenRepository.save(refreshTokenEntity);
+            // Delete the old refresh token from the database
+            refreshTokenRepository.deleteByUser_Email(userEmail);
 
-                    return LoginResponseDto.success(newAccessToken, newRefreshToken);
-                } else {
-                    return ResponseEntity.status(HttpStatus.OK).body(LoginResponseDto.success(token, null));
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDto(ResponseCode.NO_PERMISSION, "User not logged in"));
-            }
+            // Save the new refresh token in the database
+            RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+            refreshTokenEntity.setUser(userRepository.findByEmail(userEmail).get());
+            refreshTokenEntity.setToken(newRefreshToken);
+            refreshTokenEntity.setIp(request.getRemoteAddr());
+            refreshTokenEntity.setDeviceInfo(request.getHeader("User-Agent"));
+            refreshTokenEntity.setExpiryDate(LocalDateTime.now().plusDays(7));
+            refreshTokenRepository.save(refreshTokenEntity);
+
+            return LoginResponseDto.success(newAccessToken, newRefreshToken);
+
         } catch (Exception e) {
             log.error("Error during refresh token: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDto(ResponseCode.INTERNAL_ERROR, "Internal server error"));
+            return LoginResponseDto.failure(ResponseCode.INTERNAL_ERROR, ResponseMessage.INTERNAL_ERROR);
         }
     }
 
