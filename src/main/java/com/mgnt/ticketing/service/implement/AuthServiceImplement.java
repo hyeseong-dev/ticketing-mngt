@@ -159,9 +159,9 @@ public class AuthServiceImplement implements AuthService {
     @Transactional
     public ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
         try {
-            if (accessToken == null || !accessToken.startsWith(JwtUtils.BEARER_PREFIX)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(ResponseCode.VALIDATION_FAILED, ResponseMessage.VALIDATION_FAILED));
-            }
+            if (accessToken == null || !accessToken.startsWith(JwtUtils.BEARER_PREFIX))
+                return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);
+
 
             final String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
             String userEmail;
@@ -172,8 +172,11 @@ public class AuthServiceImplement implements AuthService {
                 userEmail = e.getClaims().getSubject(); // 만료된 토큰에서 이메일을 추출
             }
 
-            if (userEmail == null)
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDto(ResponseCode.INVALID_REQUEST, ResponseMessage.INVALID_REQUEST));
+            if (userEmail == null) return RefreshResponseDto.failure(ErrorCode.USER_UNAUTHORIZED);
+
+            Optional<RefreshTokenEntity> refreshTokenOpt = refreshTokenRepository.findByUser_Email(userEmail);
+            if (refreshTokenOpt.isEmpty()) return RefreshResponseDto.failure(ErrorCode.TOKEN_INVALID);
+
 
             UserDetails userDetails = userRepository.findByEmail(userEmail)
                     .map(UserDetailsImpl::new)
