@@ -19,6 +19,8 @@ server:
       throwExceptionIfNoHandlerFound: true
 
 spring:
+  config:
+    import: optional:files:.env[.properties]
   web:
     resources:
       add-mappings: false
