@@ -1,8 +1,11 @@
 package com.mgnt.ticketing.service.implement;
 
 import com.mgnt.ticketing.common.error.ErrorCode;
+import com.mgnt.ticketing.dto.ResponseDto;
 import com.mgnt.ticketing.dto.request.auth.LoginRequestDto;
 import com.mgnt.ticketing.dto.request.auth.SignUpRequestDto;
+import com.mgnt.ticketing.dto.response.ResponseCode;
+import com.mgnt.ticketing.dto.response.ResponseMessage;
 import com.mgnt.ticketing.dto.response.auth.LoginResponseDto;
 import com.mgnt.ticketing.dto.response.auth.LogoutResponseDto;
 import com.mgnt.ticketing.dto.response.auth.RefreshResponseDto;
@@ -15,10 +18,12 @@ import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.security.JwtUtils;
 import com.mgnt.ticketing.security.UserDetailsImpl;
 import com.mgnt.ticketing.service.AuthService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -121,19 +126,24 @@ public class AuthServiceImplement implements AuthService {
             }
 
             String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
-
-            // SecurityContextHolder에서 사용자 정보 가져오기
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
                 return LogoutResponseDto.failure(ErrorCode.ACCESS_DENIED.getCode(), ErrorCode.ACCESS_DENIED.getMessage());
             }
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            if (!jwtUtils.isTokenValid(token, userDetails)) {
-                return LogoutResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
+
+            try {
+                jwtUtils.extractUsername(token); // 만료된 토큰일 경우 예외 발생
+                if (!jwtUtils.isTokenValid(token, userDetails)) {
+                    return LogoutResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
+                }
+            } catch (ExpiredJwtException e) {
+                log.warn("Expired token received during logout: {}", e.getMessage());
+                return LogoutResponseDto.failure(ErrorCode.ACCESS_DENIED.getCode(), ErrorCode.ACCESS_DENIED.getMessage());
             }
 
-            // ContextHolder에서 사용자 정보 제거 및 refreshToken 삭제
             SecurityContextHolder.clearContext();
             refreshTokenRepository.deleteByUser_Email(userDetails.getUsername());
 
@@ -144,32 +154,36 @@ public class AuthServiceImplement implements AuthService {
         }
     }
 
-    @Transactional
+
     @Override
-    public ResponseEntity<RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
+    @Transactional
+    public ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
         try {
             if (accessToken == null || !accessToken.startsWith(JwtUtils.BEARER_PREFIX)) {
-                return RefreshResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE.getCode(), ErrorCode.INVALID_INPUT_VALUE.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto(ResponseCode.VALIDATION_FAILED, ResponseMessage.VALIDATION_FAILED));
             }
 
             final String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
-            String userEmail = jwtUtils.extractUsername(token);
+            String userEmail;
 
-            if (userEmail == null) {
-                return RefreshResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
+            try {
+                userEmail = jwtUtils.extractUsername(token);
+            } catch (ExpiredJwtException e) {
+                userEmail = e.getClaims().getSubject(); // 만료된 토큰에서 이메일을 추출
             }
+
+            if (userEmail == null)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDto(ResponseCode.INVALID_REQUEST, ResponseMessage.INVALID_REQUEST));
 
             UserDetails userDetails = userRepository.findByEmail(userEmail)
                     .map(UserDetailsImpl::new)
-                    .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.INVALID_CREDENTIALS.getMessage()));
+                    .orElseThrow(() -> new UsernameNotFoundException(ResponseMessage.INVALID_CREDENTIALS));
 
             String newAccessToken = jwtUtils.generateAccessToken(userDetails);
             String newRefreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userDetails);
 
-            // Delete the old refresh token from the database
             refreshTokenRepository.deleteByUser_Email(userEmail);
 
-            // Save the new refresh token in the database
             RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
             refreshTokenEntity.setUser(userRepository.findByEmail(userEmail).get());
             refreshTokenEntity.setToken(newRefreshToken);
@@ -185,4 +199,5 @@ public class AuthServiceImplement implements AuthService {
             return RefreshResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
         }
     }
+
 }
