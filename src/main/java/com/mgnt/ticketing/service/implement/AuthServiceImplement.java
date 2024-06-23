@@ -82,10 +82,9 @@ public class AuthServiceImplement implements AuthService {
 
             // 이메일 인증 상태 확인
             UserEntity userEntity = ((UserDetailsImpl) userDetails).getUser();
-            if (!userEntity.getEmailVerified()) {
-                return LoginResponseDto.failure(ErrorCode.UNVERIFED_ACCOUNT.getCode(), ErrorCode.UNVERIFED_ACCOUNT.getMessage());
+            if (!userEntity.getEmailVerified() || !passwordEncoder.matches(dto.getPassword(), userEntity.getPassword())) {
+                return LoginResponseDto.failure(ErrorCode.LOGIN_FAILED);
             }
-
             // 이메일과 비밀번호를 사용하여 인증 시도
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
