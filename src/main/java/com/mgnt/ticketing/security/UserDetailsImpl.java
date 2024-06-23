@@ -12,24 +12,15 @@ public class UserDetailsImpl implements UserDetails {
 
     private UserEntity userEntity;
 
-    public UserDetailsImpl(){}
-
     public UserDetailsImpl(UserEntity userEntity) {
         this.userEntity = userEntity;
     }
 
-    public UserDetailsImpl(UserDetails userDetails) {
-    }
 
     public UserEntity getUser() {
         return userEntity;
     }
 
-    public void setEmailVerified(boolean emailVerified) {
-        if (this.userEntity.getEmailVerified() != emailVerified) {
-            this.userEntity.setEmailVerified(emailVerified);
-        }
-    }
 
     @Override
     public String getPassword() {

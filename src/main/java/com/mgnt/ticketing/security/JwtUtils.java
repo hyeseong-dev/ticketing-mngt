@@ -28,7 +28,7 @@ public class JwtUtils {
 
     // Constants and configuration values
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String AUTHORIZATION_KEY = "auth";
+    public static final String AUTHORIZATION_KEY = "email";
     public static final String BEARER_PREFIX = "Bearer ";
     public final long ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000L; // 1일
     public final long REFRESH_TOKEN_EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
@@ -47,7 +47,7 @@ public class JwtUtils {
     // Generate access token with claims
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put(AUTHORIZATION_KEY, userDetails.getAuthorities());
+        claims.put(AUTHORIZATION_KEY, userDetails.getUsername());
         return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_EXPIRATION_TIME);
     }
 

@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.service.implement;
 
+import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.dto.request.user.AdminModifyRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyRequestDto;
 import com.mgnt.ticketing.dto.response.user.*;
@@ -46,8 +47,14 @@ public class UserServiceImplement implements UserService {
         UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 이메일 중복 확인
+        if (!user.getEmail().equals(requestBody.getEmail()) && userRepository.existsByEmail(requestBody.getEmail())) {
+            return UserModifyResponseDto.failure(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
         user.setEmail(requestBody.getEmail());
         user.setPassword(passwordEncoder.encode(requestBody.getPassword()));
+        user.setName(requestBody.getName());
         user.setPoints(requestBody.getPoints());
 
         userRepository.save(user);

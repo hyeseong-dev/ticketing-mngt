@@ -1,7 +1,6 @@
-package com.mgnt.ticketing.service;
+package com.mgnt.ticketing.security;
 
 import com.mgnt.ticketing.repository.UserRepository;
-import com.mgnt.ticketing.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -2,7 +2,7 @@ package com.mgnt.ticketing.config;
 
 import com.mgnt.ticketing.common.error.JwtAuthenticationEntryPoint;
 import com.mgnt.ticketing.filter.JWTAuthFilter;
-import com.mgnt.ticketing.service.UserDetailServiceImpl;
+import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

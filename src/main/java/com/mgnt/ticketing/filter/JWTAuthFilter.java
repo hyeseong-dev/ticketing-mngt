@@ -1,7 +1,7 @@
 package com.mgnt.ticketing.filter;
 
 import com.mgnt.ticketing.security.JwtUtils;
-import com.mgnt.ticketing.service.UserDetailServiceImpl;
+import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -43,12 +43,15 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         jwtToken = authHeader.substring(JwtUtils.BEARER_PREFIX.length());
         try {
             userEmail = jwtUtils.extractUsername(jwtToken);
+
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailServiceImpl.loadUserByUsername(userEmail);
+
                 if (jwtUtils.isTokenValid(jwtToken, userDetails)) {
                     UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );
+
                     token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(token);
                 }

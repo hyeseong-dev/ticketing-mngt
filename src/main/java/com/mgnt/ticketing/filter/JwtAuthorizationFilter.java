@@ -2,7 +2,7 @@
 package com.mgnt.ticketing.filter;
 
 import com.mgnt.ticketing.security.JwtUtils;
-import com.mgnt.ticketing.service.UserDetailServiceImpl;
+import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
