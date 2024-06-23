@@ -3,6 +3,9 @@ management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트�
 
 logging:
   level:
+    org:
+      springframework:
+        security: DEBUG
     com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
