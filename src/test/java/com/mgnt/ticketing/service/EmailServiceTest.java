@@ -46,7 +46,7 @@ class EmailServiceTest {
         String email = "test@example.com";
         String name = "Test User";
         String encryptedEmail = "encryptedEmail";
-        String verificationLink = "http://localhost:8080/api/email/token?token=" + encryptedEmail;
+        String verificationLink = "http://localhost:8080/api/email?token=" + encryptedEmail;
 
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);

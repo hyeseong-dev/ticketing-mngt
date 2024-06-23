@@ -38,7 +38,7 @@ public class EmailServiceImplement implements EmailService {
     public void sendVerificationEmail(String email, String name) {
         try {
             String encryptedEmail = EncryptionUtil.encrypt(email);
-            String verificationLink = "http://localhost:8080/api/email/token?token=" + encryptedEmail;
+            String verificationLink = "http://localhost:8080/api/email?token=" + encryptedEmail;
             String body = "안녕하세요, " + name + "님!\n\n" +
                     "다음 링크를 클릭하여 이메일 인증을 완료해주세요:\n" +
                     verificationLink;

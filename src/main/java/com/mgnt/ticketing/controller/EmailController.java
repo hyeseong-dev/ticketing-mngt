@@ -17,8 +17,8 @@ public class EmailController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/token")
-    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+    @GetMapping
+    public ResponseEntity<String> verifyEmail(@RequestParam(value="token") String token) {
         try {
             String email = EncryptionUtil.decrypt(token);
             userRepository.findByEmail(email).ifPresent(user -> {
