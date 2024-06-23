@@ -52,11 +52,6 @@ public class JwtUtils {
     public final long REFRESH_TOKEN_EXPIRATINO_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
 
     /**
-     * 에러를 처리하는 뷰
-     */
-    public final View error;
-
-    /**
      * BASE64로 인코딩된 SecretKey 값
      */
     @Value("${jwt.secret.key}")
@@ -64,14 +59,6 @@ public class JwtUtils {
     public SecretKey key;
     public final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-    /**
-     * JwtTokenProvider 생성자
-     *
-     * @param error 에러를 처리하는 뷰 객체
-     */
-    public JwtUtils(View error) {
-        this.error = error;
-    }
 
     /**
      * 초기화 메서드로, SecretKey를 BASE64 디코딩하여 초기화합니다.

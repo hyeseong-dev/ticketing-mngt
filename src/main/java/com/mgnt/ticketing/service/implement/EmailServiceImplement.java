@@ -1,15 +1,21 @@
 package com.mgnt.ticketing.service.implement;
 
+import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.dto.request.auth.EmailRequestDto;
+import com.mgnt.ticketing.dto.response.auth.EmailResponseDto;
+import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.service.EmailService;
 import com.mgnt.ticketing.util.EncryptionUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -17,6 +23,28 @@ import org.springframework.stereotype.Component;
 public class EmailServiceImplement implements EmailService {
 
     private final JavaMailSender javaMailSender;
+    private final UserRepository userRepository;
+
+    @Transactional
+    @Override
+    public ResponseEntity<? super EmailResponseDto> verifyEmail(String token) {
+        try {
+            String email = EncryptionUtil.decrypt(token);
+            UserEntity user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                if(!user.getEmailVerified()){
+                    user.setEmailVerified(true);
+                    userRepository.save(user);
+                }
+                return ResponseEntity.ok(EmailResponseDto.success());
+            } else {
+                return ResponseEntity.badRequest().body(EmailResponseDto.failure(ErrorCode.TOKEN_INVALID));
+            }
+        } catch (Exception e) {
+            log.error("오류 : " + e.getMessage());
+            return ResponseEntity.badRequest().body(EmailResponseDto.failure(ErrorCode.TOKEN_INVALID));
+        }
+    }
 
     @Override
     public void sendEmail(EmailRequestDto emailMessage) {

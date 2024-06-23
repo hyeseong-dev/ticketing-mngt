@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.dto.request.auth;
+package com.mgnt.ticketing.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

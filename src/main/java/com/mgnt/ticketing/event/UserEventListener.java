@@ -1,6 +1,5 @@
 package com.mgnt.ticketing.event;
 
-import com.mgnt.ticketing.dto.request.auth.UserRegisteredEvent;
 import com.mgnt.ticketing.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
