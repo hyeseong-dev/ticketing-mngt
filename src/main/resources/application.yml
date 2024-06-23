@@ -7,8 +7,18 @@ logging:
 #    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
 
-spring:
+server:
+  error:
+    whitelabel:
+      enabled: false
+  servlet:
+    context-parameters:
+      throwExceptionIfNoHandlerFound: true
 
+spring:
+  web:
+    resources:
+      add-mappings: false
   mail:
     host: smtp.gmail.com
     port: 587
@@ -26,9 +36,15 @@ spring:
     name: ticketing # 애플리케이션 이름을 'ticketing'으로 설정합니다.
 
   datasource:
+    hikari:
+      maximum-pool-size: 10
+      max-lifetime: 150000  # 150초 (밀리초 단위)
+      idle-timeout: 600000  # 10분 (밀리초 단위)
+      connection-timeout: 30000 # 30초 (밀리초 단위)
+      validation-timeout: 5000  # 5초 (밀리초 단위)
     url: jdbc:mysql://localhost:13306/ticketing # 데이터베이스 URL을 설정합니다.
-    username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
-    password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
+    username: ${MYSQL_USERNAME} # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
+    password: ${MYSQL_PASSWORD} # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
 
   jpa:
@@ -45,3 +61,9 @@ jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
+security:
+  allowed-uris:
+    - /api/auth/signup
+    - /api/auth/login
+    - /api/email
+    - /api/auth/refresh
