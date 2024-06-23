@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.filter;
 
-import com.mgnt.ticketing.security.JwtUtils;
+import com.mgnt.ticketing.security.JwtUtil;
 import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -24,14 +24,14 @@ import java.io.IOException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JWTAuthFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtils jwtUtils;
+    private final JwtUtil jwtUtil;
     private final UserDetailServiceImpl userDetailServiceImpl;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader = request.getHeader(JwtUtils.AUTHORIZATION_HEADER);
+        final String authHeader = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
         final String jwtToken;
         String userEmail;
 
@@ -40,14 +40,14 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        jwtToken = authHeader.substring(JwtUtils.BEARER_PREFIX.length());
+        jwtToken = authHeader.substring(JwtUtil.BEARER_PREFIX.length());
         try {
-            userEmail = jwtUtils.extractUsername(jwtToken);
+            userEmail = jwtUtil.extractUsername(jwtToken);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailServiceImpl.loadUserByUsername(userEmail);
 
-                if (jwtUtils.isTokenValid(jwtToken, userDetails)) {
+                if (jwtUtil.isTokenValid(jwtToken, userDetails)) {
                     UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );

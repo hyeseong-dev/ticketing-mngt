@@ -1,9 +1,6 @@
 package com.mgnt.ticketing.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +21,7 @@ import java.util.function.Function;
  */
 @Slf4j
 @Component
-public class JwtUtils {
+public class JwtUtil {
 
     // Constants and configuration values
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -116,12 +113,15 @@ public class JwtUtils {
         try {
             extractAllClaims(token);
             return true;
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
         } catch (ExpiredJwtException e) {
-            log.warn("Token expired: {}", e.getMessage(), e);
-            return false;
-        } catch (Exception e) {
-            log.error("Token validation error: {}", e.getMessage(), e);
-            return false;
+            log.info("Expired JWT token, 만료된 JWT token 입니다.");
+        } catch (UnsupportedJwtException e) {
+            log.info("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+        } catch (IllegalArgumentException e) {
+            log.info("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
         }
+        return false;
     }
 }

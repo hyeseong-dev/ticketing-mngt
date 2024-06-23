@@ -1,10 +1,8 @@
 package com.mgnt.ticketing.service.implement;
 
 import com.mgnt.ticketing.common.error.ErrorCode;
-import com.mgnt.ticketing.dto.ResponseDto;
 import com.mgnt.ticketing.dto.request.auth.LoginRequestDto;
 import com.mgnt.ticketing.dto.request.auth.SignUpRequestDto;
-import com.mgnt.ticketing.dto.response.ResponseCode;
 import com.mgnt.ticketing.dto.response.ResponseMessage;
 import com.mgnt.ticketing.dto.response.auth.LoginResponseDto;
 import com.mgnt.ticketing.dto.response.auth.LogoutResponseDto;
@@ -15,7 +13,7 @@ import com.mgnt.ticketing.entity.UserEntity;
 import com.mgnt.ticketing.event.UserRegisteredEvent;
 import com.mgnt.ticketing.repository.RefreshTokenRepository;
 import com.mgnt.ticketing.repository.UserRepository;
-import com.mgnt.ticketing.security.JwtUtils;
+import com.mgnt.ticketing.security.JwtUtil;
 import com.mgnt.ticketing.security.UserDetailsImpl;
 import com.mgnt.ticketing.service.AuthService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -23,7 +21,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,7 +43,7 @@ public class AuthServiceImplement implements AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtUtils jwtUtils;
+    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final ApplicationEventPublisher eventPublisher;
@@ -89,7 +86,7 @@ public class AuthServiceImplement implements AuthService {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
             );
-            String accessToken = jwtUtils.generateAccessToken(userDetails);
+            String accessToken = jwtUtil.generateAccessToken(userDetails);
             String refreshToken;
 
             Optional<RefreshTokenEntity> existingTokenOpt = refreshTokenRepository.findByUser_Email(dto.getEmail());
@@ -99,7 +96,7 @@ public class AuthServiceImplement implements AuthService {
                 refreshToken = existingToken.getToken();
                 refreshTokenRepository.save(existingToken);
             } else {
-                refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userDetails);
+                refreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
                 RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
                 refreshTokenEntity.setUser(userRepository.findByEmail(dto.getEmail()).get());
                 refreshTokenEntity.setToken(refreshToken);
@@ -120,11 +117,11 @@ public class AuthServiceImplement implements AuthService {
     @Transactional
     public ResponseEntity<LogoutResponseDto> logout(String accessToken) {
         try {
-            if (accessToken == null || !accessToken.startsWith(JwtUtils.BEARER_PREFIX)) {
+            if (accessToken == null || !accessToken.startsWith(JwtUtil.BEARER_PREFIX)) {
                 return LogoutResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE.getCode(), ErrorCode.INVALID_INPUT_VALUE.getMessage());
             }
 
-            String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
+            String token = accessToken.substring(JwtUtil.BEARER_PREFIX.length());
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
@@ -134,8 +131,8 @@ public class AuthServiceImplement implements AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             try {
-                jwtUtils.extractUsername(token); // 만료된 토큰일 경우 예외 발생
-                if (!jwtUtils.isTokenValid(token, userDetails)) {
+                jwtUtil.extractUsername(token); // 만료된 토큰일 경우 예외 발생
+                if (!jwtUtil.isTokenValid(token, userDetails)) {
                     return LogoutResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
                 }
             } catch (ExpiredJwtException e) {
@@ -158,15 +155,15 @@ public class AuthServiceImplement implements AuthService {
     @Transactional
     public ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
         try {
-            if (accessToken == null || !accessToken.startsWith(JwtUtils.BEARER_PREFIX))
+            if (accessToken == null || !accessToken.startsWith(JwtUtil.BEARER_PREFIX))
                 return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);
 
 
-            final String token = accessToken.substring(JwtUtils.BEARER_PREFIX.length());
+            final String token = accessToken.substring(JwtUtil.BEARER_PREFIX.length());
             String userEmail;
 
             try {
-                userEmail = jwtUtils.extractUsername(token);
+                userEmail = jwtUtil.extractUsername(token);
             } catch (ExpiredJwtException e) {
                 userEmail = e.getClaims().getSubject(); // 만료된 토큰에서 이메일을 추출
             }
@@ -181,8 +178,8 @@ public class AuthServiceImplement implements AuthService {
                     .map(UserDetailsImpl::new)
                     .orElseThrow(() -> new UsernameNotFoundException(ResponseMessage.INVALID_CREDENTIALS));
 
-            String newAccessToken = jwtUtils.generateAccessToken(userDetails);
-            String newRefreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userDetails);
+            String newAccessToken = jwtUtil.generateAccessToken(userDetails);
+            String newRefreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
 
             refreshTokenRepository.deleteByUser_Email(userEmail);
 

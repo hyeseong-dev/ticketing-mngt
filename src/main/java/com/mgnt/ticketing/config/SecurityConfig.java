@@ -1,7 +1,7 @@
 package com.mgnt.ticketing.config;
 
 import com.mgnt.ticketing.common.error.JwtAuthenticationEntryPoint;
-import com.mgnt.ticketing.filter.JWTAuthFilter;
+import com.mgnt.ticketing.filter.JwtAuthFilter;
 import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +37,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final UserDetailServiceImpl userDetailServiceImpl;
-    private final JWTAuthFilter jwtAuthFilter;
+    private final JwtAuthFilter jwtAuthFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final SecurityProperties securityProperties;
 

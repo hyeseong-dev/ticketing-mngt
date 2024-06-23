@@ -1,7 +1,7 @@
 // JwtAuthorizationFilter.java
 package com.mgnt.ticketing.filter;
 
-import com.mgnt.ticketing.security.JwtUtils;
+import com.mgnt.ticketing.security.JwtUtil;
 import com.mgnt.ticketing.security.UserDetailServiceImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -26,7 +26,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-    private final JwtUtils jwtUtils;
+    private final JwtUtil jwtUtil;
     private final UserDetailServiceImpl userDetailServiceImpl;
 
     @Override
@@ -34,18 +34,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
-            String tokenValue = jwtUtils.getTokenFromRequest(req);
+            String tokenValue = jwtUtil.getTokenFromRequest(req);
 
             if (StringUtils.hasText(tokenValue)) {
-                tokenValue = jwtUtils.substringToken(tokenValue);
+                tokenValue = jwtUtil.substringToken(tokenValue);
                 log.info(tokenValue);
 
-                if (!jwtUtils.validateToken(tokenValue)) {
+                if (!jwtUtil.validateToken(tokenValue)) {
                     log.error("Token Error");
                     return;
                 }
 
-                Claims info = jwtUtils.getUserInfoFromToken(tokenValue);
+                Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
                 setAuthentication(info.getSubject());
             }
         }
