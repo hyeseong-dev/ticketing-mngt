@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.config;
 
+import com.mgnt.ticketing.common.error.JwtAuthenticationEntryPoint;
 import com.mgnt.ticketing.filter.JWTAuthFilter;
 import com.mgnt.ticketing.service.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import static org.springframework.security.config.Customizer.withDefaults;
 import java.util.List;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled = false)
@@ -33,7 +35,8 @@ public class SecurityConfig {
 
     private final UserDetailServiceImpl userDetailServiceImpl;
     private final JWTAuthFilter jwtAuthFilter;
-
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final SecurityProperties securityProperties;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,16 +49,18 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(authorizeHttpRequests ->
                 authorizeHttpRequests
-                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/email/token", "/api/auth/refresh").permitAll()
-                        .anyRequest().authenticated() // 그 외의 요청은 인증 필요
+                        .requestMatchers(securityProperties.getAllowedUris().toArray(new String[0])).permitAll()
+                        .anyRequest().authenticated()
         );
 
         // CORS 설정 추가
         http.cors(withDefaults());
 
-        http.authenticationProvider(authenticationProvider()).addFilterBefore(
-                jwtAuthFilter, UsernamePasswordAuthenticationFilter.class
+        http.exceptionHandling(exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
         );
+
+        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

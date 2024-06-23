@@ -3,6 +3,9 @@ package com.mgnt.ticketing.filter;
 import com.mgnt.ticketing.security.JwtUtils;
 import com.mgnt.ticketing.service.UserDetailServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,16 +52,11 @@ public class JWTAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (ExpiredJwtException e) {
-            logger.warn("Token expired", e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token has expired");
-            return;
-        } catch (Exception e) {
-            logger.error("Token validation error", e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid token");
-            return;
+            request.setAttribute("exception", e);
+        } catch (MalformedJwtException | SignatureException | UnsupportedJwtException | IllegalArgumentException e) {
+            request.setAttribute("exception", e);
         }
+
         filterChain.doFilter(request, response);
     }
 }
