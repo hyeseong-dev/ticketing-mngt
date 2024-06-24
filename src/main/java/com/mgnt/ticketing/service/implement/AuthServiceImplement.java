@@ -51,10 +51,13 @@ public class AuthServiceImplement implements AuthService {
     @Override
     public ResponseEntity<SignUpResponseDto> signUp(SignUpRequestDto dto) {
         try {
+            //  이메일 중복 여부
             boolean hasEmail = userRepository.existsByEmail(dto.getEmail());
-            if (hasEmail) {
-                return SignUpResponseDto.duplicatedEmail();
-            }
+            if (hasEmail) return SignUpResponseDto.failure(ErrorCode.EMAIL_DUPLICATED);
+
+            // 휴대폰 중복 여부 검증
+            boolean hasPhoneNumber = userRepository.existsByPhoneNumber(dto.getPhoneNumber());
+            if (hasPhoneNumber) return SignUpResponseDto.failure(ErrorCode.PHONE_NUMBER_DUPLICATED);
 
             UserEntity userEntity = UserEntity.from(dto, passwordEncoder.encode(dto.getPassword()));
             userRepository.save(userEntity);
@@ -65,7 +68,7 @@ public class AuthServiceImplement implements AuthService {
             return SignUpResponseDto.success();
         } catch (Exception exception) {
             log.error("Database error: {}", exception.getMessage(), exception);
-            return SignUpResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
+            return SignUpResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -77,11 +80,13 @@ public class AuthServiceImplement implements AuthService {
                     .map(UserDetailsImpl::new)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + dto.getEmail()));
 
-            // 이메일 인증 상태 확인
             UserEntity userEntity = ((UserDetailsImpl) userDetails).getUser();
-            if (!userEntity.getEmailVerified() || !passwordEncoder.matches(dto.getPassword(), userEntity.getPassword())) {
+            if (!passwordEncoder.matches(dto.getPassword(), userEntity.getPassword()))
                 return LoginResponseDto.failure(ErrorCode.LOGIN_FAILED);
-            }
+
+            // 이메일 인증 상태 확인
+            if (!userEntity.getEmailVerified()) return LoginResponseDto.failure(ErrorCode.UNVERIFED_ACCOUNT);
+
             // 이메일과 비밀번호를 사용하여 인증 시도
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
