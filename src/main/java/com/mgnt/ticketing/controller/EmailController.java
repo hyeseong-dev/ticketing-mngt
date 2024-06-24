@@ -1,10 +1,8 @@
 package com.mgnt.ticketing.controller;
 
-import com.mgnt.ticketing.dto.response.ResponseMessage;
 import com.mgnt.ticketing.dto.response.auth.EmailResponseDto;
 import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.service.EmailService;
-import com.mgnt.ticketing.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -3,7 +3,6 @@ package com.mgnt.ticketing.service.implement;
 import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.dto.request.auth.LoginRequestDto;
 import com.mgnt.ticketing.dto.request.auth.SignUpRequestDto;
-import com.mgnt.ticketing.dto.response.ResponseMessage;
 import com.mgnt.ticketing.dto.response.auth.LoginResponseDto;
 import com.mgnt.ticketing.dto.response.auth.LogoutResponseDto;
 import com.mgnt.ticketing.dto.response.auth.RefreshResponseDto;
@@ -181,7 +180,7 @@ public class AuthServiceImplement implements AuthService {
 
             UserDetails userDetails = userRepository.findByEmail(userEmail)
                     .map(UserDetailsImpl::new)
-                    .orElseThrow(() -> new UsernameNotFoundException(ResponseMessage.INVALID_CREDENTIALS));
+                    .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.INVALID_CREDENTIALS.getMessage()));
 
             String newAccessToken = jwtUtil.generateAccessToken(userDetails);
             String newRefreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
