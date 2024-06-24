@@ -44,15 +44,30 @@ public class ErrorResponse {
     }
 
     public static ErrorResponse of(ErrorCode errorCode) {
-        return new ErrorResponse(errorCode.getMessage(), errorCode.getStatus(), List.of(), errorCode.getCode());
+        return new ErrorResponse(
+                errorCode.getMessage(),
+                errorCode.getStatus(),
+                List.of(),
+                errorCode.getCode()
+        );
     }
 
     public static ErrorResponse of(ErrorCode errorCode, List<FieldError> errors) {
-        return new ErrorResponse(errorCode.getMessage(), errorCode.getStatus(), errors, errorCode.getCode());
+        return new ErrorResponse(
+                errorCode.getMessage(),
+                errorCode.getStatus(),
+                errors,
+                errorCode.getCode()
+        );
     }
 
     public static ErrorResponse of(ErrorCode errorCode, BindingResult bindingResult) {
-        return new ErrorResponse(errorCode.getMessage(), errorCode.getStatus(), FieldError.of(bindingResult), errorCode.getCode());
+        return new ErrorResponse(
+                errorCode.getMessage(),
+                errorCode.getStatus(),
+                FieldError.of(bindingResult),
+                errorCode.getCode()
+        );
     }
 
     public String toJson() {

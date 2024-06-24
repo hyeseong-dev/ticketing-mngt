@@ -1,5 +1,6 @@
-package com.mgnt.ticketing.common.error;
+package com.mgnt.ticketing.common.error.exceptions;
 
+import com.mgnt.ticketing.common.error.ErrorCode;
 import lombok.Getter;
 
 @Getter

@@ -46,7 +46,8 @@ public enum ErrorCode {
     ENDPOINT_NOT_FOUND(404, "C014" ,"Endpoint not found."),
     HTTP_METHOD_NOT_FOUND(405, "C015" ,"HTTP method not found."),
     EMAIL_DUPLICATED(409, "C016", "Phone number duplicated."),
-    PHONE_NUMBER_DUPLICATED(409, "C017", "Email duplicated.")
+    PHONE_NUMBER_DUPLICATED(409, "C017", "Email duplicated."),
+    EMAIL_SEND_ERROR(400, "C018", "EMAIL SENDING_ERROR")
 
     ;
 

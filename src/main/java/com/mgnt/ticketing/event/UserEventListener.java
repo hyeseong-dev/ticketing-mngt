@@ -17,6 +17,11 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleUserRegisteredEvent(UserRegisteredEvent event) {
-        emailService.sendVerificationEmail(event.getEmail(), event.getName());
+        try {
+            emailService.sendVerificationEmail(event.getEmail(), event.getName());
+        } catch (Exception e) {
+            log.error("이메일 발송 중 오류 발생: {}", e.getMessage());
+            // 필요 시 추가 처리를 여기에 작성
+        }
     }
 }

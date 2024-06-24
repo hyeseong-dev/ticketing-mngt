@@ -1,6 +1,7 @@
 package com.mgnt.ticketing.service.implement;
 
 import com.mgnt.ticketing.common.error.ErrorCode;
+import com.mgnt.ticketing.common.error.exceptions.EmailSendException;
 import com.mgnt.ticketing.dto.request.auth.LoginRequestDto;
 import com.mgnt.ticketing.dto.request.auth.SignUpRequestDto;
 import com.mgnt.ticketing.dto.response.auth.LoginResponseDto;
@@ -15,6 +16,7 @@ import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.security.JwtUtil;
 import com.mgnt.ticketing.security.UserDetailsImpl;
 import com.mgnt.ticketing.service.AuthService;
+import com.mgnt.ticketing.service.EmailService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -46,27 +48,30 @@ public class AuthServiceImplement implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmailService emailService;
 
+    @Transactional
     @Override
     public ResponseEntity<SignUpResponseDto> signUp(SignUpRequestDto dto) {
         try {
-            //  이메일 중복 여부
             boolean hasEmail = userRepository.existsByEmail(dto.getEmail());
             if (hasEmail) return SignUpResponseDto.failure(ErrorCode.EMAIL_DUPLICATED);
 
-            // 휴대폰 중복 여부 검증
             boolean hasPhoneNumber = userRepository.existsByPhoneNumber(dto.getPhoneNumber());
             if (hasPhoneNumber) return SignUpResponseDto.failure(ErrorCode.PHONE_NUMBER_DUPLICATED);
 
             UserEntity userEntity = UserEntity.from(dto, passwordEncoder.encode(dto.getPassword()));
             userRepository.save(userEntity);
 
-            // 이벤트 발행
-            eventPublisher.publishEvent(new UserRegisteredEvent(userEntity.getEmail(), userEntity.getName()));
+//            eventPublisher.publishEvent(new UserRegisteredEvent(userEntity.getEmail(), userEntity.getName()));
+            emailService.sendVerificationEmail(userEntity.getEmail(), userEntity.getName());
 
             return SignUpResponseDto.success();
-        } catch (Exception exception) {
-            log.error("Database error: {}", exception.getMessage(), exception);
+        } catch (EmailSendException e) {
+            log.error("Email send error: {}", e.getMessage(), e);
+            return SignUpResponseDto.failure(ErrorCode.EMAIL_SEND_ERROR);
+        } catch (Exception e) {
+            log.error("Database error: {}", e.getMessage(), e);
             return SignUpResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }

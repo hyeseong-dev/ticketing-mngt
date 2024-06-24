@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.util.aop;
 
-import com.mgnt.ticketing.common.error.CustomAccessDeniedException;
+import com.mgnt.ticketing.common.error.exceptions.CustomAccessDeniedException;
 import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.entity.UserEntity;
 import com.mgnt.ticketing.service.UserService;
@@ -10,7 +10,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 @Aspect

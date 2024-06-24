@@ -57,8 +57,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private boolean isAllowedUri(String requestUri) {
         List<String> allowedUris = securityProperties.getAllowedUris();
-        return allowedUris.stream().anyMatch(requestUri::startsWith);
+        boolean isAllowed = allowedUris.stream().anyMatch(requestUri::startsWith);
+        log.debug("Request URI: {}, isAllowed: {}", requestUri, isAllowed);
+        return isAllowed;
     }
+
 
     private String getJwtToken(HttpServletRequest request) {
         final String authHeader = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);

@@ -1,5 +1,7 @@
 package com.mgnt.ticketing.common.error;
 
+import com.mgnt.ticketing.common.error.exceptions.CustomAccessDeniedException;
+import com.mgnt.ticketing.common.error.exceptions.EmailSendException;
 import io.jsonwebtoken.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,13 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(EmailSendException.class)
+    protected ResponseEntity<ErrorResponse> handleEmailSendException(EmailSendException e) {
+        final ErrorResponse response = ErrorResponse.of(ErrorCode.EMAIL_SEND_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 
     @ExceptionHandler(CustomAccessDeniedException.class)
     protected ResponseEntity<ErrorResponse> handleCustomAccessDeniedException(CustomAccessDeniedException e) {

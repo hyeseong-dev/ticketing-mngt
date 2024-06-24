@@ -1,6 +1,7 @@
 package com.mgnt.ticketing.service.implement;
 
 import com.mgnt.ticketing.common.error.ErrorCode;
+import com.mgnt.ticketing.common.error.exceptions.EmailSendException;
 import com.mgnt.ticketing.dto.request.auth.EmailRequestDto;
 import com.mgnt.ticketing.dto.response.auth.EmailResponseDto;
 import com.mgnt.ticketing.entity.UserEntity;
@@ -29,7 +30,9 @@ public class EmailServiceImplement implements EmailService {
     @Override
     public ResponseEntity<? super EmailResponseDto> verifyEmail(String token) {
         try {
+            log.info("Received token: {}", token); // 로그 추가
             String email = EncryptionUtil.decrypt(token);
+            log.info("Decrypted email: {}", email); // 로그 추가
             UserEntity user = userRepository.findByEmail(email).orElse(null);
             if (user != null) {
                 if(!user.getEmailVerified()){
@@ -41,7 +44,7 @@ public class EmailServiceImplement implements EmailService {
                 return ResponseEntity.badRequest().body(EmailResponseDto.failure(ErrorCode.TOKEN_INVALID));
             }
         } catch (Exception e) {
-            log.error("오류 : " + e.getMessage());
+            log.error("오류 : " + e.getMessage(), e); // 스택 트레이스를 로그에 포함
             return ResponseEntity.badRequest().body(EmailResponseDto.failure(ErrorCode.TOKEN_INVALID));
         }
     }
@@ -62,6 +65,7 @@ public class EmailServiceImplement implements EmailService {
         }
     }
 
+    @Transactional
     @Override
     public void sendVerificationEmail(String email, String name) {
         try {
@@ -75,6 +79,7 @@ public class EmailServiceImplement implements EmailService {
             sendEmail(emailRequestDto);
         } catch (Exception e) {
             log.error("이메일 발송 중 오류 발생: {}", e.getMessage());
+            throw new EmailSendException("Failed to send verification email", e);
         }
     }
 
