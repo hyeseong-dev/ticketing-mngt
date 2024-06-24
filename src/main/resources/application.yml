@@ -19,6 +19,9 @@ server:
       throwExceptionIfNoHandlerFound: true
 
 spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
   config:
     import: optional:files:.env[.properties]
   web:
@@ -73,3 +76,5 @@ security:
     - /api/auth/login
     - /api/email
     - /api/auth/refresh
+  jackson:
+    property-naming-strategy: SNAKE_CASE
