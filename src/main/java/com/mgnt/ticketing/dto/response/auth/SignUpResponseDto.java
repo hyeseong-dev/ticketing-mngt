@@ -23,6 +23,11 @@ public class SignUpResponseDto {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 
+    public static ResponseEntity<SignUpResponseDto> failure(ErrorCode errorCode) {
+        SignUpResponseDto result = new SignUpResponseDto(errorCode.getCode(), errorCode.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
     public static ResponseEntity<SignUpResponseDto> failure(String code, String message) {
         SignUpResponseDto result = new SignUpResponseDto(code, message);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);

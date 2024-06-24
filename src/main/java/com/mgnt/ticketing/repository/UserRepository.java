@@ -12,4 +12,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     boolean existsByEmail(String email);
     List<UserEntity> findAllByDeletedAtNull();
     Optional<UserEntity> findByIdAndDeletedAtNull(Long id);
+    boolean existsByPhoneNumber(String phoneNumber);
 }

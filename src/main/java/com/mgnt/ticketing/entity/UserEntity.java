@@ -45,9 +45,25 @@ public class UserEntity extends AuditingFields{
     @Enumerated(EnumType.STRING)
     private UserRoleEnum role;
 
+    @Column(name="phone_number", nullable = false)
+    private String phoneNumber;
+
+    @Column(name="address", nullable = false)
+    private String address;
+
 
     @Builder
-    public UserEntity(Long id, String email, String password, String name, Integer points, LocalDateTime deletedAt, Boolean emailVerified, UserRoleEnum role) {
+    public UserEntity(Long id,
+                      String email,
+                      String password,
+                      String name,
+                      Integer points,
+                      LocalDateTime deletedAt,
+                      Boolean emailVerified,
+                      UserRoleEnum role,
+                      String phoneNumber,
+                      String address
+    ) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -55,6 +71,8 @@ public class UserEntity extends AuditingFields{
         this.points = points != null ? points : 0;
         this.emailVerified = emailVerified != null ? emailVerified : false;
         this.role = role;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
     }
 
     // 회원가입용 정적 팩토리 메서드
@@ -63,6 +81,8 @@ public class UserEntity extends AuditingFields{
                 .email(dto.getEmail())
                 .name(dto.getName())
                 .password(password)
+                .phoneNumber(dto.getPhoneNumber())
+                .address(dto.getAddress())
                 .role(dto.getRole())
                 .points(0) // 초기 포인트 설정
                 .emailVerified(false) // 초기 이메일 인증 상태 설정
