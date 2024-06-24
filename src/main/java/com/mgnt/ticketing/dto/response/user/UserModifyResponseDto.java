@@ -11,13 +11,13 @@ import org.springframework.http.ResponseEntity;
 @Getter
 @NoArgsConstructor
 public class UserModifyResponseDto {
-    private UserResponseDto user;
+    private UserResponseDto data;
     private String code;
     private String message;
 
     @Builder
     public UserModifyResponseDto(UserResponseDto user, String code, String message) {
-        this.user = user;
+        this.data = user;
         this.code = code;
         this.message = message;
     }

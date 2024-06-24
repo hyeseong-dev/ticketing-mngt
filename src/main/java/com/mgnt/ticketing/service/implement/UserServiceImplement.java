@@ -2,6 +2,7 @@ package com.mgnt.ticketing.service.implement;
 
 import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.dto.request.user.AdminModifyRequestDto;
+import com.mgnt.ticketing.dto.request.user.UserModifyMypageRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyRequestDto;
 import com.mgnt.ticketing.dto.response.user.*;
 import com.mgnt.ticketing.entity.UserEntity;
@@ -58,6 +59,18 @@ public class UserServiceImplement implements UserService {
         user.setName(requestBody.getName());
         user.setPoints(requestBody.getPoints());
 
+        userRepository.save(user);
+        return UserModifyResponseDto.success(UserResponseDto.from(user));
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<UserModifyResponseDto> modifyMypage(Long id, @Valid UserModifyMypageRequestDto requestBody) {
+        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setAddress(requestBody.getAddress());
+        user.setPhoneNumber(requestBody.getPhoneNumber());
         userRepository.save(user);
         return UserModifyResponseDto.success(UserResponseDto.from(user));
     }
