@@ -16,13 +16,13 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class UserListResponseDto {
-    private List<UserResponseDto> userList;
+    private List<UserResponseDto> data;
     private String code;
     private String message;
 
     public static ResponseEntity<UserListResponseDto> success(List<UserResponseDto> users) {
         UserListResponseDto response = UserListResponseDto.builder()
-                .userList(users)
+                .data(users)
                 .code(SuccessCode.OK.getCode())
                 .message(SuccessCode.OK.getMessage())
                 .build();
@@ -31,7 +31,7 @@ public class UserListResponseDto {
 
     public static ResponseEntity<UserListResponseDto> failure(ErrorCode errorCode) {
         UserListResponseDto response = UserListResponseDto.builder()
-                .userList(List.of())
+                .data(List.of())
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,5 +89,17 @@ public class UserServiceImplement implements UserService {
 
         userRepository.save(user);
         return UserDeleteResponseDto.success(UserResponseDto.from(user));
+    }
+
+    @Transactional
+    @Override
+    public Optional<UserEntity> getUserByEmail(String currentUserEmail) {
+        return userRepository.findByEmail(currentUserEmail);
+    }
+
+    @Transactional
+    @Override
+    public Optional<UserEntity> getUserById(Long resourceId) {
+        return userRepository.findById(resourceId);
     }
 }

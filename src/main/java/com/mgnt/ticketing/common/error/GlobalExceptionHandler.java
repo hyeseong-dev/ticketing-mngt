@@ -15,6 +15,12 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(CustomAccessDeniedException.class)
+    protected ResponseEntity<ErrorResponse> handleCustomAccessDeniedException(CustomAccessDeniedException e) {
+        final ErrorResponse response = ErrorResponse.of(e.getErrorCode());
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
+    }
+
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException e) {
         ErrorResponse error = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
