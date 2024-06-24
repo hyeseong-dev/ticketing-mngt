@@ -41,9 +41,11 @@ public enum ErrorCode {
     UNSUPPORTED_MEDIA_TYPE(415, "C012", "Unsupported media type."),
     TOO_MANY_REQUESTS(429, "C013", "Too many requests."),
     ENDPOINT_NOT_FOUND(404, "C014" ,"Endpoint not found."),
-    HTTP_METHOD_NOT_FOUND(405, "C015" ,"HTTP method not found.")
+    HTTP_METHOD_NOT_FOUND(405, "C015" ,"HTTP method not found."),
+    EMAIL_DUPLICATED(409, "C016", "Phone number duplicated."),
+    PHONE_NUMBER_DUPLICATED(409, "C017", "Email duplicated.")
 
-            ;
+    ;
 
     private final int status;
     private final String code;
