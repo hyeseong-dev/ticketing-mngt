@@ -63,8 +63,8 @@ public class AuthServiceImplement implements AuthService {
             UserEntity userEntity = UserEntity.from(dto, passwordEncoder.encode(dto.getPassword()));
             userRepository.save(userEntity);
 
-//            eventPublisher.publishEvent(new UserRegisteredEvent(userEntity.getEmail(), userEntity.getName()));
-            emailService.sendVerificationEmail(userEntity.getEmail(), userEntity.getName());
+            eventPublisher.publishEvent(new UserRegisteredEvent(userEntity.getEmail(), userEntity.getName()));
+//            emailService.sendVerificationEmail(userEntity.getEmail(), userEntity.getName());
 
             return SignUpResponseDto.success();
         } catch (EmailSendException e) {
