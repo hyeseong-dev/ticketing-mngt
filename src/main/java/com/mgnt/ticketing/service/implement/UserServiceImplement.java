@@ -3,6 +3,7 @@ package com.mgnt.ticketing.service.implement;
 import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.dto.request.user.AdminModifyRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyMypageRequestDto;
+import com.mgnt.ticketing.dto.request.user.UserModifyPasswordRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyRequestDto;
 import com.mgnt.ticketing.dto.response.user.*;
 import com.mgnt.ticketing.entity.UserEntity;
@@ -26,6 +27,25 @@ public class UserServiceImplement implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public ResponseEntity<UserModifyResponseDto> modifyUserPassword(Long id, UserModifyPasswordRequestDto requestBody) {
+        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
+            return UserModifyResponseDto.failure(ErrorCode.CURRENT_PASSWORD_NOT_MATCHED);
+        }
+
+        if (!requestBody.getNewPassword1().equals(requestBody.getNewPassword2())) {
+            return UserModifyResponseDto.failure(ErrorCode.NEW_PASSWORD_NOT_MATCHED);
+        }
+
+        user.setPassword(passwordEncoder.encode(requestBody.getNewPassword1()));
+        userRepository.save(user);
+        return UserModifyResponseDto.success(UserResponseDto.from(user));
+    }
 
     @Override
     public ResponseEntity<UserListResponseDto> getUsers() {

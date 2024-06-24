@@ -19,6 +19,9 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "U001", "This user does not exist."),
     EMAIL_ALREADY_EXISTS(409, "U002", "Duplicate email."),
     USER_UNAUTHORIZED(401, "U003", "Unverified email."),
+    CURRENT_PASSWORD_NOT_MATCHED(400, "U004", "Current password not matched."),
+    NEW_PASSWORD_NOT_MATCHED(400, "U005", "NEW password not matched."),
+
 
     // Auth Errors
     LOGIN_FAILED(401, "A001", "Login information mismatch."),

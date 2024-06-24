@@ -1,6 +1,7 @@
 package com.mgnt.ticketing.controller;
 
 import com.mgnt.ticketing.dto.request.user.UserModifyMypageRequestDto;
+import com.mgnt.ticketing.dto.request.user.UserModifyPasswordRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyRequestDto;
 import com.mgnt.ticketing.dto.response.user.UserDeleteResponseDto;
 import com.mgnt.ticketing.dto.response.user.UserDetailResponseDto;
@@ -49,6 +50,15 @@ public class UserController {
             @RequestBody @Valid UserModifyMypageRequestDto requestBody
     ) {
         return userService.modifyMypage(id, requestBody);
+    }
+
+    @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<UserModifyResponseDto> modifyPassword(
+            @PathVariable Long id,
+            @RequestBody @Valid UserModifyPasswordRequestDto requestBody
+    ) {
+        return userService.modifyUserPassword(id, requestBody);
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
