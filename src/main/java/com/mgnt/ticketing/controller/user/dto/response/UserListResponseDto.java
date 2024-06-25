@@ -1,0 +1,40 @@
+package com.mgnt.ticketing.controller.user.dto.response;
+
+import com.mgnt.ticketing.base.error.ErrorCode;
+import com.mgnt.ticketing.base.dto.response.SuccessCode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserListResponseDto {
+    private List<UserResponseDto> data;
+    private String code;
+    private String message;
+
+    public static ResponseEntity<UserListResponseDto> success(List<UserResponseDto> users) {
+        UserListResponseDto response = UserListResponseDto.builder()
+                .data(users)
+                .code(SuccessCode.OK.getCode())
+                .message(SuccessCode.OK.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    public static ResponseEntity<UserListResponseDto> failure(ErrorCode errorCode) {
+        UserListResponseDto response = UserListResponseDto.builder()
+                .data(List.of())
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+}
