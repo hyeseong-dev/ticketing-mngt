@@ -2,7 +2,7 @@
 .env
 
 # DB Dockerfile, my.cnf, init_scripts
-/db/
+#/docker/db/
 
 HELP.md
 .gradle

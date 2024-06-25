@@ -3,7 +3,7 @@ version: "3.9"
 services:
   db:
     build:
-      context: ./db
+      context: .
       dockerfile: Dockerfile
     container_name: db_container
     ports:
@@ -14,7 +14,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: ${MYSQL_TZ}
     volumes:
-      - ${MYSQL_DATA_PATH}:/var/lib/mysql # 데이터 영구 저장을 위한 볼륨 마운트
+      - mysql_data:/var/lib/mysql # 데이터 영구 저장을 위한 볼륨 마운트
       - ${MYSQL_CUSTOM_CONFIG_PATH}:/etc/mysql/conf.d
       - ${MYSQL_DEFAULT_CONFIG_FILE}:/etc/my.cnf
       - ${MYSQL_INIT_SCRIPTS_PATH}:/docker-entrypoint-initdb.d  # 초기화 스크립트 마운트
