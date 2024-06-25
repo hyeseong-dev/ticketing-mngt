@@ -2,6 +2,12 @@ debug: false # 디버그 모드를 비활성화합니다.
 management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트를 노출합니다.
 
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 logging:
   level:
     org:
@@ -81,5 +87,10 @@ security:
     - /api/auth/login
     - /api/email
     - /api/auth/refresh
+    - /favicon.ico
+    - /swagger-ui
+    - /hello
+    - /concerts
+    - /payments
   jackson:
     property-naming-strategy: SNAKE_CASE

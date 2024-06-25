@@ -9,11 +9,13 @@ import com.mgnt.ticketing.controller.user.dto.response.UserListResponseDto;
 import com.mgnt.ticketing.controller.user.dto.response.UserModifyResponseDto;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
 import com.mgnt.ticketing.base.util.aop.CheckAccess;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "User", description = "User 관련 API 입니다.")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
