@@ -23,10 +23,9 @@ public class ConcertDate extends BaseDateTimeEntity {
     @Column(nullable = false)
     private ZonedDateTime concertDate;
 
-    public ConcertDate(ZonedDateTime concertDate, int seats) {
+    public ConcertDate(ZonedDateTime concertDate) {
         this.concertDate = concertDate;
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

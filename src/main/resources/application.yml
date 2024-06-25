@@ -3,6 +3,8 @@ management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트�
 
 
 springdoc:
+  cache:
+    disabled: true
   api-docs:
     path: /v3/api-docs
   swagger-ui:

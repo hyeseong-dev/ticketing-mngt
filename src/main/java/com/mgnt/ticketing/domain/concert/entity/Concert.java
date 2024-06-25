@@ -26,15 +26,15 @@ public class Concert extends BaseDateTimeEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
-    private Long hallId;
+    private Long placeId;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "concert_id")
     private List<ConcertDate> concertDateList = new ArrayList();
 
-    public Concert(String name, Long hallId) {
+    public Concert(String name, Long placeId) {
         this.name = name;
-        this.hallId = hallId;
+        this.placeId = placeId;
     }
 
     @Override

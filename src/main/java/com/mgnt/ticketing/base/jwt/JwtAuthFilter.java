@@ -1,6 +1,8 @@
 package com.mgnt.ticketing.base.jwt;
 
 import com.mgnt.ticketing.base.config.SecurityProperties;
+import com.mgnt.ticketing.base.error.ErrorCode;
+import com.mgnt.ticketing.base.error.exceptions.CustomAccessDeniedException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -39,6 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String jwtToken = getJwtToken(request);
+        if(jwtToken == null) {
+            SecurityContextHolder.clearContext();  // 인증 정보 제거
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
+            return;
+        }
 
         try {
             final String userEmail = jwtUtil.extractUsername(jwtToken);

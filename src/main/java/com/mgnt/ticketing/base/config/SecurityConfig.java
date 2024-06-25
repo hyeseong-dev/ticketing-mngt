@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(securityProperties.getAllowedUris().toArray(new String[0])).permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+                        .requestMatchers("/**").permitAll() // 기능 개발 편의를 위해 모두 오픈
                         .anyRequest().authenticated()
         );
 

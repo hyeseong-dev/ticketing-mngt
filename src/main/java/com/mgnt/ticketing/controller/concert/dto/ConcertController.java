@@ -49,8 +49,8 @@ public class ConcertController {
     public List<GetDatesResponse> getDates(@PathVariable(value = "concertId") @NotNull Long concertId) {
         // dummy data
         return List.of(
-                new GetDatesResponse(1L, ZonedDateTime.now().plusMonths(1), false),
-                new GetDatesResponse(2L, ZonedDateTime.now().plusMonths(2), true)
+                new GetDatesResponse(1L, ZonedDateTime.now().plusMonths(1)),
+                new GetDatesResponse(2L, ZonedDateTime.now().plusMonths(2))
         );
     }
 

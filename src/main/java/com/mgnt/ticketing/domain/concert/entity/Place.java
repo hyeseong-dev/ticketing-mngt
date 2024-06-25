@@ -15,12 +15,12 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicUpdate
-@Table(name = "hall")
-public class Hall extends BaseDateTimeEntity {
+@Table(name = "place")
+public class Place extends BaseDateTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long hallId;
+    private Long placeId;
 
     @Column(nullable = false)
     private String name;
@@ -32,7 +32,7 @@ public class Hall extends BaseDateTimeEntity {
     @JoinColumn(name = "seat_id")
     private List<Seat> seatList = new ArrayList();
 
-    public Hall(String name, int seats_cnt) {
+    public Place(String name, int seats_cnt) {
         this.name = name;
         this.seats_cnt = seats_cnt;
     }
@@ -41,12 +41,12 @@ public class Hall extends BaseDateTimeEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Hall hall = (Hall) o;
-        return Objects.equals(hallId, hall.hallId);
+        Place place = (Place) o;
+        return Objects.equals(placeId, place.placeId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(hallId);
+        return Objects.hash(placeId);
     }
 }
