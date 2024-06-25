@@ -10,20 +10,20 @@ import org.springframework.http.ResponseEntity;
 
 @Getter
 @NoArgsConstructor
-public class UserDetailResponseDto {
-    private UserResponseDto user;
+public class UpdateUserResponse {
+    private UserResponseDto data;
     private String code;
     private String message;
 
     @Builder
-    public UserDetailResponseDto(UserResponseDto user, String code, String message) {
-        this.user = user;
+    public UpdateUserResponse(UserResponseDto user, String code, String message) {
+        this.data = user;
         this.code = code;
         this.message = message;
     }
 
-    public static ResponseEntity<UserDetailResponseDto> success(UserResponseDto user) {
-        UserDetailResponseDto response = UserDetailResponseDto.builder()
+    public static ResponseEntity<UpdateUserResponse> success(UserResponseDto user) {
+        UpdateUserResponse response = UpdateUserResponse.builder()
                 .user(user)
                 .code(SuccessCode.OK.getCode())
                 .message(SuccessCode.OK.getMessage())
@@ -31,8 +31,8 @@ public class UserDetailResponseDto {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    public static ResponseEntity<UserDetailResponseDto> failure(ErrorCode errorCode) {
-        UserDetailResponseDto response = UserDetailResponseDto.builder()
+    public static ResponseEntity<UpdateUserResponse> failure(ErrorCode errorCode) {
+        UpdateUserResponse response = UpdateUserResponse.builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();

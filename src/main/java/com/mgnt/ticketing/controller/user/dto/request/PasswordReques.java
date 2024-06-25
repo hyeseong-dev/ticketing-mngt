@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserModifyPasswordRequestDto {
+public class PasswordReques {
 
     @NotBlank(message = "현재 비밀번호를 입력해주세요.")
     private String currentPassword;

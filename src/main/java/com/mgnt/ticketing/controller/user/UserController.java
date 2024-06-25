@@ -1,19 +1,20 @@
 package com.mgnt.ticketing.controller.user;
 
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyMypageRequestDto;
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyPasswordRequestDto;
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyRequestDto;
-import com.mgnt.ticketing.controller.user.dto.response.UserDeleteResponseDto;
-import com.mgnt.ticketing.controller.user.dto.response.UserDetailResponseDto;
-import com.mgnt.ticketing.controller.user.dto.response.UserListResponseDto;
-import com.mgnt.ticketing.controller.user.dto.response.UserModifyResponseDto;
+import com.mgnt.ticketing.controller.user.dto.request.*;
+import com.mgnt.ticketing.controller.user.dto.response.*;
+import com.mgnt.ticketing.domain.payment.PaymentEnums;
+import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
 import com.mgnt.ticketing.base.util.aop.CheckAccess;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.ZonedDateTime;
+import java.util.List;
 
 @Tag(name = "User", description = "User 관련 API 입니다.")
 @RestController
@@ -24,48 +25,84 @@ public class UserController {
     private final UserInterface userInterface;
     private final String resourceType = "USER";
 
+    @GetMapping("/{userId}/reservation")
+    public List<GetMyReservationsResponse> getMyReservation(@PathVariable(value = "userId") @NotNull Long userId) {
+        // dummy data
+        return List.of(GetMyReservationsResponse.builder()
+                .reservationId(1L)
+                .status(ReservationEnums.Status.ING)
+                .concertInfo(GetMyReservationsResponse.ConcertInfo.builder()
+                        .concertId(1L)
+                        .concertDateId(1L)
+                        .name("2024 테스트 콘서트 in 서울")
+                        .date(ZonedDateTime.now().plusMonths(1))
+                        .seatId(2L)
+                        .seatNum(2)
+                        .build())
+                .paymentInfo(GetMyReservationsResponse.PaymentInfo.builder()
+                        .paymentId(1L)
+                        .status(PaymentEnums.Status.READY)
+                        .paymentPrice(79000)
+                        .build())
+                .build());
+    }
+
+    @PatchMapping("/{userId}/charge")
+    public void charge(@PathVariable(value = "userId") @NotNull Long userId,
+                       @RequestBody @Valid ChargeRequest request
+    ) {
+
+    }
+
+    @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
+    @GetMapping("/{userId}/balance")
+    public GetBalanceResponse getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
+        // dummy data
+        return new GetBalanceResponse(1000);
+    }
+
     @CheckAccess(roles = {"ADMIN"}, resourceType = resourceType)
     @GetMapping
-    public ResponseEntity<UserListResponseDto> getUsers() {
+    public ResponseEntity<GetUserListResponse> getUsers() {
         return userInterface.getUsers();
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
     @GetMapping("/{id}")
-    public ResponseEntity<UserDetailResponseDto> getUserDetail(@PathVariable Long id) {
+    public ResponseEntity<GetUserResponse> getUserDetail(@PathVariable Long id) {
         return userInterface.getUserDetail(id);
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
     @PatchMapping("/{id}")
-    public ResponseEntity<UserModifyResponseDto> modifyUser(
+    public ResponseEntity<UpdateUserResponse> modifyUser(
             @PathVariable Long id,
-            @RequestBody @Valid UserModifyRequestDto requestBody
+            @RequestBody @Valid UserModifyRequest requestBody
     ) {
         return userInterface.modifyUser(id, requestBody);
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
     @PatchMapping("/mypage/{id}")
-    public ResponseEntity<UserModifyResponseDto> modifyMypage(
+    public ResponseEntity<UpdateUserResponse> modifyMypage(
             @PathVariable Long id,
-            @RequestBody @Valid UserModifyMypageRequestDto requestBody
+            @RequestBody @Valid MypageRequest requestBody
     ) {
         return userInterface.modifyMypage(id, requestBody);
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
     @PatchMapping("/{id}/password")
-    public ResponseEntity<UserModifyResponseDto> modifyPassword(
+    public ResponseEntity<UpdateUserResponse> modifyPassword(
             @PathVariable Long id,
-            @RequestBody @Valid UserModifyPasswordRequestDto requestBody
+            @RequestBody @Valid PasswordReques requestBody
     ) {
         return userInterface.modifyUserPassword(id, requestBody);
     }
 
     @CheckAccess(roles = {"ADMIN", "USER"}, resourceType = resourceType)
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserDeleteResponseDto> deleteUser(
+    public ResponseEntity<DeleteUserResponse> deleteUser(
             @PathVariable Long id
     ) {
         return userInterface.deleteUser(id);

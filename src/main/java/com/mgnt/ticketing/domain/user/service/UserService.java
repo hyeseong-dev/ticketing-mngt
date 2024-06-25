@@ -1,10 +1,7 @@
 package com.mgnt.ticketing.domain.user.service;
 
 import com.mgnt.ticketing.base.error.ErrorCode;
-import com.mgnt.ticketing.controller.user.dto.request.AdminModifyRequestDto;
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyMypageRequestDto;
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyPasswordRequestDto;
-import com.mgnt.ticketing.controller.user.dto.request.UserModifyRequestDto;
+import com.mgnt.ticketing.controller.user.dto.request.*;
 import com.mgnt.ticketing.controller.user.dto.response.*;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
@@ -28,49 +25,64 @@ public class UserService implements UserInterface {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    public GetBalanceResponse getBalance(Long userId) {
+        return null;
+    }
+
+    @Override
+    public void charge(Long userId, ChargeRequest request) {
+
+    }
+
+    @Override
+    public List<GetMyReservationsResponse> getMyReservations(Long userId) {
+        return null;
+    }
+
+    @Override
     @Transactional
-    public ResponseEntity<UserModifyResponseDto> modifyUserPassword(Long id, UserModifyPasswordRequestDto requestBody) {
+    public ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordReques requestBody) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
-            return UserModifyResponseDto.failure(ErrorCode.CURRENT_PASSWORD_NOT_MATCHED);
+            return UpdateUserResponse.failure(ErrorCode.CURRENT_PASSWORD_NOT_MATCHED);
         }
 
         if (!requestBody.getNewPassword1().equals(requestBody.getNewPassword2())) {
-            return UserModifyResponseDto.failure(ErrorCode.NEW_PASSWORD_NOT_MATCHED);
+            return UpdateUserResponse.failure(ErrorCode.NEW_PASSWORD_NOT_MATCHED);
         }
 
         user.updatePassword(passwordEncoder.encode(requestBody.getNewPassword1()));
         userJpaRepository.save(user);
-        return UserModifyResponseDto.success(UserResponseDto.from(user));
+        return UpdateUserResponse.success(UserResponseDto.from(user));
     }
 
     @Override
-    public ResponseEntity<UserListResponseDto> getUsers() {
+    public ResponseEntity<GetUserListResponse> getUsers() {
         List<UserResponseDto> users = userJpaRepository.findAllByDeletedAtNull()
                 .stream()
                 .map(UserResponseDto::from)
                 .collect(Collectors.toList());
-        return UserListResponseDto.success(users);
+        return GetUserListResponse.success(users);
     }
 
     @Override
-    public ResponseEntity<UserDetailResponseDto> getUserDetail(Long id) {
+    public ResponseEntity<GetUserResponse> getUserDetail(Long id) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return UserDetailResponseDto.success(UserResponseDto.from(user));
+        return GetUserResponse.success(UserResponseDto.from(user));
     }
 
     @Override
     @Transactional
-    public ResponseEntity<UserModifyResponseDto> modifyUser(Long id, @Valid UserModifyRequestDto requestBody) {
+    public ResponseEntity<UpdateUserResponse> modifyUser(Long id, @Valid UserModifyRequest requestBody) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 이메일 중복 확인
         if (!user.getEmail().equals(requestBody.getEmail()) && userJpaRepository.existsByEmail(requestBody.getEmail())) {
-            return UserModifyResponseDto.failure(ErrorCode.EMAIL_ALREADY_EXISTS);
+            return UpdateUserResponse.failure(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         user.updateEmail(requestBody.getEmail());
@@ -80,23 +92,23 @@ public class UserService implements UserInterface {
         user.updateBalance(requestBody.getBalance());
 
         userJpaRepository.save(user);
-        return UserModifyResponseDto.success(UserResponseDto.from(user));
+        return UpdateUserResponse.success(UserResponseDto.from(user));
     }
 
     @Override
     @Transactional
-    public ResponseEntity<UserModifyResponseDto> modifyMypage(Long id, @Valid UserModifyMypageRequestDto requestBody) {
+    public ResponseEntity<UpdateUserResponse> modifyMypage(Long id, @Valid MypageRequest requestBody) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updateUserInfo(user.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
         userJpaRepository.save(user);
-        return UserModifyResponseDto.success(UserResponseDto.from(user));
+        return UpdateUserResponse.success(UserResponseDto.from(user));
     }
 
     @Override
     @Transactional
-    public ResponseEntity<AdminModifyResponseDto> modifyUserByAdmin(Long id, AdminModifyRequestDto requestBody) {
+    public ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -107,12 +119,12 @@ public class UserService implements UserInterface {
         user.updateRole(requestBody.getRole());
 
         userJpaRepository.save(user);
-        return AdminModifyResponseDto.success(UserResponseDto.from(user));
+        return UpdateAllUserResponse.success(UserResponseDto.from(user));
     }
 
     @Override
     @Transactional
-    public ResponseEntity<UserDeleteResponseDto> deleteUser(Long id) {
+    public ResponseEntity<DeleteUserResponse> deleteUser(Long id) {
         User user = userJpaRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -120,7 +132,7 @@ public class UserService implements UserInterface {
         user.updateDeletedAt(ZonedDateTime.now());
 
         userJpaRepository.save(user);
-        return UserDeleteResponseDto.success(UserResponseDto.from(user));
+        return DeleteUserResponse.success(UserResponseDto.from(user));
     }
 
     @Transactional

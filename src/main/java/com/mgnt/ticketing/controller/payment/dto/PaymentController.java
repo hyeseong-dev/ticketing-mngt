@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.controller.payment;
+package com.mgnt.ticketing.controller.payment.dto;
 
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;

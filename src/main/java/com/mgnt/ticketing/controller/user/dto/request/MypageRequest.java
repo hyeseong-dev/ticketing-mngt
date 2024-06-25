@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserModifyMypageRequestDto {
+public class MypageRequest {
 
     @NotNull
     @NotBlank

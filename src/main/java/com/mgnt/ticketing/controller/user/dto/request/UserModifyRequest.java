@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserModifyRequestDto {
+public class UserModifyRequest {
     @NotBlank @Email
     private String email;
 

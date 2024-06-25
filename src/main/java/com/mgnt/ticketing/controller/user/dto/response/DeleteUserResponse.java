@@ -9,19 +9,19 @@ import org.springframework.http.ResponseEntity;
 
 @Getter
 @NoArgsConstructor
-public class UserDeleteResponseDto {
+public class DeleteUserResponse {
     private String code;
     private String message;
 
-    public static ResponseEntity<UserDeleteResponseDto> success(UserResponseDto from) {
-        UserDeleteResponseDto response = new UserDeleteResponseDto();
+    public static ResponseEntity<DeleteUserResponse> success(UserResponseDto from) {
+        DeleteUserResponse response = new DeleteUserResponse();
         response.code = SuccessCode.OK.getCode();
         response.message = SuccessCode.OK.getMessage();;
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    public static ResponseEntity<UserDeleteResponseDto> failure(ErrorCode errorCode) {
-        UserDeleteResponseDto response = new UserDeleteResponseDto();
+    public static ResponseEntity<DeleteUserResponse> failure(ErrorCode errorCode) {
+        DeleteUserResponse response = new DeleteUserResponse();
         response.code = errorCode.getCode();
         response.message = errorCode.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

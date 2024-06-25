@@ -2,37 +2,36 @@ package com.mgnt.ticketing.controller.user.dto.response;
 
 import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.dto.response.SuccessCode;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
-public class UserModifyResponseDto {
-    private UserResponseDto data;
+@AllArgsConstructor
+@Builder
+public class GetUserListResponse {
+    private List<UserResponseDto> data;
     private String code;
     private String message;
 
-    @Builder
-    public UserModifyResponseDto(UserResponseDto user, String code, String message) {
-        this.data = user;
-        this.code = code;
-        this.message = message;
-    }
-
-    public static ResponseEntity<UserModifyResponseDto> success(UserResponseDto user) {
-        UserModifyResponseDto response = UserModifyResponseDto.builder()
-                .user(user)
+    public static ResponseEntity<GetUserListResponse> success(List<UserResponseDto> users) {
+        GetUserListResponse response = GetUserListResponse.builder()
+                .data(users)
                 .code(SuccessCode.OK.getCode())
                 .message(SuccessCode.OK.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    public static ResponseEntity<UserModifyResponseDto> failure(ErrorCode errorCode) {
-        UserModifyResponseDto response = UserModifyResponseDto.builder()
+    public static ResponseEntity<GetUserListResponse> failure(ErrorCode errorCode) {
+        GetUserListResponse response = GetUserListResponse.builder()
+                .data(List.of())
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
