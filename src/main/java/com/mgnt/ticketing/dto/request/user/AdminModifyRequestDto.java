@@ -25,7 +25,7 @@ public class AdminModifyRequestDto {
     private String name;
 
     @NotNull
-    private Integer points;
+    private Double balance;
 
     @NotNull
     private Boolean emailVerified;

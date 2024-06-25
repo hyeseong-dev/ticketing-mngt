@@ -8,8 +8,8 @@ import com.mgnt.ticketing.dto.response.auth.LoginResponseDto;
 import com.mgnt.ticketing.dto.response.auth.LogoutResponseDto;
 import com.mgnt.ticketing.dto.response.auth.RefreshResponseDto;
 import com.mgnt.ticketing.dto.response.auth.SignUpResponseDto;
-import com.mgnt.ticketing.entity.RefreshTokenEntity;
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.RefreshToken;
+import com.mgnt.ticketing.entity.User;
 import com.mgnt.ticketing.event.UserRegisteredEvent;
 import com.mgnt.ticketing.repository.RefreshTokenRepository;
 import com.mgnt.ticketing.repository.UserRepository;
@@ -60,10 +60,10 @@ public class AuthServiceImplement implements AuthService {
             boolean hasPhoneNumber = userRepository.existsByPhoneNumber(dto.getPhoneNumber());
             if (hasPhoneNumber) return SignUpResponseDto.failure(ErrorCode.PHONE_NUMBER_DUPLICATED);
 
-            UserEntity userEntity = UserEntity.from(dto, passwordEncoder.encode(dto.getPassword()));
-            userRepository.save(userEntity);
+            User user = User.from(dto, passwordEncoder.encode(dto.getPassword()));
+            userRepository.save(user);
 
-            eventPublisher.publishEvent(new UserRegisteredEvent(userEntity.getEmail(), userEntity.getName()));
+            eventPublisher.publishEvent(new UserRegisteredEvent(user.getEmail(), user.getName()));
 //            emailService.sendVerificationEmail(userEntity.getEmail(), userEntity.getName());
 
             return SignUpResponseDto.success();
@@ -84,12 +84,12 @@ public class AuthServiceImplement implements AuthService {
                     .map(UserDetailsImpl::new)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + dto.getEmail()));
 
-            UserEntity userEntity = ((UserDetailsImpl) userDetails).getUser();
-            if (!passwordEncoder.matches(dto.getPassword(), userEntity.getPassword()))
+            User user = ((UserDetailsImpl) userDetails).getUser();
+            if (!passwordEncoder.matches(dto.getPassword(), user.getPassword()))
                 return LoginResponseDto.failure(ErrorCode.LOGIN_FAILED);
 
             // 이메일 인증 상태 확인
-            if (!userEntity.getEmailVerified()) return LoginResponseDto.failure(ErrorCode.UNVERIFED_ACCOUNT);
+            if (!user.getEmailVerified()) return LoginResponseDto.failure(ErrorCode.UNVERIFED_ACCOUNT);
 
             // 이메일과 비밀번호를 사용하여 인증 시도
             authenticationManager.authenticate(
@@ -98,20 +98,21 @@ public class AuthServiceImplement implements AuthService {
             String accessToken = jwtUtil.generateAccessToken(userDetails);
             String refreshToken;
 
-            Optional<RefreshTokenEntity> existingTokenOpt = refreshTokenRepository.findByUser_Email(dto.getEmail());
+            Optional<RefreshToken> existingTokenOpt = refreshTokenRepository.findByUser_Email(dto.getEmail());
             if (existingTokenOpt.isPresent()) {
-                RefreshTokenEntity existingToken = existingTokenOpt.get();
+                RefreshToken existingToken = existingTokenOpt.get();
                 existingToken.setExpiryDate(LocalDateTime.now().plusDays(7));
                 refreshToken = existingToken.getToken();
                 refreshTokenRepository.save(existingToken);
             } else {
                 refreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
-                RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-                refreshTokenEntity.setUser(userRepository.findByEmail(dto.getEmail()).get());
-                refreshTokenEntity.setToken(refreshToken);
-                refreshTokenEntity.setIp(request.getRemoteAddr());
-                refreshTokenEntity.setDeviceInfo(request.getHeader("User-Agent"));
-                refreshTokenEntity.setExpiryDate(LocalDateTime.now().plusDays(7));
+                RefreshToken refreshTokenEntity = RefreshToken.builder()
+                        .user(userRepository.findByEmail(dto.getEmail()).get())
+                        .token(refreshToken)
+                        .ip(request.getRemoteAddr())
+                        .deviceInfo(request.getHeader("User-Agent"))
+                        .expiryDate(LocalDateTime.now().plusDays(7))
+                        .build();
                 refreshTokenRepository.save(refreshTokenEntity);
             }
 
@@ -179,8 +180,8 @@ public class AuthServiceImplement implements AuthService {
 
             if (userEmail == null) return RefreshResponseDto.failure(ErrorCode.USER_UNAUTHORIZED);
 
-            Optional<RefreshTokenEntity> refreshTokenOpt = refreshTokenRepository.findByUser_Email(userEmail);
-            if (refreshTokenOpt.isEmpty()) return RefreshResponseDto.failure(ErrorCode.TOKEN_INVALID);
+            Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByUser_Email(userEmail);
+            if (refreshTokenOpt.isEmpty()) return RefreshResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE);
 
 
             UserDetails userDetails = userRepository.findByEmail(userEmail)
@@ -192,13 +193,14 @@ public class AuthServiceImplement implements AuthService {
 
             refreshTokenRepository.deleteByUser_Email(userEmail);
 
-            RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-            refreshTokenEntity.setUser(userRepository.findByEmail(userEmail).get());
-            refreshTokenEntity.setToken(newRefreshToken);
-            refreshTokenEntity.setIp(request.getRemoteAddr());
-            refreshTokenEntity.setDeviceInfo(request.getHeader("User-Agent"));
-            refreshTokenEntity.setExpiryDate(LocalDateTime.now().plusDays(7));
-            refreshTokenRepository.save(refreshTokenEntity);
+            RefreshToken refreshToken = RefreshToken.builder()
+                    .user(userRepository.findByEmail(userEmail).get())
+                    .token(newRefreshToken)
+                    .ip(request.getRemoteAddr())
+                    .deviceInfo(request.getHeader("User-Agent"))
+                    .expiryDate(LocalDateTime.now().plusDays(7))
+                    .build();
+            refreshTokenRepository.save(refreshToken);
 
             return RefreshResponseDto.success(newAccessToken, newRefreshToken);
 

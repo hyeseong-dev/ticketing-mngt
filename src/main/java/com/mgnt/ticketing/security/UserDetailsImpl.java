@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.security;
 
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,31 +10,31 @@ import java.util.List;
 
 public class UserDetailsImpl implements UserDetails {
 
-    private UserEntity userEntity;
+    private User user;
 
-    public UserDetailsImpl(UserEntity userEntity) {
-        this.userEntity = userEntity;
+    public UserDetailsImpl(User user) {
+        this.user = user;
     }
 
 
-    public UserEntity getUser() {
-        return userEntity;
+    public User getUser() {
+        return user;
     }
 
 
     @Override
     public String getPassword() {
-        return userEntity.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return userEntity.getEmail();
+        return user.getEmail();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(userEntity.getRole().toString()));
+        return List.of(new SimpleGrantedAuthority(user.getRole().toString()));
     }
 
     @Override

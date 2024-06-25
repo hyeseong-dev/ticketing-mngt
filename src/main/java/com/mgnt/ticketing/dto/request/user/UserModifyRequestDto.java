@@ -21,7 +21,7 @@ public class UserModifyRequestDto {
     private String password;
 
     @Positive
-    private Integer points;
+    private Double balance;
 
     @NotBlank
     private String name;

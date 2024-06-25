@@ -2,7 +2,7 @@ package com.mgnt.ticketing.util.aop;
 
 import com.mgnt.ticketing.common.error.exceptions.CustomAccessDeniedException;
 import com.mgnt.ticketing.common.error.ErrorCode;
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.User;
 import com.mgnt.ticketing.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -30,7 +30,7 @@ public class CheckAccessAspect {
         if (!isAdmin) {
             switch (checkAccess.resourceType()) {
                 case "USER":
-                    UserEntity user = userService.getUserById(id).orElse(null);
+                    User user = userService.getUserById(id).orElse(null);
 
                     if (user == null || !user.getEmail().equals(currentUserEmail))
                         throw new CustomAccessDeniedException(ErrorCode.ACCESS_DENIED);

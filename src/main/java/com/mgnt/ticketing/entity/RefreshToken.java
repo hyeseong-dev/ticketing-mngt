@@ -1,18 +1,21 @@
 package com.mgnt.ticketing.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "refresh_tokens")
-public class RefreshTokenEntity extends AuditingFields{
+@Table(name = "refresh_token")
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 무분별한 인스턴스 생성을 막기 위해 PROTECTED 접근 지정자 사용
+public class RefreshToken {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "token_id", nullable = false)
@@ -20,7 +23,7 @@ public class RefreshTokenEntity extends AuditingFields{
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private User user;
 
     @Column(name = "token", nullable = false)
     private String token;
@@ -34,4 +37,12 @@ public class RefreshTokenEntity extends AuditingFields{
     @Column(name = "expiry_date", nullable = false, updatable = false)
     private LocalDateTime expiryDate;
 
+    @Builder
+    public RefreshToken(User user, String token, String ip, String deviceInfo, LocalDateTime expiryDate) {
+        this.user = user;
+        this.token = token;
+        this.ip = ip;
+        this.deviceInfo = deviceInfo;
+        this.expiryDate = expiryDate;
+    }
 }

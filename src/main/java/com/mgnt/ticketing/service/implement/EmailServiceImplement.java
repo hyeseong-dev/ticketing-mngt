@@ -4,7 +4,7 @@ import com.mgnt.ticketing.common.error.ErrorCode;
 import com.mgnt.ticketing.common.error.exceptions.EmailSendException;
 import com.mgnt.ticketing.dto.request.auth.EmailRequestDto;
 import com.mgnt.ticketing.dto.response.auth.EmailResponseDto;
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.User;
 import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.service.EmailService;
 import com.mgnt.ticketing.util.EncryptionUtil;
@@ -33,7 +33,7 @@ public class EmailServiceImplement implements EmailService {
             log.info("Received token: {}", token); // 로그 추가
             String email = EncryptionUtil.decrypt(token);
             log.info("Decrypted email: {}", email); // 로그 추가
-            UserEntity user = userRepository.findByEmail(email).orElse(null);
+            User user = userRepository.findByEmail(email).orElse(null);
             if (user != null) {
                 if(!user.getEmailVerified()){
                     user.setEmailVerified(true);

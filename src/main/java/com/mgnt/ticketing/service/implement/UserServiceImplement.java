@@ -6,7 +6,7 @@ import com.mgnt.ticketing.dto.request.user.UserModifyMypageRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyPasswordRequestDto;
 import com.mgnt.ticketing.dto.request.user.UserModifyRequestDto;
 import com.mgnt.ticketing.dto.response.user.*;
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.User;
 import com.mgnt.ticketing.repository.UserRepository;
 import com.mgnt.ticketing.service.UserService;
 import jakarta.validation.Valid;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +32,7 @@ public class UserServiceImplement implements UserService {
     @Override
     @Transactional
     public ResponseEntity<UserModifyResponseDto> modifyUserPassword(Long id, UserModifyPasswordRequestDto requestBody) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
@@ -42,7 +43,7 @@ public class UserServiceImplement implements UserService {
             return UserModifyResponseDto.failure(ErrorCode.NEW_PASSWORD_NOT_MATCHED);
         }
 
-        user.setPassword(passwordEncoder.encode(requestBody.getNewPassword1()));
+        user.updatePassword(passwordEncoder.encode(requestBody.getNewPassword1()));
         userRepository.save(user);
         return UserModifyResponseDto.success(UserResponseDto.from(user));
     }
@@ -58,7 +59,7 @@ public class UserServiceImplement implements UserService {
 
     @Override
     public ResponseEntity<UserDetailResponseDto> getUserDetail(Long id) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return UserDetailResponseDto.success(UserResponseDto.from(user));
     }
@@ -66,7 +67,7 @@ public class UserServiceImplement implements UserService {
     @Override
     @Transactional
     public ResponseEntity<UserModifyResponseDto> modifyUser(Long id, @Valid UserModifyRequestDto requestBody) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 이메일 중복 확인
@@ -74,10 +75,11 @@ public class UserServiceImplement implements UserService {
             return UserModifyResponseDto.failure(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
-        user.setEmail(requestBody.getEmail());
-        user.setPassword(passwordEncoder.encode(requestBody.getPassword()));
-        user.setName(requestBody.getName());
-        user.setPoints(requestBody.getPoints());
+        user.updateEmail(requestBody.getEmail());
+        user.updatePassword(passwordEncoder.encode(requestBody.getPassword()));
+        user.updateName(requestBody.getName());
+//        user.updateUserInfo(requestBody.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
+        user.updateBalance(requestBody.getBalance());
 
         userRepository.save(user);
         return UserModifyResponseDto.success(UserResponseDto.from(user));
@@ -86,11 +88,10 @@ public class UserServiceImplement implements UserService {
     @Override
     @Transactional
     public ResponseEntity<UserModifyResponseDto> modifyMypage(Long id, @Valid UserModifyMypageRequestDto requestBody) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setAddress(requestBody.getAddress());
-        user.setPhoneNumber(requestBody.getPhoneNumber());
+        user.updateUserInfo(user.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
         userRepository.save(user);
         return UserModifyResponseDto.success(UserResponseDto.from(user));
     }
@@ -98,14 +99,14 @@ public class UserServiceImplement implements UserService {
     @Override
     @Transactional
     public ResponseEntity<AdminModifyResponseDto> modifyUserByAdmin(Long id, AdminModifyRequestDto requestBody) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setEmail(requestBody.getEmail());
-        user.setPassword(passwordEncoder.encode(requestBody.getPassword()));
-        user.setPoints(requestBody.getPoints());
+        user.updateEmail(requestBody.getEmail());
+        user.updatePassword(passwordEncoder.encode(requestBody.getPassword()));
+        user.updateBalance(requestBody.getBalance());
         user.setEmailVerified(requestBody.getEmailVerified());
-        user.setRole(requestBody.getRole());
+        user.updateRole(requestBody.getRole());
 
         userRepository.save(user);
         return AdminModifyResponseDto.success(UserResponseDto.from(user));
@@ -114,11 +115,11 @@ public class UserServiceImplement implements UserService {
     @Override
     @Transactional
     public ResponseEntity<UserDeleteResponseDto> deleteUser(Long id) {
-        UserEntity user = userRepository.findByIdAndDeletedAtNull(id)
+        User user = userRepository.findByIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setEmailVerified(false);
-        user.setDeletedAt(LocalDateTime.now());
+        user.updateDeletedAt(ZonedDateTime.now());
 
         userRepository.save(user);
         return UserDeleteResponseDto.success(UserResponseDto.from(user));
@@ -126,13 +127,13 @@ public class UserServiceImplement implements UserService {
 
     @Transactional
     @Override
-    public Optional<UserEntity> getUserByEmail(String currentUserEmail) {
+    public Optional<User> getUserByEmail(String currentUserEmail) {
         return userRepository.findByEmail(currentUserEmail);
     }
 
     @Transactional
     @Override
-    public Optional<UserEntity> getUserById(Long resourceId) {
+    public Optional<User> getUserById(Long resourceId) {
         return userRepository.findById(resourceId);
     }
 }

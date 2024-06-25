@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.dto.response.user;
 
-import com.mgnt.ticketing.entity.UserEntity;
+import com.mgnt.ticketing.entity.User;
 import com.mgnt.ticketing.entity.UserRoleEnum;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +12,7 @@ public class UserResponseDto {
     private Long id;
     private String email;
     private String name;
-    private Integer points;
+    private Double balance;
     private Boolean emailVerified;
     private UserRoleEnum role;
     private String phoneNumber;
@@ -24,14 +24,14 @@ public class UserResponseDto {
                            String name,
                            String phoneNumber,
                            String address,
-                           Integer points,
+                           Double balance,
                            Boolean emailVerified,
                            UserRoleEnum role
     ) {
         this.id = id;
         this.email = email;
         this.name = name;
-        this.points = points;
+        this.balance = balance;
         this.emailVerified = emailVerified;
         this.role = role;
         this.phoneNumber = phoneNumber;
@@ -39,12 +39,12 @@ public class UserResponseDto {
     }
 
 
-    public static UserResponseDto from(UserEntity user) {
+    public static UserResponseDto from(User user) {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
-                .points(user.getPoints())
+                .balance(user.getBalance())
                 .emailVerified(user.getEmailVerified())
                 .role(user.getRole())
                 .phoneNumber(user.getPhoneNumber())
