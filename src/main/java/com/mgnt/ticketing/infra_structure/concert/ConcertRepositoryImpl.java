@@ -7,10 +7,12 @@ import com.mgnt.ticketing.domain.concert.repository.ConcertDateJpaRepository;
 import com.mgnt.ticketing.domain.concert.repository.ConcertJpaRepository;
 import com.mgnt.ticketing.domain.concert.repository.ConcertQueryDslRepository;
 import com.mgnt.ticketing.domain.concert.repository.ConcertRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Repository
 public class ConcertRepositoryImpl implements ConcertRepository {
 
     private ConcertJpaRepository concertJpaRepository;

@@ -12,6 +12,7 @@ import java.util.List;
 import static com.mgnt.ticketing.domain.concert.entity.QSeat.seat;
 import static com.mgnt.ticketing.domain.reservation.entity.QReservation.reservation;
 
+
 @RequiredArgsConstructor
 public class ConcertQueryDslRepositoryImpl implements ConcertQueryDslRepository {
 

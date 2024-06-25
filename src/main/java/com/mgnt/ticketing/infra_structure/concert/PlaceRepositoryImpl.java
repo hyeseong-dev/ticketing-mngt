@@ -3,9 +3,11 @@ package com.mgnt.ticketing.infra_structure.concert;
 import com.mgnt.ticketing.domain.concert.entity.Place;
 import com.mgnt.ticketing.domain.concert.repository.PlaceJpaRepository;
 import com.mgnt.ticketing.domain.concert.repository.PlaceRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.NoSuchElementException;
 
+@Repository
 public class PlaceRepositoryImpl implements PlaceRepository {
 
     private PlaceJpaRepository placeJpaRepository;
