@@ -70,9 +70,9 @@ public class SecurityConfig {
         );
         // 필터 인스턴스 직접 생성 및 추가
         UriNonExistFilter uriNonExistFilter = new UriNonExistFilter(handlerMappings);
-        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtUtil, userDetailServiceImpl, securityProperties, handlerMappings);
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtUtil, userDetailServiceImpl, securityProperties);
 
-        // UriNonExistFilter를 jwtAuthFilter 앞에 추가
+        // UriNonExistFilter를 UsernamePasswordAuthenticationFilter 앞에 추가
         http.addFilterBefore(uriNonExistFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

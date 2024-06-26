@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Slf4j
+@Order(0)
 public class UriNonExistFilter extends OncePerRequestFilter {
 
     private final List<HandlerMapping> handlerMappings;
@@ -26,8 +28,14 @@ public class UriNonExistFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String requestUri = request.getRequestURI();
 
+        // 특정 경로를 필터링에서 제외
+        if (isExcludedPath(requestUri)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         log.debug("Checking URI existence: {}", requestUri);
-        if (!isExistingUri(request) || isExcludedPath(requestUri)) {
+        if (!isExistingUri(request)) {
             log.debug("URI does not exist: {}", requestUri);
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Resource not found");
             return;
