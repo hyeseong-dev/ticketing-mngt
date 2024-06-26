@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.base.message;
+package com.mgnt.ticketing;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

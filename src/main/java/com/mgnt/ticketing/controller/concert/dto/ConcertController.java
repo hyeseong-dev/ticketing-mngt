@@ -38,7 +38,7 @@ public class ConcertController {
         return GetConcertResponse.builder()
                 .concertId(1L)
                 .name("2024 테스트 콘서트 in 서울")
-                .hall("서울 장충체육관")
+                .place("서울 장충체육관")
                 .period("2024.05.05~2024.05.25")
                 .price("79,000원~119,000원")
                 .createdAt(ZonedDateTime.now().minusDays(1))

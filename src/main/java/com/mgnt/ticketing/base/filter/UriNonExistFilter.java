@@ -53,6 +53,9 @@ public class UriNonExistFilter extends OncePerRequestFilter {
 
     // 특정 경로를 필터링에서 제외하는 메서드
     private boolean isExcludedPath(String requestUri) {
-        return requestUri.startsWith("/swagger-ui/") || requestUri.startsWith("/v3/api-docs/") || requestUri.startsWith("/webjars/");
+        return false;
+//        return requestUri.startsWith("/swagger-ui/")
+//                || requestUri.startsWith("/v3/api-docs/")
+//                || requestUri.startsWith("/webjars/");
     }
 }

@@ -20,5 +20,25 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     public List<Reservation> findAllByConcertDateId(Long concertDateId) {
         return reservationJpaRepository.findAllByConcertDate_ConcertDateId(concertDateId);
     }
+
+    @Override
+    public Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
+        return reservationJpaRepository.findOneByConcertDate_ConcertDateIdAndSeat_SeatId(concertDateId, seatId);
+    }
+
+    @Override
+    public Reservation save(Reservation reservation) {
+        return reservationJpaRepository.save(reservation);
+    }
+
+    @Override
+    public Reservation findByIdAndUserId(Long reservationId, Long userId) {
+        return reservationJpaRepository.findByReservationIdAndUser_UserId(reservationId, userId);
+    }
+
+    @Override
+    public void delete(Reservation reservation) {
+        reservationJpaRepository.delete(reservation);
+    }
 }
 

@@ -6,13 +6,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @NoArgsConstructor
 public class UserResponseDto {
     private Long id;
     private String email;
     private String name;
-    private Double balance;
+    private BigDecimal balance;
     private Boolean emailVerified;
     private UserRoleEnum role;
     private String phoneNumber;
@@ -24,7 +26,7 @@ public class UserResponseDto {
                            String name,
                            String phoneNumber,
                            String address,
-                           Double balance,
+                           BigDecimal balance,
                            Boolean emailVerified,
                            UserRoleEnum role
     ) {
@@ -41,7 +43,7 @@ public class UserResponseDto {
 
     public static UserResponseDto from(User user) {
         return UserResponseDto.builder()
-                .id(user.getId())
+                .id(user.getUserId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .balance(user.getBalance())

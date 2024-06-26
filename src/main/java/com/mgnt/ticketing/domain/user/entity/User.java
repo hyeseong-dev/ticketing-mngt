@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -19,8 +20,8 @@ import java.time.ZonedDateTime;
 public class User extends BaseDateTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
+    @Column(name = "user_id", nullable = false)  // 수정: id -> user_id
+    private Long userId;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -33,7 +34,7 @@ public class User extends BaseDateTimeEntity {
 
     @ColumnDefault("0")
     @Column(name = "balance", nullable = false)
-    private Double balance;
+    private BigDecimal balance;
 
     @Column(name = "deleted_at")
     private ZonedDateTime deletedAt;
@@ -53,21 +54,21 @@ public class User extends BaseDateTimeEntity {
     private String address;
 
     @Builder
-    public User(Long id,
+    public User(Long userId,
                 String email,
                 String password,
                 String name,
-                Double balance,
+                BigDecimal balance,
                 ZonedDateTime deletedAt,
                 Boolean emailVerified,
                 UserRoleEnum role,
                 String phoneNumber,
                 String address) {
-        this.id = id;
+        this.userId = userId;
         this.email = email;
         this.password = password;
         this.name = name;
-        this.balance = balance != null ? balance : 0;
+        this.balance = balance != null ? balance : BigDecimal.valueOf(0);
         this.emailVerified = emailVerified != null ? emailVerified : false;
         this.role = role;
         this.phoneNumber = phoneNumber;
@@ -82,9 +83,14 @@ public class User extends BaseDateTimeEntity {
                 .phoneNumber(dto.getPhoneNumber())
                 .address(dto.getAddress())
                 .role(dto.getRole())
-                .balance(0D)
+                .balance(BigDecimal.valueOf(0))
                 .emailVerified(false)
                 .build();
+    }
+
+    public BigDecimal useBalance(BigDecimal price) {
+        this.balance = balance.subtract(price);
+        return this.balance;
     }
 
     public void setEmailVerified(boolean emailVerified) {
@@ -105,7 +111,7 @@ public class User extends BaseDateTimeEntity {
         this.address = address;
     }
 
-    public void updateBalance(Double newBalance) {
+    public void updateBalance(BigDecimal newBalance) {
         this.balance = newBalance;
     }
 

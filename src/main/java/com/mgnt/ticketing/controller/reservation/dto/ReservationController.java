@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @RequestMapping("/reservations")
@@ -36,7 +37,7 @@ public class ReservationController {
                 .paymentInfo(ReserveResponse.PaymentInfo.builder()
                         .paymentId(1L)
                         .status(PaymentEnums.Status.READY)
-                        .paymentPrice(79000)
+                        .paymentPrice(BigDecimal.valueOf(79000))
                         .build())
                 .build();
     }

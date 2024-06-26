@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -30,12 +31,29 @@ public class Payment extends BaseDateTimeEntity {
     @Column(nullable = false)
     private PaymentEnums.Status status;
 
+    @Column(nullable = false)
+    private BigDecimal price;
+
     private ZonedDateTime paidAt;
 
-    public Payment(Reservation reservation, PaymentEnums.Status status, ZonedDateTime paidAt) {
+    public Payment(Reservation reservation, PaymentEnums.Status status, BigDecimal price) {
         this.reservation = reservation;
         this.status = status;
-        this.paidAt = paidAt;
+        this.price = price;
+    }
+    public Payment updateStatus(PaymentEnums.Status status) {
+        if (status == null) {
+            return null;
+        }
+
+        this.status = status;
+        return this;
+    }
+
+    public Payment completePay() {
+        this.status = PaymentEnums.Status.COMPLETE;
+        this.paidAt = ZonedDateTime.now();
+        return this;
     }
 
     @Override

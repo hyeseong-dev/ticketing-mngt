@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordReques requestBody) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
@@ -69,7 +70,7 @@ public class UserService implements UserInterface {
 
     @Override
     public ResponseEntity<GetUserResponse> getUserDetail(Long id) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return GetUserResponse.success(UserResponseDto.from(user));
     }
@@ -77,7 +78,7 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUser(Long id, @Valid UserModifyRequest requestBody) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 이메일 중복 확인
@@ -89,7 +90,7 @@ public class UserService implements UserInterface {
         user.updatePassword(passwordEncoder.encode(requestBody.getPassword()));
         user.updateName(requestBody.getName());
 //        user.updateUserInfo(requestBody.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
-        user.updateBalance(requestBody.getBalance());
+        user.updateBalance(BigDecimal.valueOf(requestBody.getBalance()));
 
         userJpaRepository.save(user);
         return UpdateUserResponse.success(UserResponseDto.from(user));
@@ -98,7 +99,7 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyMypage(Long id, @Valid MypageRequest requestBody) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updateUserInfo(user.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
@@ -109,12 +110,12 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updateEmail(requestBody.getEmail());
         user.updatePassword(passwordEncoder.encode(requestBody.getPassword()));
-        user.updateBalance(requestBody.getBalance());
+        user.updateBalance(BigDecimal.valueOf(requestBody.getBalance()));
         user.setEmailVerified(requestBody.getEmailVerified());
         user.updateRole(requestBody.getRole());
 
@@ -125,7 +126,7 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<DeleteUserResponse> deleteUser(Long id) {
-        User user = userJpaRepository.findByIdAndDeletedAtNull(id)
+        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setEmailVerified(false);

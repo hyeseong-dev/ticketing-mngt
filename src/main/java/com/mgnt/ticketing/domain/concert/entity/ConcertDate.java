@@ -23,9 +23,11 @@ public class ConcertDate extends BaseDateTimeEntity {
     @Column(nullable = false)
     private ZonedDateTime concertDate;
 
-    public ConcertDate(ZonedDateTime concertDate) {
+    public ConcertDate(Long concertDateId, ZonedDateTime concertDate) {
+        this.concertDateId = concertDateId;
         this.concertDate = concertDate;
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -39,3 +41,4 @@ public class ConcertDate extends BaseDateTimeEntity {
         return Objects.hash(concertDateId);
     }
 }
+

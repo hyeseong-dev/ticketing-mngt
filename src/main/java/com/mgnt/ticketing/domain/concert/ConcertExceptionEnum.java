@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.concert;
 
-import com.mgnt.ticketing.base.message.MessageCommInterface;
+import com.mgnt.ticketing.MessageCommInterface;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

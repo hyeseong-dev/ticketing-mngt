@@ -1,14 +1,13 @@
-package com.mgnt.ticketing.domain.concert;
+package com.mgnt.ticketing;
 
-import com.mgnt.ticketing.base.message.MessageCommInterface;
 import lombok.Getter;
 
-public class ConcertCustomException extends RuntimeException {
+public class CustomException extends RuntimeException {
     @Getter
     private final String errorCode;
     private final String message;
 
-    public ConcertCustomException(MessageCommInterface messageCommInterface) {
+    public CustomException(MessageCommInterface messageCommInterface) {
         super(messageCommInterface.getMessage());
         this.errorCode = messageCommInterface.getCode();
         this.message = messageCommInterface.getMessage();

@@ -82,6 +82,8 @@ security:
     - /api/auth/login
     - /api/email
     - /api/auth/refresh
+    - /swagger-ui
+    - /swagger-ui/index.html
     - /favicon.ico
     - /hello
     - /concerts

@@ -1,23 +1,23 @@
--- 기존 데이터베이스를 DROP합니다.
 DROP DATABASE IF EXISTS ticketing;
 CREATE DATABASE ticketing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE ticketing;
 
 -- 사용자 테이블
 CREATE TABLE users (
-                      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '사용자 ID (기본 키)',
-                      email VARCHAR(30) UNIQUE NOT NULL COMMENT '사용자 이메일',
-                      password VARCHAR(255) NOT NULL COMMENT '사용자 비밀번호',
-                      name VARCHAR(50) NOT NULL COMMENT '사용자 이름',
-                      role ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER' COMMENT '사용자 역할',
-                      balance DECIMAL(10, 2) DEFAULT 0 COMMENT '사용자 잔액',
-                      address VARCHAR(100) COMMENT '사용자 주소',
-                      phone_number VARCHAR(20) UNIQUE COMMENT '사용자 전화번호',
-                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '사용자 생성 일시',
-                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '사용자 정보 수정 일시',
-                      deleted_at TIMESTAMP COMMENT '사용자 삭제 일시',
-                      email_verified BOOLEAN DEFAULT FALSE COMMENT '이메일 인증 여부'
+                       user_id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '사용자 ID (기본 키)',
+                       email VARCHAR(30) UNIQUE NOT NULL COMMENT '사용자 이메일',
+                       password VARCHAR(255) NOT NULL COMMENT '사용자 비밀번호',
+                       name VARCHAR(50) NOT NULL COMMENT '사용자 이름',
+                       role ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER' COMMENT '사용자 역할',
+                       balance DECIMAL(10, 2) DEFAULT 0 COMMENT '사용자 잔액',
+                       address VARCHAR(100) COMMENT '사용자 주소',
+                       phone_number VARCHAR(20) UNIQUE COMMENT '사용자 전화번호',
+                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '사용자 생성 일시',
+                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '사용자 정보 수정 일시',
+                       deleted_at TIMESTAMP COMMENT '사용자 삭제 일시',
+                       email_verified BOOLEAN DEFAULT FALSE COMMENT '이메일 인증 여부'
 ) COMMENT '사용자 정보를 저장하는 테이블';
+
 
 -- 리프레시 토큰 테이블
 CREATE TABLE refresh_token (
@@ -29,7 +29,7 @@ CREATE TABLE refresh_token (
                                expiry_date TIMESTAMP NOT NULL COMMENT '리프레시 토큰 만료 일시',
                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '리프레시 토큰 생성 일시',
                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '리프레시 토큰 정보 수정 일시',
-                               CONSTRAINT fk_refresh_token_user FOREIGN KEY (user_id) REFERENCES users (id)
+                               CONSTRAINT fk_refresh_token_user FOREIGN KEY (user_id) REFERENCES users (user_id) -- 수정: id -> user_id
 ) COMMENT '사용자의 리프레시 토큰을 저장하는 테이블';
 
 -- 장소 테이블
@@ -92,7 +92,7 @@ CREATE TABLE reservation (
                              created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
                              updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
                              PRIMARY KEY (reservation_id),
-                             FOREIGN KEY (user_id) REFERENCES users (id),
+                             FOREIGN KEY (user_id) REFERENCES users (user_id), -- 수정: id -> user_id
                              FOREIGN KEY (concert_date_id) REFERENCES concert_date (concert_date_id),
                              FOREIGN KEY (seat_id) REFERENCES seat (seat_id)
 ) COMMENT '예약 정보를 저장하는 테이블';
@@ -119,5 +119,5 @@ CREATE TABLE waiting_queue (
                                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
                                updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
                                PRIMARY KEY (waiting_queue_id),
-                               FOREIGN KEY (user_id) REFERENCES users (id)
+                               FOREIGN KEY (user_id) REFERENCES users (user_id) -- 수정: id -> user_id
 ) COMMENT '대기열 정보를 저장하는 테이블';

@@ -4,6 +4,7 @@ import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 public record GetMyReservationsResponse(
@@ -32,7 +33,7 @@ public record GetMyReservationsResponse(
     public static record PaymentInfo(
             Long paymentId,
             PaymentEnums.Status status,
-            int paymentPrice
+            BigDecimal paymentPrice
     ) {
     }
 

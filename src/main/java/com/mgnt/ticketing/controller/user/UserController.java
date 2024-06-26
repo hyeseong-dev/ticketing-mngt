@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class UserController {
                 .paymentInfo(GetMyReservationsResponse.PaymentInfo.builder()
                         .paymentId(1L)
                         .status(PaymentEnums.Status.READY)
-                        .paymentPrice(79000)
+                        .paymentPrice(BigDecimal.valueOf(79000))
                         .build())
                 .build());
     }

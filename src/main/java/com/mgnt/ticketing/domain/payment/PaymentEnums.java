@@ -4,7 +4,8 @@ public class PaymentEnums {
 
     public enum Status {
         READY,
-        COMPLETE
+        COMPLETE,
+        CANCEL,
+        REFUND
     }
-
 }

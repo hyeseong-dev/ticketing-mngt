@@ -1,13 +1,16 @@
 package com.mgnt.ticketing.domain.reservation.entity;
 
-
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
+import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-import com.mgnt.ticketing.domain.place.entity.Seat;
+import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.payment.PaymentEnums;
+import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -27,8 +30,12 @@ public class Reservation extends BaseDateTimeEntity {
     private Long reservationId;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id")  // 수정: id -> user_id
     private User user;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "concert_id")
+    private Concert concert;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "concert_date_id")
@@ -43,12 +50,18 @@ public class Reservation extends BaseDateTimeEntity {
 
     private ZonedDateTime reservedAt;
 
-    public Reservation(User user, ConcertDate concertDate, Seat seat, ReservationEnums.Status status, ZonedDateTime reservedAt) {
+    @Builder
+    public Reservation(User user, Concert concert, ConcertDate concertDate, Seat seat, ReservationEnums.Status status, ZonedDateTime reservedAt) {
         this.user = user;
+        this.concert = concert;
         this.concertDate = concertDate;
         this.seat = seat;
         this.status = status;
         this.reservedAt = reservedAt;
+    }
+
+    public CreatePaymentReqDto toCreatePayment() {
+        return new CreatePaymentReqDto(this, PaymentEnums.Status.READY, this.seat.getPrice());
     }
 
     @Override

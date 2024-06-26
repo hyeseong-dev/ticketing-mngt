@@ -1,8 +1,9 @@
-package com.mgnt.ticketing.domain.place.entity;
+package com.mgnt.ticketing.domain.concert.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 
 @Entity
 @Getter
@@ -32,9 +34,11 @@ public class Place extends BaseDateTimeEntity {
     @JoinColumn(name = "seat_id")
     private List<Seat> seatList = new ArrayList();
 
-    public Place(String name, int seats_cnt) {
+    @Builder
+    public Place(String name, int seats_cnt, List<Seat> seatList) {
         this.name = name;
         this.seats_cnt = seats_cnt;
+        this.seatList = seatList;
     }
 
     @Override

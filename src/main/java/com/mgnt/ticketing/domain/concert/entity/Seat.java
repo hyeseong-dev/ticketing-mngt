@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.domain.place.entity;
+package com.mgnt.ticketing.domain.concert.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -25,9 +26,10 @@ public class Seat extends BaseDateTimeEntity {
     private int seatNum;
 
     @Column(nullable = false)
-    private int price = 0;
+    private BigDecimal price = BigDecimal.ZERO;
 
-    public Seat(int seatNum, int price) {
+    public Seat(Long seatId, int seatNum, BigDecimal price) {
+        this.seatId = seatId;
         this.seatNum = seatNum;
         this.price = price;
     }

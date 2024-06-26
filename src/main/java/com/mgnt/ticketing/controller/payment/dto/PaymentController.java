@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RequestMapping("/payments")
 @RestController
 @RequiredArgsConstructor
@@ -23,8 +25,8 @@ public class PaymentController {
         return PayResponse.builder()
                 .paymentId(1L)
                 .status(PaymentEnums.Status.COMPLETE)
-                .paymentPrice(79000)
-                .balance(1000)
+                .paymentPrice(BigDecimal.valueOf(79000))
+                .balance(BigDecimal.valueOf(1000))
                 .build();
     }
 }

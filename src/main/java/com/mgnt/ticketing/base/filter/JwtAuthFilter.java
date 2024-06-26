@@ -10,8 +10,6 @@ import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
@@ -30,7 +28,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-public class JwtAuthFilter extends GenericFilterBean {
+public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailServiceImpl userDetailServiceImpl;
@@ -38,42 +36,32 @@ public class JwtAuthFilter extends GenericFilterBean {
     private final List<HandlerMapping> handlerMappings;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        log.debug("Request URI: {}", httpRequest.getRequestURI());
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        log.debug("Request URI: {}", request.getRequestURI());
 
-        if (!isExistingUri(httpRequest)) {
-            log.debug("URI does not exist: {}", httpRequest.getRequestURI());
-            httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.ENDPOINT_NOT_FOUND.getMessage());
-            return;
+        if (isAllowedUri(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
         }
 
-        if (isAllowedUri(httpRequest.getRequestURI())) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        final String jwtToken = getJwtToken(httpRequest);
+        final String jwtToken = getJwtToken(request);
         if (jwtToken == null) {
             SecurityContextHolder.clearContext();
-            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
             return;
         }
 
         try {
             final String userEmail = jwtUtil.extractUsername(jwtToken);
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                authenticateUser(httpRequest, userEmail, jwtToken);
+                authenticateUser(request, userEmail, jwtToken);
             }
         } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException | IllegalArgumentException e) {
             log.error(e.getMessage());
-            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.TOKEN_INVALID.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.TOKEN_INVALID.getMessage());
             return;
         }
 
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
     }
 
     private boolean isAllowedUri(String requestUri) {
