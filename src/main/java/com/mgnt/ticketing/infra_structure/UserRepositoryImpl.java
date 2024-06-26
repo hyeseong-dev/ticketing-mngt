@@ -1,7 +1,9 @@
 package com.mgnt.ticketing.infra_structure;
 
+import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import com.mgnt.ticketing.domain.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 public class UserRepositoryImpl implements UserRepository {
 
@@ -9,5 +11,10 @@ public class UserRepositoryImpl implements UserRepository {
 
     public UserRepositoryImpl(UserJpaRepository userJpaRepository) {
         this.userJpaRepository = userJpaRepository;
+    }
+
+    @Override
+    public User findById(Long userId) {
+        return userJpaRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
     }
 }
