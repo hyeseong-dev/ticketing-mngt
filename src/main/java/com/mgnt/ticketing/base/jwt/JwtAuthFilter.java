@@ -2,23 +2,23 @@ package com.mgnt.ticketing.base.jwt;
 
 import com.mgnt.ticketing.base.config.SecurityProperties;
 import com.mgnt.ticketing.base.error.ErrorCode;
-import com.mgnt.ticketing.base.error.exceptions.CustomAccessDeniedException;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.HandlerExecutionChain;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,17 +32,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserDetailServiceImpl userDetailServiceImpl;
     private final SecurityProperties securityProperties;
 
+    @Autowired
+    private List<HandlerMapping> handlerMappings;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // 허용된 URI는 인증 기능 로직을 받지 않도록 함.
+        log.debug("Request URI: {}", request.getRequestURI());
+
+        if (!isExistingUri(request)) {
+            log.debug("URI does not exist: {}", request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.ENDPOINT_NOT_FOUND.getMessage());
+            return;
+        }
+
         if (isAllowedUri(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String jwtToken = getJwtToken(request);
-        if(jwtToken == null) {
-            SecurityContextHolder.clearContext();  // 인증 정보 제거
+        if (jwtToken == null) {
+            SecurityContextHolder.clearContext();
             response.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
             return;
         }
@@ -54,7 +64,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException | IllegalArgumentException e) {
             log.error(e.getMessage());
-            request.setAttribute("exception", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.TOKEN_INVALID.getMessage());
+            return;
         }
 
         filterChain.doFilter(request, response);
@@ -67,6 +78,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return isAllowed;
     }
 
+    private boolean isExistingUri(HttpServletRequest request) {
+        for (HandlerMapping handlerMapping : handlerMappings) {
+            try {
+                HandlerExecutionChain handler = handlerMapping.getHandler(request);
+                if (handler != null) {
+                    // 이 부분에서 실제 핸들러가 존재하는지 확인하는 로직 추가
+                    if (handler.getHandler() instanceof HandlerMethod) {
+                        log.debug("Handler found for URI: {}", request.getRequestURI());
+                        return true;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore and continue checking other handler mappings
+            }
+        }
+        log.debug("No handler found for URI: {}", request.getRequestURI());
+        return false;
+    }
 
     private String getJwtToken(HttpServletRequest request) {
         final String authHeader = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
@@ -86,5 +115,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(token);
         }
     }
-
 }

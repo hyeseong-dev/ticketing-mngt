@@ -4,6 +4,7 @@ package com.mgnt.ticketing.domain.concert.entity;
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -32,9 +33,17 @@ public class Concert extends BaseDateTimeEntity {
     @JoinColumn(name = "concert_id")
     private List<ConcertDate> concertDateList = new ArrayList();
 
-    public Concert(String name, Long placeId) {
+    @Builder
+    public Concert(Long concertId, String name, Long placeId, List<ConcertDate> concertDateList) {
+        this.concertId = concertId;
         this.name = name;
         this.placeId = placeId;
+        this.concertDateList = concertDateList != null ? concertDateList : new ArrayList<>();
+    }
+
+    // setConcertDateList 메서드 추가
+    public void setConcertDateList(List<ConcertDate> concertDateList) {
+        this.concertDateList = concertDateList;
     }
 
     @Override

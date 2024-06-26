@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.base.config;
 
+import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.jwt.JwtAuthenticationEntryPoint;
 import com.mgnt.ticketing.base.jwt.JwtAuthFilter;
 import com.mgnt.ticketing.base.jwt.UserDetailServiceImpl;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -24,6 +26,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.List;
 
@@ -46,27 +49,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // CSRF, HTTP BASIC DISABLE 설정
         http.csrf(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
-        // 기본 설정인 Session 방식은 사용하지 않고 JWT 방식을 사용하기 위한 설정
-        http.sessionManagement((sessionManagement) ->
-                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.authorizeHttpRequests(authorizeHttpRequests ->
-                authorizeHttpRequests
-                        .requestMatchers(securityProperties.getAllowedUris().toArray(new String[0])).permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
-                        .requestMatchers("/**").permitAll() // 기능 개발 편의를 위해 모두 오픈
-                        .anyRequest().authenticated()
+        http.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                .requestMatchers(securityProperties.getAllowedUris().toArray(new String[0])).permitAll()
+                .anyRequest().authenticated()
         );
 
-        // CORS 설정 추가
         http.cors(withDefaults());
 
-        http.exceptionHandling(exceptionHandling ->
-                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+        http.exceptionHandling(exceptionHandling -> exceptionHandling
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendError(HttpStatus.FORBIDDEN.value(), ErrorCode.ACCESS_DENIED.getMessage());
+                })
         );
 
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -79,7 +77,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(List.of("*"));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         source.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(source);

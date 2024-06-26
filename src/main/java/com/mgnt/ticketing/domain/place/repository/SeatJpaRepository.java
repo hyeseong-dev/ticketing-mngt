@@ -1,6 +1,6 @@
-package com.mgnt.ticketing.domain.concert.repository;
+package com.mgnt.ticketing.domain.place.repository;
 
-import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.place.entity.Seat;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SeatJpaRepository extends JpaRepository<Seat, Long> {

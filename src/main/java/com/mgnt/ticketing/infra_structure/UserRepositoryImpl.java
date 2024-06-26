@@ -5,5 +5,9 @@ import com.mgnt.ticketing.domain.user.repository.UserRepository;
 
 public class UserRepositoryImpl implements UserRepository {
 
-    private UserJpaRepository userJpaRepository;
+    private final UserJpaRepository userJpaRepository;
+
+    public UserRepositoryImpl(UserJpaRepository userJpaRepository) {
+        this.userJpaRepository = userJpaRepository;
+    }
 }

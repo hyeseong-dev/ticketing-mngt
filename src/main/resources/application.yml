@@ -1,14 +1,5 @@
-debug: false # 디버그 모드를 비활성화합니다.
+debug: true # 디버그 모드를 비활성화합니다.
 management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트를 노출합니다.
-
-
-springdoc:
-  cache:
-    disabled: true
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
 
 logging:
   level:
@@ -16,14 +7,16 @@ logging:
       springframework:
         security: DEBUG
     com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
-#    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
+    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
 
 server:
   error:
     whitelabel:
       enabled: false
+    include-message: always
   servlet:
+    context-path: /
     context-parameters:
       throwExceptionIfNoHandlerFound: true
 
@@ -90,7 +83,6 @@ security:
     - /api/email
     - /api/auth/refresh
     - /favicon.ico
-    - /swagger-ui
     - /hello
     - /concerts
     - /payments

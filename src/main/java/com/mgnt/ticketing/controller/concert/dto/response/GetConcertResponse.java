@@ -2,8 +2,8 @@ package com.mgnt.ticketing.controller.concert.dto.response;
 
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-import com.mgnt.ticketing.domain.concert.entity.Place;
-import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.place.entity.Place;
+import com.mgnt.ticketing.domain.place.entity.Seat;
 import lombok.Builder;
 
 import java.text.DecimalFormat;

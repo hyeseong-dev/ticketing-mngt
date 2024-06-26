@@ -1,12 +1,14 @@
 package com.mgnt.ticketing.controller.user;
 
-import com.mgnt.ticketing.controller.user.dto.request.*;
+import com.mgnt.ticketing.base.util.aop.CheckAccess;
+import com.mgnt.ticketing.controller.user.dto.request.ChargeRequest;
+import com.mgnt.ticketing.controller.user.dto.request.MypageRequest;
+import com.mgnt.ticketing.controller.user.dto.request.PasswordReques;
+import com.mgnt.ticketing.controller.user.dto.request.UserModifyRequest;
 import com.mgnt.ticketing.controller.user.dto.response.*;
 import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
-import com.mgnt.ticketing.base.util.aop.CheckAccess;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-@Tag(name = "User", description = "User 관련 API 입니다.")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

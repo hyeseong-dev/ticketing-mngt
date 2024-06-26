@@ -12,5 +12,4 @@ public interface ConcertRepository {
 
     Concert findById(Long concertId);
 
-    List<GetSeatsQueryResDto> getSeatsByConcertDate(Long concertId, Long concertDateId);
 }

@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.domain.concert.entity;
+package com.mgnt.ticketing.domain.place.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
@@ -7,41 +7,46 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicUpdate
-@Table(name = "seat")
-public class Seat extends BaseDateTimeEntity {
+@Table(name = "place")
+public class Place extends BaseDateTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seat_id")
-    private Long seatId;
+    private Long placeId;
 
     @Column(nullable = false)
-    private int seatNum;
+    private String name;
 
     @Column(nullable = false)
-    private int price = 0;
+    private int seats_cnt = 0;
 
-    public Seat(int seatNum, int price) {
-        this.seatNum = seatNum;
-        this.price = price;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "seat_id")
+    private List<Seat> seatList = new ArrayList();
+
+    public Place(String name, int seats_cnt) {
+        this.name = name;
+        this.seats_cnt = seats_cnt;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Seat seat = (Seat) o;
-        return Objects.equals(seatId, seat.seatId);
+        Place place = (Place) o;
+        return Objects.equals(placeId, place.placeId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(seatId);
+        return Objects.hash(placeId);
     }
 }

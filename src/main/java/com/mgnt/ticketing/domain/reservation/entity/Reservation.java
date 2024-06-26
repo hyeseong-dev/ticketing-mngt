@@ -3,7 +3,7 @@ package com.mgnt.ticketing.domain.reservation.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.place.entity.Seat;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.entity.User;
 import jakarta.persistence.*;
