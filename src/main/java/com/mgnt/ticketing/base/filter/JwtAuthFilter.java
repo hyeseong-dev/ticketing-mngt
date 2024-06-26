@@ -1,74 +1,79 @@
-package com.mgnt.ticketing.base.jwt;
+package com.mgnt.ticketing.base.filter;
 
 import com.mgnt.ticketing.base.config.SecurityProperties;
 import com.mgnt.ticketing.base.error.ErrorCode;
-import io.jsonwebtoken.*;
+import com.mgnt.ticketing.base.jwt.JwtUtil;
+import com.mgnt.ticketing.base.jwt.UserDetailServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 import java.util.List;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends GenericFilterBean {
 
     private final JwtUtil jwtUtil;
     private final UserDetailServiceImpl userDetailServiceImpl;
     private final SecurityProperties securityProperties;
-
-    @Autowired
-    private List<HandlerMapping> handlerMappings;
+    private final List<HandlerMapping> handlerMappings;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.debug("Request URI: {}", request.getRequestURI());
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        log.debug("Request URI: {}", httpRequest.getRequestURI());
 
-        if (!isExistingUri(request)) {
-            log.debug("URI does not exist: {}", request.getRequestURI());
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.ENDPOINT_NOT_FOUND.getMessage());
+        if (!isExistingUri(httpRequest)) {
+            log.debug("URI does not exist: {}", httpRequest.getRequestURI());
+            httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.ENDPOINT_NOT_FOUND.getMessage());
             return;
         }
 
-        if (isAllowedUri(request.getRequestURI())) {
-            filterChain.doFilter(request, response);
+        if (isAllowedUri(httpRequest.getRequestURI())) {
+            chain.doFilter(request, response);
             return;
         }
 
-        final String jwtToken = getJwtToken(request);
+        final String jwtToken = getJwtToken(httpRequest);
         if (jwtToken == null) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
+            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, ErrorCode.ACCESS_DENIED.getMessage());
             return;
         }
 
         try {
             final String userEmail = jwtUtil.extractUsername(jwtToken);
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                authenticateUser(request, userEmail, jwtToken);
+                authenticateUser(httpRequest, userEmail, jwtToken);
             }
         } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException | IllegalArgumentException e) {
             log.error(e.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.TOKEN_INVALID.getMessage());
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.TOKEN_INVALID.getMessage());
             return;
         }
 
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 
     private boolean isAllowedUri(String requestUri) {
@@ -83,14 +88,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 HandlerExecutionChain handler = handlerMapping.getHandler(request);
                 if (handler != null) {
-                    // 이 부분에서 실제 핸들러가 존재하는지 확인하는 로직 추가
                     if (handler.getHandler() instanceof HandlerMethod) {
                         log.debug("Handler found for URI: {}", request.getRequestURI());
                         return true;
                     }
                 }
             } catch (Exception e) {
-                // Ignore and continue checking other handler mappings
+                log.error("Error checking handler mapping for URI: {}", request.getRequestURI(), e);
             }
         }
         log.debug("No handler found for URI: {}", request.getRequestURI());

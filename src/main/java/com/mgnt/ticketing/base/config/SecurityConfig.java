@@ -1,8 +1,10 @@
 package com.mgnt.ticketing.base.config;
 
 import com.mgnt.ticketing.base.error.ErrorCode;
+import com.mgnt.ticketing.base.filter.JwtAuthFilter;
+import com.mgnt.ticketing.base.filter.UriNonExistFilter;
 import com.mgnt.ticketing.base.jwt.JwtAuthenticationEntryPoint;
-import com.mgnt.ticketing.base.jwt.JwtAuthFilter;
+import com.mgnt.ticketing.base.jwt.JwtUtil;
 import com.mgnt.ticketing.base.jwt.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +24,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -38,9 +39,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final UserDetailServiceImpl userDetailServiceImpl;
-    private final JwtAuthFilter jwtAuthFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final SecurityProperties securityProperties;
+    private final List<HandlerMapping> handlerMappings; // HandlerMapping을 주입받음
+    private final JwtUtil jwtUtil;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -66,8 +68,14 @@ public class SecurityConfig {
                     response.sendError(HttpStatus.FORBIDDEN.value(), ErrorCode.ACCESS_DENIED.getMessage());
                 })
         );
+        // 필터 인스턴스 직접 생성 및 추가
+        UriNonExistFilter uriNonExistFilter = new UriNonExistFilter(handlerMappings);
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtUtil, userDetailServiceImpl, securityProperties, handlerMappings);
 
+        // UriNonExistFilter를 jwtAuthFilter 앞에 추가
+        http.addFilterBefore(uriNonExistFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         return http.build();
     }
