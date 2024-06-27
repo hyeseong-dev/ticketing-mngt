@@ -5,6 +5,7 @@ import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -13,6 +14,11 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+/**
+ * 결제 엔티티 클래스
+ *
+ * 이 클래스는 결제 정보를 나타내며, 데이터베이스의 'payment' 테이블과 매핑됩니다.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -36,11 +42,26 @@ public class Payment extends BaseDateTimeEntity {
 
     private ZonedDateTime paidAt;
 
+    /**
+     * 생성자
+     *
+     * @param reservation 예약 정보
+     * @param status 결제 상태
+     * @param price 결제 금액
+     */
+    @Builder
     public Payment(Reservation reservation, PaymentEnums.Status status, BigDecimal price) {
         this.reservation = reservation;
         this.status = status;
         this.price = price;
     }
+
+    /**
+     * 결제 상태 업데이트
+     *
+     * @param status 결제 상태
+     * @return 업데이트된 Payment 객체
+     */
     public Payment updateStatus(PaymentEnums.Status status) {
         if (status == null) {
             return null;
@@ -50,12 +71,23 @@ public class Payment extends BaseDateTimeEntity {
         return this;
     }
 
-    public Payment completePay() {
+    /**
+     * 결제 적용
+     *
+     * @return 결제 상태가 업데이트된 Payment 객체
+     */
+    public Payment applyPay() {
         this.status = PaymentEnums.Status.COMPLETE;
         this.paidAt = ZonedDateTime.now();
         return this;
     }
 
+    /**
+     * 객체 동등성 비교
+     *
+     * @param o 비교할 객체
+     * @return 객체가 같으면 true, 그렇지 않으면 false
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -64,6 +96,11 @@ public class Payment extends BaseDateTimeEntity {
         return Objects.equals(paymentId, that.paymentId);
     }
 
+    /**
+     * 객체 해시 코드 반환
+     *
+     * @return 해시 코드
+     */
     @Override
     public int hashCode() {
         return Objects.hash(paymentId);
