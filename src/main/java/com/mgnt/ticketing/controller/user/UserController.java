@@ -9,6 +9,7 @@ import com.mgnt.ticketing.controller.user.dto.response.*;
 import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
+import com.mgnt.ticketing.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,38 +34,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
+    private final UserService service;
     private final UserInterface userInterface;
     private final String resourceType = "USER";
-
-    /**
-     * 사용자 예약 조회
-     *
-     * @param userId 사용자 ID
-     * @return 예약 목록
-     */
-    @Operation(summary = "사용자 예약 조회")
-    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetMyReservationsResponse.class)))
-    @GetMapping("/{userId}/reservation")
-    public List<GetMyReservationsResponse> getMyReservation(@PathVariable(value = "userId") @NotNull Long userId) {
-        // 더미 데이터
-        return List.of(GetMyReservationsResponse.builder()
-                .reservationId(1L)
-                .status(ReservationEnums.Status.ING)
-                .concertInfo(GetMyReservationsResponse.ConcertInfo.builder()
-                        .concertId(1L)
-                        .concertDateId(1L)
-                        .name("2024 테스트 콘서트 in 서울")
-                        .date(ZonedDateTime.now().plusMonths(1))
-                        .seatId(2L)
-                        .seatNum(2)
-                        .build())
-                .paymentInfo(GetMyReservationsResponse.PaymentInfo.builder()
-                        .paymentId(1L)
-                        .status(PaymentEnums.Status.READY)
-                        .paymentPrice(BigDecimal.valueOf(79000))
-                        .build())
-                .build());
-    }
 
     /**
      * 사용자 충전
@@ -77,7 +49,7 @@ public class UserController {
     @PatchMapping("/{userId}/charge")
     public ApiResult<GetBalanceResponse> charge(@PathVariable(value = "userId") @NotNull Long userId,
                                                 @RequestBody @Valid ChargeRequest request) {
-        return ApiResult.success(new GetBalanceResponse(1L, BigDecimal.valueOf(110000)));
+        return ApiResult.success(service.charge(userId, request));
     }
 
     /**
@@ -90,20 +62,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetBalanceResponse.class)))
     @GetMapping("/{userId}/balance")
     public ApiResult<GetBalanceResponse> getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
-        // 더미 데이터
-        return ApiResult.success(new GetBalanceResponse(1L, BigDecimal.valueOf(1000)));
-    }
-
-    /**
-     * 사용자 목록 조회 (관리자 권한 필요)
-     *
-     * @return 사용자 목록 응답
-     */
-    @Operation(summary = "사용자 목록 조회")
-    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetUserListResponse.class)))
-    @GetMapping
-    public ResponseEntity<GetUserListResponse> getUsers() {
-        return userInterface.getUsers();
+        return ApiResult.success(service.getBalance(userId));
     }
 
     /**
