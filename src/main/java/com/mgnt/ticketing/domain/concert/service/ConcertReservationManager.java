@@ -28,7 +28,7 @@ public class ConcertReservationManager {
     public List<Long> getReservedSeatIdsByConcertDate(Long concertDateId) {
         // 예약 정보 조회
         List<Reservation> reservations = reservationRepository.findAllByConcertDateId(concertDateId);
-        // 예약 완료 및 예약 중인 좌석의 PK 반환
+        // [예약 완료, 예약중]인 좌석 PK 반환
         return reservations.stream()
                 .filter(v -> List.of(Reservation.Status.RESERVED, Reservation.Status.ING).contains(v.getStatus()))
                 .map(Reservation::getSeat)

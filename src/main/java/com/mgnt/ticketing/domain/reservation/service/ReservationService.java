@@ -90,7 +90,7 @@ public class ReservationService implements ReservationInterface {
         // 1. 결제 정보 처리
         Payment payment = paymentReader.findPaymentByReservation(reservation);
         CancelPaymentResultResDto cancelPaymentInfo = paymentService.cancel(payment.getPaymentId());
-        if (cancelPaymentInfo.isSuccess()) { // 결제 정보 처리 성공 시
+        if (cancelPaymentInfo.isSuccess()) {
             // 2. 예약 내역 삭제
             reservationRepository.delete(reservation);
         }
@@ -104,7 +104,6 @@ public class ReservationService implements ReservationInterface {
      */
     @Override
     public List<GetMyReservationsResponse> getMyReservations(Long userId) {
-        // 사용자의 예약 및 결제 정보 조회
         List<GetReservationAndPaymentResDto> reservationsAndPayments = reservationRepository.getMyReservations(userId);
         return reservationsAndPayments.stream().map(GetMyReservationsResponse::from).toList();
     }

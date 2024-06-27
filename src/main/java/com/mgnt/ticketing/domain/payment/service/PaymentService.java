@@ -56,9 +56,9 @@ public class PaymentService implements PaymentInterface {
         BigDecimal previousBalance = user.getBalance();
         BigDecimal usedBalance = user.useBalance(payment.getPrice());
         if (usedBalance.equals(previousBalance.subtract(payment.getPrice()))) {
-            // 2-1. 결제 처리
-            payment = payment.toPaid();   // 결제 완료 처리
-            payment.getReservation().toComplete();    // 예약 완료 처리
+            // 2-1. 결제 완료 처리
+            payment = payment.toPaid();
+            payment.getReservation().toComplete();
             isSuccess = true;
         } else {
             // 2-2. 결제 실패 : 잔액 원복
@@ -116,12 +116,11 @@ public class PaymentService implements PaymentInterface {
         User user = payment.getReservation().getUser();
 
         if (Payment.Status.READY.equals(payment.getStatus())) {
-            // 결제 대기 상태일 경우 - 즉시 취소
+            // 결제 대기 상태 - 즉시 취소
             updatedPayment = payment.updateStatus(Payment.Status.CANCEL);
         } else if (Payment.Status.COMPLETE.equals(payment.getStatus())) {
-            // 결제 완료 상태일 경우 - 환불
+            // 결제 완료 상태 - 환불
             updatedPayment = payment.updateStatus(Payment.Status.REFUND);
-            // 잔액 환불
             user.refundBalance(payment.getPrice());
         }
 
