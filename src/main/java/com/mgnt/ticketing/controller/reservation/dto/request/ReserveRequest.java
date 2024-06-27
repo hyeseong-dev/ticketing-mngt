@@ -4,7 +4,6 @@ import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.concert.service.ConcertReader;
-import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
@@ -28,7 +27,7 @@ public record ReserveRequest(
                 .concertDate(concertDate)
                 .seat(seat)
                 .user(user)
-                .status(ReservationEnums.Status.ING)
+                .status(Reservation.Status.ING)
                 .build();
     }
 }

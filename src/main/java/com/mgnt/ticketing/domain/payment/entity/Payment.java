@@ -1,7 +1,6 @@
 package com.mgnt.ticketing.domain.payment.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -35,12 +34,19 @@ public class Payment extends BaseDateTimeEntity {
     private Reservation reservation;
 
     @Column(nullable = false)
-    private PaymentEnums.Status status;
+    private Payment.Status status;
 
     @Column(nullable = false)
     private BigDecimal price;
 
     private ZonedDateTime paidAt;
+
+    public enum Status {
+        READY,
+        COMPLETE,
+        CANCEL,
+        REFUND
+    }
 
     /**
      * 생성자
@@ -50,7 +56,7 @@ public class Payment extends BaseDateTimeEntity {
      * @param price 결제 금액
      */
     @Builder
-    public Payment(Reservation reservation, PaymentEnums.Status status, BigDecimal price) {
+    public Payment(Reservation reservation, Payment.Status status, BigDecimal price) {
         this.reservation = reservation;
         this.status = status;
         this.price = price;
@@ -62,12 +68,18 @@ public class Payment extends BaseDateTimeEntity {
      * @param status 결제 상태
      * @return 업데이트된 Payment 객체
      */
-    public Payment updateStatus(PaymentEnums.Status status) {
+    public Payment updateStatus(Payment.Status status) {
         if (status == null) {
             return null;
         }
 
         this.status = status;
+        return this;
+    }
+
+    public Payment toPaid() {
+        this.status = Payment.Status.COMPLETE;
+        this.paidAt = ZonedDateTime.now();
         return this;
     }
 
@@ -77,7 +89,7 @@ public class Payment extends BaseDateTimeEntity {
      * @return 결제 상태가 업데이트된 Payment 객체
      */
     public Payment applyPay() {
-        this.status = PaymentEnums.Status.COMPLETE;
+        this.status = Payment.Status.COMPLETE;
         this.paidAt = ZonedDateTime.now();
         return this;
     }

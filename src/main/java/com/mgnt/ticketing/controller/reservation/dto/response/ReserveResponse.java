@@ -3,9 +3,7 @@ package com.mgnt.ticketing.controller.reservation.dto.response;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
-import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import lombok.Builder;
 
@@ -17,7 +15,7 @@ import java.time.ZonedDateTime;
  */
 public record ReserveResponse(
         Long reservationId,
-        ReservationEnums.Status status,
+        Reservation.Status status,
         ConcertInfo concertInfo,
         PaymentInfo paymentInfo
 ) {
@@ -71,7 +69,7 @@ public record ReserveResponse(
     @Builder
     public static record PaymentInfo(
             Long paymentId,
-            PaymentEnums.Status status,
+            Payment.Status status,
             BigDecimal paymentPrice
     ) {
     }

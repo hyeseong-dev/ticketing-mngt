@@ -1,10 +1,10 @@
 package com.mgnt.ticketing.domain.payment.service.dto;
 
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
+import com.mgnt.ticketing.domain.payment.entity.Payment;
 
 public record CancelPaymentResultResDto(
         boolean isSuccess,
         Long paymentId,
-        PaymentEnums.Status status
+        Payment.Status status
 ) {
 }

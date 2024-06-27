@@ -1,7 +1,5 @@
 package com.mgnt.ticketing.domain.payment.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
@@ -9,13 +7,11 @@ import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
 import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
-import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
@@ -85,7 +81,7 @@ class PaymentServiceTest {
                                 LocalDateTime.of(2024, 5, 25, 18, 30, 0),
                                 ZoneId.of("Asia/Seoul"))))
                 .seat(new Seat(1L, 1, BigDecimal.valueOf(79000)))
-                .status(ReservationEnums.Status.ING)
+                .status(Reservation.Status.ING)
                 .reservedAt(null)
                 .build();
 
@@ -98,7 +94,7 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 완료된_결제건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.COMPLETE)
+                .status(Payment.Status.COMPLETE)
                 .price(BigDecimal.valueOf(79000))
                 .build();
 
@@ -120,7 +116,7 @@ class PaymentServiceTest {
         PayRequest request = new PayRequest(1L);
         Payment 결제건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.READY)
+                .status(Payment.Status.READY)
                 .price(BigDecimal.valueOf(79000))
                 .build();
         User 사용자 = new User(1L, BigDecimal.valueOf(10000));
@@ -144,7 +140,7 @@ class PaymentServiceTest {
         PayRequest request = new PayRequest(1L);
         Payment 결제건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.READY)
+                .status(Payment.Status.READY)
                 .price(BigDecimal.valueOf(79000))
                 .build();
         User 사용자 = new User(1L, BigDecimal.valueOf(100000));
@@ -156,7 +152,7 @@ class PaymentServiceTest {
 
         // then
         assertThat(response.isSuccess()).isTrue();
-        assertThat(response.status()).isEqualTo(PaymentEnums.Status.COMPLETE);
+        assertThat(response.status()).isEqualTo(Payment.Status.COMPLETE);
         assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(21000));
     }
 
@@ -166,7 +162,7 @@ class PaymentServiceTest {
         // given
         CreatePaymentReqDto reqDto = new CreatePaymentReqDto(
                 예약건,
-                PaymentEnums.Status.READY,
+                Payment.Status.READY,
                 BigDecimal.valueOf(79000)
         );
 
@@ -180,7 +176,7 @@ class PaymentServiceTest {
 
         // then
         assertThat(response.getReservation()).isEqualTo(예약건);
-        assertThat(response.getStatus()).isEqualTo(PaymentEnums.Status.READY);
+        assertThat(response.getStatus()).isEqualTo(Payment.Status.READY);
     }
 
     @Test
@@ -190,7 +186,7 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 결제대기건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.READY)
+                .status(Payment.Status.READY)
                 .price(BigDecimal.valueOf(79000))
                 .build();
 
@@ -200,7 +196,7 @@ class PaymentServiceTest {
 
         // then
         assertThat(response.isSuccess()).isTrue();
-        assertThat(response.status()).isEqualTo(PaymentEnums.Status.CANCEL);
+        assertThat(response.status()).isEqualTo(Payment.Status.CANCEL);
     }
 
     @Test
@@ -210,7 +206,7 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 결제완료건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.COMPLETE)
+                .status(Payment.Status.COMPLETE)
                 .price(BigDecimal.valueOf(79000))
                 .build();
 
@@ -220,7 +216,7 @@ class PaymentServiceTest {
 
         // then
         assertThat(response.isSuccess()).isTrue();
-        assertThat(response.status()).isEqualTo(PaymentEnums.Status.REFUND);
+        assertThat(response.status()).isEqualTo(Payment.Status.REFUND);
     }
 
     @Test
@@ -230,7 +226,7 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 결제취소건 = Payment.builder()
                 .reservation(예약건)
-                .status(PaymentEnums.Status.CANCEL)
+                .status(Payment.Status.CANCEL)
                 .price(BigDecimal.valueOf(79000))
                 .build();
 

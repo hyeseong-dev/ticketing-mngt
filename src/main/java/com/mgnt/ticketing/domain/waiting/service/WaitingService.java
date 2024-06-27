@@ -9,6 +9,7 @@ import com.mgnt.ticketing.domain.waiting.repository.WaitingQueueRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 
@@ -60,7 +61,7 @@ public class WaitingService implements WaitingInterface {
             waitingQueueRepository.save(WaitingQueue.toActiveEntity(userId, token));
         } else {
             // 유저 비활성, 대기열 정보 생성
-            waitingNum = activeSize - WaitingConstants.ACTIVE_USER_CNT;
+            waitingNum = waitingQueueRepository.countByStatusIs(WaitingQueue.Status.WAITING);
             expectedWaitTimeInSeconds = Duration.ofMinutes(waitingNum).toSeconds();
             waitingQueueRepository.save(WaitingQueue.toWaitingEntity(userId, token));
         }
@@ -91,6 +92,7 @@ public class WaitingService implements WaitingInterface {
      * @return 활성 상태 확인 응답
      */
     @Override
+    @Transactional
     public CheckActiveResponse checkActive(Long userId, String token) {
         Long waitingNum = null;
         Long expectedWaitTimeInSeconds = null;
@@ -105,8 +107,7 @@ public class WaitingService implements WaitingInterface {
         boolean isActive = waitingQueue.getStatus().equals(WaitingQueue.Status.ACTIVE);
         if (!isActive) {
             // 대기열 정보 생성
-            long activeSize = waitingQueueRepository.countByStatusIs(WaitingQueue.Status.ACTIVE);
-            waitingNum = activeSize - WaitingConstants.ACTIVE_USER_CNT;
+            waitingNum = waitingQueueRepository.countByRequestTimeBeforeAndStatusIs(WaitingQueue.Status.WAITING, waitingQueue.getRequestTime());
             expectedWaitTimeInSeconds = Duration.ofMinutes(waitingNum).toSeconds();
         }
 

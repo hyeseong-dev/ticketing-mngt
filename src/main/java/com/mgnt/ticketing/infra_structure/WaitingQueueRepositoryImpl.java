@@ -46,6 +46,18 @@ public class WaitingQueueRepositoryImpl implements WaitingQueueRepository {
     }
 
     /**
+     * 특정 상태의 대기열 항목 수 조회 (시간 조건 포함)
+     *
+     * @param status 대기열 상태
+     * @param requestTime 요청 시간
+     * @return 대기열 항목 수
+     */
+    @Override
+    public long countByRequestTimeBeforeAndStatusIs(WaitingQueue.Status status, Timestamp requestTime) {
+        return waitingQueueJpaRepository.countByRequestTimeBeforeAndStatusIs(requestTime, status);
+    }
+
+    /**
      * 대기열 항목 저장
      *
      * @param waitingQueue 대기열 항목

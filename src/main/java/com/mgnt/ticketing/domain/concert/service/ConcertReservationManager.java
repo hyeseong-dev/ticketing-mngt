@@ -1,7 +1,6 @@
 package com.mgnt.ticketing.domain.concert.service;
 
 import com.mgnt.ticketing.domain.concert.entity.Seat;
-import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,7 @@ public class ConcertReservationManager {
         List<Reservation> reservations = reservationRepository.findAllByConcertDateId(concertDateId);
         // 예약 완료 및 예약 중인 좌석의 PK 반환
         return reservations.stream()
-                .filter(v -> List.of(ReservationEnums.Status.RESERVED, ReservationEnums.Status.ING).contains(v.getStatus()))
+                .filter(v -> List.of(Reservation.Status.RESERVED, Reservation.Status.ING).contains(v.getStatus()))
                 .map(Reservation::getSeat)
                 .map(Seat::getSeatId)
                 .toList();

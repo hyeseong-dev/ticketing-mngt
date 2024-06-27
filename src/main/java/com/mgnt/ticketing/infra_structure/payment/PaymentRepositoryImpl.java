@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.infra_structure;
+package com.mgnt.ticketing.infra_structure.payment;
 
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentJpaRepository;
@@ -29,5 +29,10 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public Payment findById(Long paymentId) {
         return paymentJpaRepository.findById(paymentId).orElseThrow(EntityNotFoundException::new);
+    }
+
+    @Override
+    public void delete(Payment payment) {
+        paymentJpaRepository.delete(payment);
     }
 }

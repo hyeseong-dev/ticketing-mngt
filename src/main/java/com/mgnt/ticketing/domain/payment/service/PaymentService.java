@@ -2,7 +2,6 @@ package com.mgnt.ticketing.domain.payment.service;
 
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
@@ -11,9 +10,15 @@ import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+/**
+ * 결제 서비스 클래스
+ *
+ * 이 클래스는 결제와 관련된 비즈니스 로직을 처리합니다.
+ */
 /**
  * 결제 서비스 클래스
  *
@@ -28,28 +33,31 @@ public class PaymentService implements PaymentInterface {
     private final UserReader userReader;
 
     /**
-     * 결제 요청
+     * 결제 요청을 처리합니다.
      *
      * @param paymentId 결제 ID
-     * @param request 결제 요청 DTO
-     * @return 결제 응답 DTO
+     * @param request 결제 요청 객체
+     * @return 결제 응답 객체
      */
     @Override
+    @Transactional
     public PayResponse pay(Long paymentId, PayRequest request) {
-        // 결제 상태 검증
+        // validator - 결제 상태 검증
         Payment payment = paymentRepository.findById(paymentId);
         paymentValidator.checkPayStatus(payment.getStatus());
 
-        // 사용자 잔액 검증
+        // validator - 사용자 잔액 검증
         User user = userReader.findUser(request.userId());
         paymentValidator.checkBalance(payment.getPrice(), user.getBalance());
 
         // 결제
+        // 1. 결제
         boolean isSuccess = false;
-        Payment paymentResult = payment.applyPay();
+        Payment paymentResult = payment.toPaid();   // 결제 완료 처리
+        paymentResult.getReservation().toComplete();    // 예약 완료 처리
         BigDecimal usedBalance = user.getBalance();
-        if (paymentResult.getStatus().equals(PaymentEnums.Status.COMPLETE)) {
-            // 사용자 잔액 차감
+        if (paymentResult.getStatus().equals(Payment.Status.COMPLETE)) {
+            // 2. 사용자 잔액 차감
             usedBalance = user.useBalance(payment.getPrice());
             isSuccess = true;
         }
@@ -58,10 +66,10 @@ public class PaymentService implements PaymentInterface {
     }
 
     /**
-     * 결제 정보 생성
+     * 결제 정보를 생성합니다.
      *
-     * @param reqDto 결제 생성 요청 DTO
-     * @return 생성된 결제 정보
+     * @param reqDto 결제 요청 DTO
+     * @return 생성된 결제 객체
      */
     @Override
     public Payment create(CreatePaymentReqDto reqDto) {
@@ -69,19 +77,20 @@ public class PaymentService implements PaymentInterface {
     }
 
     /**
-     * 결제 취소
+     * 결제를 취소합니다.
      *
      * @param paymentId 결제 ID
      * @return 결제 취소 결과 응답 DTO
      */
     @Override
+    @Transactional
     public CancelPaymentResultResDto cancel(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId);
 
-        // 결제 취소 상태 검증
+        // validator
         paymentValidator.checkCancelStatus(payment.getStatus());
 
-        // 결제 취소
+        // 취소
         Payment updatedPayment = cancelPayment(payment);
 
         // 성공 / 실패 응답 반환
@@ -94,22 +103,22 @@ public class PaymentService implements PaymentInterface {
     }
 
     /**
-     * 결제 취소 처리
+     * 결제를 취소하는 내부 메서드입니다.
      *
-     * @param payment 결제 정보
-     * @return 취소된 결제 정보
+     * @param payment 결제 객체
+     * @return 취소된 결제 객체
      */
     private Payment cancelPayment(Payment payment) {
         Payment updatedPayment = payment;
         User user = payment.getReservation().getUser();
 
-        if (PaymentEnums.Status.READY.equals(payment.getStatus())) {
+        if (Payment.Status.READY.equals(payment.getStatus())) {
             // 결제 대기 상태일 경우 - 즉시 취소
-            updatedPayment = payment.updateStatus(PaymentEnums.Status.CANCEL);
-        } else if (PaymentEnums.Status.COMPLETE.equals(payment.getStatus())) {
-            // 결제 완료 상태일 경우 - 환불 처리
-            updatedPayment = payment.updateStatus(PaymentEnums.Status.REFUND);
-            // 사용자 잔액 환불
+            updatedPayment = payment.updateStatus(Payment.Status.CANCEL);
+        } else if (Payment.Status.COMPLETE.equals(payment.getStatus())) {
+            // 결제 완료 상태일 경우 - 환불
+            updatedPayment = payment.updateStatus(Payment.Status.REFUND);
+            // 잔액 환불
             user.refundBalance(payment.getPrice());
         }
 

@@ -6,8 +6,6 @@ import com.mgnt.ticketing.controller.user.dto.request.MypageRequest;
 import com.mgnt.ticketing.controller.user.dto.request.PasswordReques;
 import com.mgnt.ticketing.controller.user.dto.request.UserModifyRequest;
 import com.mgnt.ticketing.controller.user.dto.response.*;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
-import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
 import com.mgnt.ticketing.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,10 +18,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.time.ZonedDateTime;
-import java.util.List;
 
 /**
  * 사용자 관련 API 컨트롤러

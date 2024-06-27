@@ -1,8 +1,8 @@
 package com.mgnt.ticketing.domain.payment.service;
 
 import com.mgnt.ticketing.base.exception.CustomException;
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
+import com.mgnt.ticketing.domain.payment.entity.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +36,8 @@ public class PaymentValidator {
      * @param status 결제 상태
      * @throws CustomException 결제 가능한 상태가 아닌 경우 예외 발생
      */
-    public void checkPayStatus(PaymentEnums.Status status) {
-        if (!status.equals(PaymentEnums.Status.READY)) {
+    public void checkPayStatus(Payment.Status status) {
+        if (!status.equals(Payment.Status.READY)) {
             throw new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_PAY);
         }
     }
@@ -48,8 +48,8 @@ public class PaymentValidator {
      * @param status 결제 상태
      * @throws CustomException 결제 취소 가능한 상태가 아닌 경우 예외 발생
      */
-    public void checkCancelStatus(PaymentEnums.Status status) {
-        if (!(status.equals(PaymentEnums.Status.READY) || status.equals(PaymentEnums.Status.COMPLETE))) {
+    public void checkCancelStatus(Payment.Status status) {
+        if (!(status.equals(Payment.Status.READY) || status.equals(Payment.Status.COMPLETE))) {
             throw new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_CANCEL);
         }
     }

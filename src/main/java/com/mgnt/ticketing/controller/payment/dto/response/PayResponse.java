@@ -1,6 +1,5 @@
 package com.mgnt.ticketing.controller.payment.dto.response;
 
-import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import lombok.Builder;
 
@@ -9,7 +8,7 @@ import java.math.BigDecimal;
 public record PayResponse(
         boolean isSuccess,
         Long paymentId,
-        PaymentEnums.Status status,
+        Payment.Status status,
         BigDecimal paymentPrice,
         BigDecimal balance
 ) {

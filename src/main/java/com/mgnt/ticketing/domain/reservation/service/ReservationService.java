@@ -13,8 +13,10 @@ import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
 import com.mgnt.ticketing.domain.user.service.UserReader;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +35,12 @@ public class ReservationService implements ReservationInterface {
     private final UserReader userReader;
     private final PaymentService paymentService;
     private final PaymentReader paymentReader;
+    private final ReservationMonitor reservationMonitor;
+
+    @PostConstruct
+    public void init() {
+        reservationMonitor.reservationMonitoring();
+    }
 
     /**
      * 콘서트 좌석 예매
@@ -49,7 +57,9 @@ public class ReservationService implements ReservationInterface {
         Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
         // 결제 정보 생성
         Payment payment = paymentService.create(reservation.toCreatePayment());
-        // TODO - 5분 선점 로직
+
+        // 예약 임시 점유 5분
+        reservationMonitor.occupyReservation(reservation.getReservationId());
 
         return ReserveResponse.from(reservation, payment);
     }
@@ -61,6 +71,7 @@ public class ReservationService implements ReservationInterface {
      * @param request 예매 취소 요청 DTO
      */
     @Override
+    @Transactional
     public void cancel(Long reservationId, CancelRequest request) {
         Reservation reservation = reservationRepository.findByIdAndUserId(reservationId, request.userId());
 

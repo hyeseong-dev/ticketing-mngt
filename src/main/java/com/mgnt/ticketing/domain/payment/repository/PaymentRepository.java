@@ -12,4 +12,6 @@ public interface PaymentRepository {
     Payment findByReservation(Reservation reservation);
 
     Payment findById(Long paymentId);
+
+    void delete(Payment payment);
 }
