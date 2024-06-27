@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.concert.service;
 
-import com.mgnt.ticketing.CustomException;
+import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.controller.concert.dto.response.GetConcertResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetConcertsResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetDatesResponse;

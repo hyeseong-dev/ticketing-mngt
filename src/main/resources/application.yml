@@ -21,6 +21,7 @@ server:
       throwExceptionIfNoHandlerFound: true
 
 spring:
+
   docker:
     compose:
       enabled: false
@@ -80,19 +81,7 @@ jwt:
     refresh-token-validity: 1296000000 # 15 days
 
 security:
-  allowed-uris:
-    - /api/auth/signup
-    - /api/auth/login
-    - /api/email
-    - /api/auth/refresh
-    - /swagger-ui
-    - /swagger-ui/index.html
-    - /favicon.ico
-    - /hello
-    - /concerts
-    - /payments
-  jackson:
-    property-naming-strategy: SNAKE_CASE
+
 
 springdoc:
   api-docs:

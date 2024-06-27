@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.payment.service;
 
-import com.mgnt.ticketing.CustomException;
+import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;

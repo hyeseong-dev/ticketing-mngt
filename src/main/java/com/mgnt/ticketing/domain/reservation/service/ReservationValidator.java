@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.reservation.service;
 
-import com.mgnt.ticketing.CustomException;
+import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.reservation.ReservationExceptionEnum;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;

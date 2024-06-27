@@ -12,6 +12,9 @@ import lombok.Builder;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
+/**
+ * 예약 응답 DTO
+ */
 public record ReserveResponse(
         Long reservationId,
         ReservationEnums.Status status,
@@ -23,6 +26,13 @@ public record ReserveResponse(
     public ReserveResponse {
     }
 
+    /**
+     * Reservation 및 Payment 객체로부터 ReserveResponse 객체를 생성하는 메서드
+     *
+     * @param reservation 예약 정보
+     * @param payment 결제 정보
+     * @return ReserveResponse 객체
+     */
     public static ReserveResponse from(Reservation reservation, Payment payment) {
         Concert concertInfo = reservation.getConcert();
         ConcertDate concertDateInfo = reservation.getConcertDate();
@@ -47,7 +57,8 @@ public record ReserveResponse(
                 .build();
     }
 
-    public record ConcertInfo(
+    @Builder
+    public static record ConcertInfo(
             Long concertId,
             Long concertDateId,
             String name,
@@ -55,20 +66,13 @@ public record ReserveResponse(
             Long seatId,
             int seatNum
     ) {
-        @Builder
-        public ConcertInfo {
-        }
     }
 
-    public record PaymentInfo(
+    @Builder
+    public static record PaymentInfo(
             Long paymentId,
             PaymentEnums.Status status,
             BigDecimal paymentPrice
     ) {
-
-        @Builder
-        public PaymentInfo {
-        }
     }
-
 }

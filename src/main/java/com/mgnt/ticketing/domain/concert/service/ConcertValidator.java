@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.concert.service;
 
-import com.mgnt.ticketing.CustomException;
+import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.domain.concert.ConcertExceptionEnum;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import lombok.RequiredArgsConstructor;
