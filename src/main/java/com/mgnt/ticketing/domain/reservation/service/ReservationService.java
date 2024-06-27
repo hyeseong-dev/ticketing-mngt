@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.domain.reservation.service;
 
+import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.controller.reservation.dto.request.CancelRequest;
 import com.mgnt.ticketing.controller.reservation.dto.request.ReserveRequest;
 import com.mgnt.ticketing.controller.reservation.dto.response.ReserveResponse;
@@ -9,12 +10,14 @@ import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.service.PaymentReader;
 import com.mgnt.ticketing.domain.payment.service.PaymentService;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
+import com.mgnt.ticketing.domain.reservation.ReservationExceptionEnum;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,18 +53,23 @@ public class ReservationService implements ReservationInterface {
      */
     @Override
     public ReserveResponse reserve(ReserveRequest request) {
-        // 예약 유효성 검사
-        reservationValidator.checkReserved(request.concertDateId(), request.seatId());
+        try {
+            // 예약 유효성 검사
+            reservationValidator.checkReserved(request.concertDateId(), request.seatId());
 
-        // 좌석 예약
-        Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
-        // 결제 정보 생성
-        Payment payment = paymentService.create(reservation.toCreatePayment());
+            // 좌석 예약
+            Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
+            // 결제 정보 생성
+            Payment payment = paymentService.create(reservation.toCreatePayment());
+            // 예약 임시 점유 (5분)
+            reservationMonitor.occupyReservation(reservation.getReservationId());
 
-        // 예약 임시 점유 5분
-        reservationMonitor.occupyReservation(reservation.getReservationId());
+            return ReserveResponse.from(reservation, payment);
 
-        return ReserveResponse.from(reservation, payment);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            // 버전 충돌 -> "이미 선택된 좌석입니다." 반환
+            throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED);
+        }
     }
 
     /**
