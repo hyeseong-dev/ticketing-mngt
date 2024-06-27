@@ -18,9 +18,9 @@ public record ReserveRequest(
 ) {
 
     public Reservation toEntity(ConcertReader concertReader, UserReader userReader) {
-        Concert concert = concertReader.getConcert(concertId);
-        ConcertDate concertDate = concertReader.getConcertDate(concertDateId);
-        Seat seat = concertReader.getSeat(seatId);
+        Concert concert = concertReader.findConcert(concertId);
+        ConcertDate concertDate = concertReader.findConcertDate(concertDateId);
+        Seat seat = concertReader.findSeat(seatId);
         User user = userReader.getUser(userId);
 
         return Reservation.builder()

@@ -10,6 +10,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * 콘서트 장소 관리 서비스
+ *
+ * 이 클래스는 콘서트와 공연장 정보를 관리하는 기능을 제공합니다.
+ */
 @Component
 @RequiredArgsConstructor
 public class ConcertPlaceManager {
@@ -17,12 +22,14 @@ public class ConcertPlaceManager {
     private final ConcertRepository concertRepository;
     private final PlaceRepository placeRepository;
 
-    public List<Seat> getSeatsByPlace(Long concertId) {
+    /**
+     * 콘서트 ID로 공연장 전체 좌석 조회
+     *
+     * @param concertId 콘서트 ID
+     * @return 좌석 목록
+     */
+    public List<Seat> getSeatsByConcertId(Long concertId) {
         Concert concert = concertRepository.findById(concertId);
         return placeRepository.findById(concert.getPlaceId()).getSeatList();
-    }
-
-    public Place getPlace(Long placeId) {
-        return placeRepository.findById(placeId);
     }
 }

@@ -9,16 +9,27 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * 콘서트 예약 관리 서비스
+ *
+ * 이 클래스는 콘서트 예약과 관련된 기능을 제공합니다.
+ */
 @Component
 @RequiredArgsConstructor
 public class ConcertReservationManager {
 
     private final ReservationRepository reservationRepository;
 
+    /**
+     * 콘서트 날짜별 예약된 좌석 ID 목록 조회
+     *
+     * @param concertDateId 콘서트 날짜 ID
+     * @return 예약된 좌석 ID 목록
+     */
     public List<Long> getReservedSeatIdsByConcertDate(Long concertDateId) {
         // 예약 정보 조회
         List<Reservation> reservations = reservationRepository.findAllByConcertDateId(concertDateId);
-        // 예약완료, 예약중인 좌석 PK 반환
+        // 예약 완료 및 예약 중인 좌석의 PK 반환
         return reservations.stream()
                 .filter(v -> List.of(ReservationEnums.Status.RESERVED, ReservationEnums.Status.ING).contains(v.getStatus()))
                 .map(Reservation::getSeat)
@@ -26,4 +37,3 @@ public class ConcertReservationManager {
                 .toList();
     }
 }
-
