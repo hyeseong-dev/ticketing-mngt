@@ -45,6 +45,7 @@ class ConcertServiceTest {
 
     private Concert 임영웅_콘서트;
     private Place 상암_월드컵경기장;
+    private List<Seat> 좌석;
 
     @BeforeEach
     void setUp() {
@@ -83,15 +84,14 @@ class ConcertServiceTest {
         // 공연장 & 좌석 정보 세팅
         상암_월드컵경기장 = Place.builder()
                 .name("상암 월드컵경기장")
-                .seats_cnt(5)
-                .seatList(List.of(
-                        new Seat(1L, 1, BigDecimal.valueOf(119000)),
-                        new Seat(2L, 2, BigDecimal.valueOf(119000)),
-                        new Seat(3L, 3, BigDecimal.valueOf(139000)),
-                        new Seat(4L, 4, BigDecimal.valueOf(139000)),
-                        new Seat(5L, 5, BigDecimal.valueOf(179000))
-                ))
+                .seatsCnt(5)
                 .build();
+        좌석 = List.of(
+                new Seat(1L, 상암_월드컵경기장, 1, BigDecimal.valueOf(119000)),
+                new Seat(2L, 상암_월드컵경기장,2, BigDecimal.valueOf(119000)),
+                new Seat(3L, 상암_월드컵경기장,3, BigDecimal.valueOf(139000)),
+                new Seat(4L, 상암_월드컵경기장,4, BigDecimal.valueOf(139000)),
+                new Seat(5L, 상암_월드컵경기장,5, BigDecimal.valueOf(179000)));
     }
 
     @Test
@@ -169,11 +169,11 @@ class ConcertServiceTest {
 
         // when
         when(concertRepository.findById(concertId)).thenReturn(임영웅_콘서트);
-        List<GetDatesResponse> responses = concertService.getDates(concertId);
+        GetDatesResponse response = concertService.getDates(concertId);
 
         // then
-        assertThat(responses.size()).isEqualTo(2);
-        assertThat(responses.get(0).date()).isEqualTo(ZonedDateTime.of(
+        assertThat(response.dates().size()).isEqualTo(2);
+        assertThat(response.dates().get(0).date()).isEqualTo(ZonedDateTime.of(
                 LocalDateTime.of(2024, 5, 25, 18, 30, 0),
                 ZoneId.of("Asia/Seoul")));
     }
@@ -186,17 +186,17 @@ class ConcertServiceTest {
         Long concertDateId = 1L;
 
         // when
-        when(placeManager.getSeatsByConcertId(concertId)).thenReturn(상암_월드컵경기장.getSeatList());
+        when(placeManager.getSeatsByConcertId(concertId)).thenReturn(좌석);
         when(reservationManager.getReservedSeatIdsByConcertDate(concertDateId)).thenReturn(List.of(2L, 4L));
-        List<GetSeatsResponse> responses = concertService.getSeats(concertId, concertDateId);
+        GetSeatsResponse responses = concertService.getSeats(concertId, concertDateId);
 
         // then
         // 전체 좌석 중 2,4번 좌석만 예약 여부 true
-        assertThat(responses.size()).isEqualTo(5);
-        assertThat(responses.get(0).isReserved()).isEqualTo(false);
-        assertThat(responses.get(1).isReserved()).isEqualTo(true);
-        assertThat(responses.get(2).isReserved()).isEqualTo(false);
-        assertThat(responses.get(3).isReserved()).isEqualTo(true);
-        assertThat(responses.get(4).isReserved()).isEqualTo(false);
+        assertThat(responses.seats().size()).isEqualTo(5);
+        assertThat(responses.seats().get(0).isReserved()).isEqualTo(false);
+        assertThat(responses.seats().get(1).isReserved()).isEqualTo(true);
+        assertThat(responses.seats().get(2).isReserved()).isEqualTo(false);
+        assertThat(responses.seats().get(3).isReserved()).isEqualTo(true);
+        assertThat(responses.seats().get(4).isReserved()).isEqualTo(false);
     }
 }

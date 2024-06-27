@@ -3,6 +3,7 @@ package com.mgnt.ticketing.domain.concert.entity;
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -33,6 +34,10 @@ public class Seat extends BaseDateTimeEntity {
     @Column(nullable = false)
     private BigDecimal price = BigDecimal.ZERO;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    private Place place;
+
     /**
      * 생성자
      *
@@ -40,8 +45,10 @@ public class Seat extends BaseDateTimeEntity {
      * @param seatNum 좌석 번호
      * @param price 좌석 가격
      */
-    public Seat(Long seatId, int seatNum, BigDecimal price) {
+    @Builder
+    public Seat(Long seatId, Place place, int seatNum, BigDecimal price) {
         this.seatId = seatId;
+        this.place = place;
         this.seatNum = seatNum;
         this.price = price;
     }

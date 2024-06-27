@@ -36,4 +36,25 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     public ConcertDate findConcertDateById(Long concertDateId) {
         return concertDateJpaRepository.findById(concertDateId).orElseThrow(EntityNotFoundException::new);
     }
+
+    @Override
+    public void addConcertDates(List<ConcertDate> concertDates) {
+        concertDateJpaRepository.saveAll(concertDates);
+    }
+
+    @Override
+    public void addConcert(Concert concert) {
+        concertJpaRepository.save(concert);
+    }
+
+    @Override
+    public void deleteAll() {
+        concertDateJpaRepository.deleteAll();
+        concertJpaRepository.deleteAll();
+    }
+
+    @Override
+    public void deleteAllDates() {
+        concertDateJpaRepository.deleteAll();
+    }
 }

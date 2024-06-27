@@ -59,30 +59,22 @@ public class ConcertService implements ConcertInterface {
      * @return 콘서트 날짜 응답 DTO 리스트
      */
     @Override
-    public List<GetDatesResponse> getDates(Long concertId) {
+    public GetDatesResponse getDates(Long concertId) {
         Concert concert = concertRepository.findById(concertId);
-        // 유효성 검사
+        // validator
         concertValidator.dateIsNull(concert.getConcertDateList());
 
-        return concert.getConcertDateList().stream().map(GetDatesResponse::from).toList();
+        return GetDatesResponse.from(concert.getConcertDateList());
     }
 
-    /**
-     * 특정 콘서트 날짜의 좌석 목록 조회
-     *
-     * @param concertId 콘서트 ID
-     * @param concertDateId 콘서트 날짜 ID
-     * @return 좌석 응답 DTO 리스트
-     */
     @Override
-    public List<GetSeatsResponse> getSeats(Long concertId, Long concertDateId) {
+    public GetSeatsResponse getSeats(Long concertId, Long concertDateId) {
         // 콘서트 전체 좌석 정보
         List<Seat> allSeats = placeManager.getSeatsByConcertId(concertId);
-        // 예약된 좌석 ID 조회
+        // 예약된 좌석 PK 조회
         List<Long> reservedSeatIds = reservationManager.getReservedSeatIdsByConcertDate(concertDateId);
 
-        return allSeats.stream()
-                .map(seat -> new GetSeatsResponse(seat.getSeatId(), seat.getSeatNum(), reservedSeatIds.contains(seat.getSeatId())))
-                .toList();
+        return GetSeatsResponse.from(allSeats, reservedSeatIds);
     }
+
 }

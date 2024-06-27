@@ -3,6 +3,7 @@ package com.mgnt.ticketing.domain.concert.entity;
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -33,6 +34,7 @@ public class ConcertDate extends BaseDateTimeEntity {
      * @param concertDateId 콘서트 날짜 ID
      * @param concertDate 콘서트 날짜
      */
+    @Builder
     public ConcertDate(Long concertDateId, ZonedDateTime concertDate) {
         this.concertDateId = concertDateId;
         this.concertDate = concertDate;

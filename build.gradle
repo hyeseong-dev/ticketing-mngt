@@ -34,11 +34,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     testImplementation 'org.springframework.security:spring-security-test'
-    compileOnly 'org.projectlombok:lombok:1.18.32'
     developmentOnly 'org.springframework.boot:spring-boot-devtools:3.3.0'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose:3.3.0'
     runtimeOnly 'com.mysql:mysql-connector-j:8.0.31'
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.3.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
     implementation 'jakarta.annotation:jakarta.annotation-api:2.0.0'
@@ -60,6 +65,11 @@ dependencies {
 
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+    // guava
+    implementation 'com.google.guava:guava:33.0.0-jre'
+
+    testImplementation 'io.rest-assured:rest-assured:5.3.1'
 }
 
 // Querydsl 프로젝트 build Directory 설정

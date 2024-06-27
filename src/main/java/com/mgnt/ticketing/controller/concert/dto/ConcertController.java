@@ -48,14 +48,14 @@ public class ConcertController {
     @Operation(summary = "콘서트 회차 목록 조회")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetDatesResponse.class))))
     @GetMapping("/{concertId}/dates")
-    public ApiResult<List<GetDatesResponse>> getDates(@PathVariable(value = "concertId") @NotNull Long concertId) {
+    public ApiResult<GetDatesResponse> getDates(@PathVariable(value = "concertId") @NotNull Long concertId) {
         return ApiResult.success(service.getDates(concertId));
     }
 
     @Operation(summary = "좌석 목록 조회")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetSeatsResponse.class))))
     @GetMapping("/{concertId}/dates/{concertDateId}/seats")
-    public ApiResult<List<GetSeatsResponse>> getSeats(@PathVariable(value = "concertId") @NotNull Long concertId,
+    public ApiResult<GetSeatsResponse> getSeats(@PathVariable(value = "concertId") @NotNull Long concertId,
                                                       @PathVariable(value = "concertDateId") @NotNull Long concertDateId) {
         return ApiResult.success(service.getSeats(concertId, concertDateId));
     }

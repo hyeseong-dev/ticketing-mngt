@@ -19,4 +19,9 @@ public class UserRepositoryImpl implements UserRepository {
     public User findById(Long userId) {
         return userJpaRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
     }
+
+    @Override
+    public void save(User user) {
+        userJpaRepository.save(user);
+    }
 }

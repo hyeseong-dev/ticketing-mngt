@@ -16,8 +16,8 @@ public interface ConcertInterface {
     GetConcertResponse getConcert(Long concertId);
 
     /* 예약 가능 날짜 조회 */
-    List<GetDatesResponse> getDates(Long concertId);
+    GetDatesResponse getDates(Long concertId);
 
     /* 좌석 조회 */
-    List<GetSeatsResponse> getSeats(Long concertId, Long concertDateId);
+    GetSeatsResponse getSeats(Long concertId, Long concertDateId);
 }

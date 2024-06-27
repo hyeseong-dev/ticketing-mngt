@@ -8,6 +8,8 @@ import com.mgnt.ticketing.domain.concert.repository.SeatJpaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class PlaceRepositoryImpl implements PlaceRepository {
 
@@ -27,5 +29,16 @@ public class PlaceRepositoryImpl implements PlaceRepository {
     @Override
     public Seat findSeatById(Long seatId) {
         return seatJpaRepository.findById(seatId).orElseThrow(EntityNotFoundException::new);
+    }
+
+
+    @Override
+    public void addSeats(List<Seat> seats) {
+        seatJpaRepository.saveAll(seats);
+    }
+
+    @Override
+    public void addPlace(Place place) {
+        placeJpaRepository.save(place);
     }
 }

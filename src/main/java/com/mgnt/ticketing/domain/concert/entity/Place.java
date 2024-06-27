@@ -32,7 +32,7 @@ public class Place extends BaseDateTimeEntity {
     private String name;
 
     @Column(nullable = false)
-    private int seats_cnt = 0;
+    private int seatsCnt = 0;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "seat_id")
@@ -42,14 +42,12 @@ public class Place extends BaseDateTimeEntity {
      * 생성자
      *
      * @param name 장소 이름
-     * @param seats_cnt 좌석 수
-     * @param seatList 좌석 목록
+     * @param seatsCnt 좌석 수
      */
     @Builder
-    public Place(String name, int seats_cnt, List<Seat> seatList) {
+    public Place(String name, int seatsCnt) {
         this.name = name;
-        this.seats_cnt = seats_cnt;
-        this.seatList = seatList != null ? seatList : new ArrayList<>();
+        this.seatsCnt = seatsCnt;
     }
 
     /**

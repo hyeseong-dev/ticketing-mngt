@@ -6,6 +6,7 @@ import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
+import com.mgnt.ticketing.domain.concert.entity.Place;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
@@ -58,20 +59,8 @@ class PaymentServiceTest {
         );
 
         // 예약 정보 세팅
-// 예약 정보 세팅
         예약건 = Reservation.builder()
-                .user(User.builder()
-                        .userId(1L)
-                        .email("test@example.com")
-                        .password("password")  // 실제로는 암호화된 비밀번호여야 합니다.
-                        .name("홍길동")
-                        .balance(BigDecimal.valueOf(100000))
-                        .deletedAt(null)
-                        .emailVerified(true)
-                        .role(UserRoleEnum.USER)  // UserRoleEnum.USER로 가정
-                        .phoneNumber("010-1234-5678")
-                        .address("서울시 강남구 테헤란로 123")
-                        .build())
+                .user(new User(1L, BigDecimal.valueOf(100000)))
                 .concert(new Concert(
                         "임영웅 콘서트",
                         1L,
@@ -83,11 +72,10 @@ class PaymentServiceTest {
                         ZonedDateTime.of(
                                 LocalDateTime.of(2024, 5, 25, 18, 30, 0),
                                 ZoneId.of("Asia/Seoul"))))
-                .seat(new Seat(1L, 1, BigDecimal.valueOf(79000)))
+                .seat(new Seat(1L, Place.builder().build(), 1, BigDecimal.valueOf(79000)))
                 .status(Reservation.Status.ING)
                 .reservedAt(null)
                 .build();
-
     }
 
     @Test
