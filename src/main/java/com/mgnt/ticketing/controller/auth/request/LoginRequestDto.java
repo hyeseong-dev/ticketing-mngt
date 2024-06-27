@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.controller.auth.dto.request;
+package com.mgnt.ticketing.controller.auth.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

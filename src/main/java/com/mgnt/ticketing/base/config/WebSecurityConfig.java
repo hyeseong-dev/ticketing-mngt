@@ -35,6 +35,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/user/**").permitAll()
                                 .requestMatchers("/", "/css/**", "/js/**","/swagger-ui/**", "/api-docs/**").permitAll() // 정적 리소스 허용
                                 .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 루트 경로 허용
+                                .requestMatchers("/hello").permitAll()
                                 .requestMatchers("/").permitAll() // 루트 경로 허용
                                 .anyRequest().authenticated())
                 .addFilterBefore(new JwtTokenFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);

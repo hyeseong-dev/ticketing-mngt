@@ -2,8 +2,8 @@ package com.mgnt.ticketing.domain.auth.service;
 
 import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.error.exceptions.EmailSendException;
-import com.mgnt.ticketing.controller.auth.dto.request.EmailRequestDto;
-import com.mgnt.ticketing.controller.auth.dto.response.EmailResponseDto;
+import com.mgnt.ticketing.controller.auth.request.EmailRequestDto;
+import com.mgnt.ticketing.controller.auth.response.EmailResponseDto;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import com.mgnt.ticketing.base.util.EncryptionUtil;

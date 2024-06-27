@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.controller.auth.dto.response;
+package com.mgnt.ticketing.controller.auth.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

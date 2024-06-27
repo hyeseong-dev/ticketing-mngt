@@ -1,7 +1,7 @@
 package com.mgnt.ticketing.domain.user.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
-import com.mgnt.ticketing.controller.auth.dto.request.SignUpRequestDto;
+import com.mgnt.ticketing.controller.auth.request.SignUpRequestDto;
 import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

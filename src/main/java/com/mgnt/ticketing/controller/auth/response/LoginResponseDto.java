@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.controller.auth.dto.response;
+package com.mgnt.ticketing.controller.auth.response;
 
 import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.dto.response.SuccessCode;

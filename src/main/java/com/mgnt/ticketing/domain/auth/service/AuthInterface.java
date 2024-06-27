@@ -1,12 +1,12 @@
 package com.mgnt.ticketing.domain.auth.service;
 
 
-import com.mgnt.ticketing.controller.auth.dto.request.LoginRequestDto;
-import com.mgnt.ticketing.controller.auth.dto.request.SignUpRequestDto;
-import com.mgnt.ticketing.controller.auth.dto.response.LoginResponseDto;
-import com.mgnt.ticketing.controller.auth.dto.response.LogoutResponseDto;
-import com.mgnt.ticketing.controller.auth.dto.response.RefreshResponseDto;
-import com.mgnt.ticketing.controller.auth.dto.response.SignUpResponseDto;
+import com.mgnt.ticketing.controller.auth.request.LoginRequestDto;
+import com.mgnt.ticketing.controller.auth.request.SignUpRequestDto;
+import com.mgnt.ticketing.controller.auth.response.LoginResponseDto;
+import com.mgnt.ticketing.controller.auth.response.LogoutResponseDto;
+import com.mgnt.ticketing.controller.auth.response.RefreshResponseDto;
+import com.mgnt.ticketing.controller.auth.response.SignUpResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 

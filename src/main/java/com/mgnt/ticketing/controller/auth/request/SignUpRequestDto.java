@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.controller.auth.dto.request;
+package com.mgnt.ticketing.controller.auth.request;
 
 import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import jakarta.validation.constraints.*;
