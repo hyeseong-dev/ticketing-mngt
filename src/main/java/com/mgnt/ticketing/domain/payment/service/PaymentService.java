@@ -50,19 +50,22 @@ public class PaymentService implements PaymentInterface {
         User user = userReader.findUser(request.userId());
         paymentValidator.checkBalance(payment.getPrice(), user.getBalance());
 
-        // 결제
-        // 1. 결제
+        // 결제 요청
         boolean isSuccess = false;
-        Payment paymentResult = payment.toPaid();   // 결제 완료 처리
-        paymentResult.getReservation().toComplete();    // 예약 완료 처리
-        BigDecimal usedBalance = user.getBalance();
-        if (paymentResult.getStatus().equals(Payment.Status.COMPLETE)) {
-            // 2. 사용자 잔액 차감
-            usedBalance = user.useBalance(payment.getPrice());
+        // 1. 사용자 잔액 차감
+        BigDecimal previousBalance = user.getBalance();
+        BigDecimal usedBalance = user.useBalance(payment.getPrice());
+        if (usedBalance.equals(previousBalance.subtract(payment.getPrice()))) {
+            // 2-1. 결제 처리
+            payment = payment.toPaid();   // 결제 완료 처리
+            payment.getReservation().toComplete();    // 예약 완료 처리
             isSuccess = true;
+        } else {
+            // 2-2. 결제 실패 : 잔액 원복
+            usedBalance = user.getBalance();
         }
 
-        return PayResponse.from(isSuccess, paymentResult, usedBalance);
+        return PayResponse.from(isSuccess, payment, usedBalance);
     }
 
     /**
