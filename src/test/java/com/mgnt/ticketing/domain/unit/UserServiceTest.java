@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.domain.user.service;
+package com.mgnt.ticketing.domain.unit;
 
 import com.mgnt.ticketing.controller.user.dto.request.ChargeRequest;
 import com.mgnt.ticketing.controller.user.dto.response.GetBalanceResponse;

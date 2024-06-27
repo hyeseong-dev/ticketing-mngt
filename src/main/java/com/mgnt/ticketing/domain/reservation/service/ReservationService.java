@@ -17,6 +17,7 @@ import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymen
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.logging.LogLevel;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,12 +64,11 @@ public class ReservationService implements ReservationInterface {
             Payment payment = paymentService.create(reservation.toCreatePayment());
             // 예약 임시 점유 (5분)
             reservationMonitor.occupyReservation(reservation.getReservationId());
-
             return ReserveResponse.from(reservation, payment);
 
         } catch (ObjectOptimisticLockingFailureException e) {
             // 버전 충돌 -> "이미 선택된 좌석입니다." 반환
-            throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED);
+            throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, LogLevel.INFO);
         }
     }
 

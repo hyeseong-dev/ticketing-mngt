@@ -1,4 +1,4 @@
-package com.mgnt.ticketing.domain.concert.service;
+package com.mgnt.ticketing.domain.unit;
 
 import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.controller.concert.dto.response.GetConcertResponse;
@@ -12,10 +12,12 @@ import com.mgnt.ticketing.domain.concert.entity.Place;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.concert.repository.ConcertRepository;
 
+import com.mgnt.ticketing.domain.concert.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.logging.LogLevel;
 
 
 import java.math.BigDecimal;
@@ -151,7 +153,7 @@ class ConcertServiceTest {
                 .placeId(1L)
                 .concertDateList(new ArrayList<>())
                 .build());
-        doThrow(new CustomException(ConcertExceptionEnum.DATE_IS_NULL)).when(concertValidator).dateIsNull(any());
+        doThrow(new CustomException(ConcertExceptionEnum.DATE_IS_NULL, null, LogLevel.INFO)).when(concertValidator).dateIsNull(any());
 
         // then
         CustomException expected = assertThrows(CustomException.class, () ->

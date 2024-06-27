@@ -1,17 +1,17 @@
-package com.mgnt.ticketing.domain.waiting.service;
+package com.mgnt.ticketing.domain.unit;
 
 import com.mgnt.ticketing.base.jwt.JwtService;
 import com.mgnt.ticketing.controller.waiting.response.CheckActiveResponse;
 import com.mgnt.ticketing.controller.waiting.response.IssueTokenResponse;
 import com.mgnt.ticketing.domain.waiting.entity.WaitingQueue;
 import com.mgnt.ticketing.domain.waiting.repository.WaitingQueueRepository;
+import com.mgnt.ticketing.domain.waiting.service.WaitingService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
