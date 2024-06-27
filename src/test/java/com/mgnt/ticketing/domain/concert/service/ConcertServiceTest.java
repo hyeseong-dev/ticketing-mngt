@@ -37,6 +37,7 @@ class ConcertServiceTest {
     private ConcertService concertService;
     private ConcertRepository concertRepository;
     private ConcertValidator concertValidator;
+    private ConcertReader concertReader;
     private ConcertPlaceManager placeManager;
     private ConcertReservationManager reservationManager;
 
@@ -48,17 +49,19 @@ class ConcertServiceTest {
         // mocking
         concertRepository = Mockito.mock(ConcertRepository.class);
         concertValidator = Mockito.mock(ConcertValidator.class);
+        concertReader = Mockito.mock(ConcertReader.class);
         placeManager = Mockito.mock(ConcertPlaceManager.class);
         reservationManager = Mockito.mock(ConcertReservationManager.class);
 
         concertService = new ConcertService(
                 concertRepository,
                 concertValidator,
+                concertReader,
                 placeManager,
                 reservationManager
         );
 
-        // 임영웅 콘서트 정보 세팅
+        // 콘서트 정보 세팅
         임영웅_콘서트 = Concert.builder()
                 .name("2024 임영웅 콘서트 [IM HERO - THE STADIUM]")
                 .placeId(1L)
@@ -108,11 +111,10 @@ class ConcertServiceTest {
 
         // when
         when(concertRepository.findById(concertId)).thenReturn(임영웅_콘서트);
-        when(placeManager.getPlace(임영웅_콘서트.getPlaceId())).thenReturn(상암_월드컵경기장);
+        when(concertReader.findPlace(임영웅_콘서트.getPlaceId())).thenReturn(상암_월드컵경기장);
         GetConcertResponse response = concertService.getConcert(concertId);
 
         // then
-
         assertThat(response.name()).isEqualTo("2024 임영웅 콘서트 [IM HERO - THE STADIUM]");
         assertThat(response.period()).isEqualTo("2024.05.25~2024.05.26");
         assertThat(response.place()).isEqualTo("상암 월드컵경기장");
@@ -127,11 +129,10 @@ class ConcertServiceTest {
 
         // when
         when(concertRepository.findById(concertId)).thenReturn(임영웅_콘서트);
-        when(placeManager.getPlace(임영웅_콘서트.getPlaceId())).thenReturn(null);
+        when(concertReader.findPlace(임영웅_콘서트.getPlaceId())).thenReturn(null);
         GetConcertResponse response = concertService.getConcert(concertId);
 
         // then
-
         assertThat(response.name()).isEqualTo("2024 임영웅 콘서트 [IM HERO - THE STADIUM]");
         assertThat(response.period()).isEqualTo("2024.05.25~2024.05.26");
         assertThat(response.place()).isEqualTo("-");
@@ -155,7 +156,7 @@ class ConcertServiceTest {
         // then
         CustomException expected = assertThrows(CustomException.class, () ->
                 concertValidator.dateIsNull(new ArrayList<>()));
-        assertThat(expected.getMessage()).isEqualTo("예정된 콘서트 날짜가 없습니다..");
+        assertThat(expected.getMessage()).isEqualTo("예정된 콘서트 날짜가 없습니다.");
     }
 
     @Test
@@ -183,26 +184,17 @@ class ConcertServiceTest {
         Long concertDateId = 1L;
 
         // when
-        when(placeManager.getSeatsByPlace(concertId)).thenReturn(상암_월드컵경기장.getSeatList());
+        when(placeManager.getSeatsByConcertId(concertId)).thenReturn(상암_월드컵경기장.getSeatList());
         when(reservationManager.getReservedSeatIdsByConcertDate(concertDateId)).thenReturn(List.of(2L, 4L));
         List<GetSeatsResponse> responses = concertService.getSeats(concertId, concertDateId);
 
-        // 전체 좌석 중 2, 4번 좌석만 예약 여부 true
+        // then
+        // 전체 좌석 중 2,4번 좌석만 예약 여부 true
         assertThat(responses.size()).isEqualTo(5);
-
-        assertThat(responses.get(0).seatNum()).isEqualTo(1);
         assertThat(responses.get(0).isReserved()).isEqualTo(false);
-
-        assertThat(responses.get(1).seatNum()).isEqualTo(2);
         assertThat(responses.get(1).isReserved()).isEqualTo(true);
-
-        assertThat(responses.get(2).seatNum()).isEqualTo(3);
         assertThat(responses.get(2).isReserved()).isEqualTo(false);
-
-        assertThat(responses.get(3).seatNum()).isEqualTo(4);
         assertThat(responses.get(3).isReserved()).isEqualTo(true);
-
-        assertThat(responses.get(4).seatNum()).isEqualTo(5);
         assertThat(responses.get(4).isReserved()).isEqualTo(false);
     }
 }

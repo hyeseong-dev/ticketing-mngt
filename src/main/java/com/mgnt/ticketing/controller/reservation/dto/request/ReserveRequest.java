@@ -21,7 +21,7 @@ public record ReserveRequest(
         Concert concert = concertReader.findConcert(concertId);
         ConcertDate concertDate = concertReader.findConcertDate(concertDateId);
         Seat seat = concertReader.findSeat(seatId);
-        User user = userReader.getUser(userId);
+        User user = userReader.findUser(userId);
 
         return Reservation.builder()
                 .concert(concert)

@@ -1,5 +1,6 @@
 package com.mgnt.ticketing.controller.user;
 
+import com.mgnt.ticketing.base.exception.ApiResult;
 import com.mgnt.ticketing.controller.user.dto.request.ChargeRequest;
 import com.mgnt.ticketing.controller.user.dto.request.MypageRequest;
 import com.mgnt.ticketing.controller.user.dto.request.PasswordReques;
@@ -8,6 +9,11 @@ import com.mgnt.ticketing.controller.user.dto.response.*;
 import com.mgnt.ticketing.domain.payment.PaymentEnums;
 import com.mgnt.ticketing.domain.reservation.ReservationEnums;
 import com.mgnt.ticketing.domain.user.service.UserInterface;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +27,7 @@ import java.util.List;
 /**
  * 사용자 관련 API 컨트롤러
  */
+@Tag(name = "유저", description = "user-controller")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -35,6 +42,8 @@ public class UserController {
      * @param userId 사용자 ID
      * @return 예약 목록
      */
+    @Operation(summary = "사용자 예약 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetMyReservationsResponse.class)))
     @GetMapping("/{userId}/reservation")
     public List<GetMyReservationsResponse> getMyReservation(@PathVariable(value = "userId") @NotNull Long userId) {
         // 더미 데이터
@@ -63,11 +72,12 @@ public class UserController {
      * @param userId 사용자 ID
      * @param request 충전 요청 정보
      */
+    @Operation(summary = "잔액 충전")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetBalanceResponse.class)))
     @PatchMapping("/{userId}/charge")
-    public void charge(@PathVariable(value = "userId") @NotNull Long userId,
-                       @RequestBody @Valid ChargeRequest request
-    ) {
-
+    public ApiResult<GetBalanceResponse> charge(@PathVariable(value = "userId") @NotNull Long userId,
+                                                @RequestBody @Valid ChargeRequest request) {
+        return ApiResult.success(new GetBalanceResponse(1L, BigDecimal.valueOf(110000)));
     }
 
     /**
@@ -76,10 +86,12 @@ public class UserController {
      * @param userId 사용자 ID
      * @return 잔액 정보
      */
+    @Operation(summary = "잔액 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetBalanceResponse.class)))
     @GetMapping("/{userId}/balance")
-    public GetBalanceResponse getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
+    public ApiResult<GetBalanceResponse> getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
         // 더미 데이터
-        return new GetBalanceResponse(BigDecimal.valueOf(1000));
+        return ApiResult.success(new GetBalanceResponse(1L, BigDecimal.valueOf(1000)));
     }
 
     /**
@@ -87,6 +99,8 @@ public class UserController {
      *
      * @return 사용자 목록 응답
      */
+    @Operation(summary = "사용자 목록 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetUserListResponse.class)))
     @GetMapping
     public ResponseEntity<GetUserListResponse> getUsers() {
         return userInterface.getUsers();
@@ -98,6 +112,8 @@ public class UserController {
      * @param id 사용자 ID
      * @return 사용자 상세 정보 응답
      */
+    @Operation(summary = "사용자 상세 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetUserResponse.class)))
     @GetMapping("/{id}")
     public ResponseEntity<GetUserResponse> getUserDetail(@PathVariable Long id) {
         return userInterface.getUserDetail(id);
@@ -110,6 +126,8 @@ public class UserController {
      * @param requestBody 수정 요청 정보
      * @return 수정된 사용자 정보 응답
      */
+    @Operation(summary = "사용자 정보 수정")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
     @PatchMapping("/{id}")
     public ResponseEntity<UpdateUserResponse> modifyUser(
             @PathVariable Long id,
@@ -125,6 +143,8 @@ public class UserController {
      * @param requestBody 수정 요청 정보
      * @return 수정된 사용자 정보 응답
      */
+    @Operation(summary = "마이페이지 정보 수정")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
     @PatchMapping("/mypage/{id}")
     public ResponseEntity<UpdateUserResponse> modifyMypage(
             @PathVariable Long id,
@@ -140,6 +160,8 @@ public class UserController {
      * @param requestBody 비밀번호 수정 요청 정보
      * @return 수정된 사용자 정보 응답
      */
+    @Operation(summary = "비밀번호 수정")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
     @PatchMapping("/{id}/password")
     public ResponseEntity<UpdateUserResponse> modifyPassword(
             @PathVariable Long id,
@@ -154,6 +176,8 @@ public class UserController {
      * @param id 사용자 ID
      * @return 삭제된 사용자 정보 응답
      */
+    @Operation(summary = "사용자 삭제")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DeleteUserResponse.class)))
     @DeleteMapping("/{id}")
     public ResponseEntity<DeleteUserResponse> deleteUser(
             @PathVariable Long id

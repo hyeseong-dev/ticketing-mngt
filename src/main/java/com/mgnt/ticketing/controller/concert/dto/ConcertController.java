@@ -6,6 +6,12 @@ import com.mgnt.ticketing.controller.concert.dto.response.GetConcertsResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetDatesResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetSeatsResponse;
 import com.mgnt.ticketing.domain.concert.service.ConcertService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+@Tag(name = "콘서트", description = "concert-controller")
 @RequestMapping("/concerts")
 @RestController
 @RequiredArgsConstructor
@@ -23,7 +30,9 @@ public class ConcertController {
 
     private final ConcertService service;
 
-    @GetMapping("/")
+    @Operation(summary = "콘서트 목록 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetConcertsResponse.class))))
+    @GetMapping("")
     public List<GetConcertsResponse> getConcerts() {
         // dummy data
         return List.of(
@@ -32,6 +41,8 @@ public class ConcertController {
         );
     }
 
+    @Operation(summary = "콘서트 상세 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetConcertResponse.class)))
     @GetMapping("/{concertId}")
     public GetConcertResponse getConcert(@PathVariable(value = "concertId") @NotNull Long concertId) {
         // dummy data
@@ -44,7 +55,8 @@ public class ConcertController {
                 .createdAt(ZonedDateTime.now().minusDays(1))
                 .build();
     }
-
+    @Operation(summary = "콘서트 회차 목록 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetDatesResponse.class))))
     @GetMapping("/{concertId}/dates")
     public List<GetDatesResponse> getDates(@PathVariable(value = "concertId") @NotNull Long concertId) {
         // dummy data
@@ -54,6 +66,8 @@ public class ConcertController {
         );
     }
 
+    @Operation(summary = "좌석 목록 조회")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetSeatsResponse.class))))
     @GetMapping("/{concertId}/dates/{concertDateId}/seats")
     public List<GetSeatsResponse> getSeats(@PathVariable(value = "concertId") @NotNull Long concertId,
                                            @PathVariable(value = "concertDateId") @NotNull Long concertDateId) {
