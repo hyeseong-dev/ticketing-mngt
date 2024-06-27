@@ -40,14 +40,12 @@ public class Concert extends BaseDateTimeEntity {
     /**
      * 생성자
      *
-     * @param concertId 콘서트 ID
      * @param name 콘서트 이름
      * @param placeId 장소 ID
      * @param concertDateList 콘서트 날짜 목록
      */
     @Builder
-    public Concert(Long concertId, String name, Long placeId, List<ConcertDate> concertDateList) {
-        this.concertId = concertId;
+    public Concert(String name, Long placeId, List<ConcertDate> concertDateList) {
         this.name = name;
         this.placeId = placeId;
         this.concertDateList = concertDateList != null ? concertDateList : new ArrayList<>();

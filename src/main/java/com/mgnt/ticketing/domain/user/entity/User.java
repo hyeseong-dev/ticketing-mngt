@@ -59,6 +59,11 @@ public class User extends BaseDateTimeEntity {
     @Column(name = "address", nullable = false)
     private String address;
 
+    public User(Long userId, BigDecimal balance) {
+        this.userId = userId;
+        this.balance = balance;
+    }
+
     /**
      * 생성자
      *
