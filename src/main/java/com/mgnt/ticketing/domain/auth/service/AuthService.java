@@ -3,7 +3,8 @@ package com.mgnt.ticketing.domain.auth.service;
 import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.error.exceptions.EmailSendException;
 import com.mgnt.ticketing.base.event.AuthRegisteredEvent;
-import com.mgnt.ticketing.domain.auth.repository.RefreshTokenJpaRepository;
+import com.mgnt.ticketing.base.jwt.JwtUtil;
+import com.mgnt.ticketing.base.jwt.UserDetailsImpl;
 import com.mgnt.ticketing.controller.auth.dto.request.LoginRequestDto;
 import com.mgnt.ticketing.controller.auth.dto.request.SignUpRequestDto;
 import com.mgnt.ticketing.controller.auth.dto.response.LoginResponseDto;
@@ -11,10 +12,9 @@ import com.mgnt.ticketing.controller.auth.dto.response.LogoutResponseDto;
 import com.mgnt.ticketing.controller.auth.dto.response.RefreshResponseDto;
 import com.mgnt.ticketing.controller.auth.dto.response.SignUpResponseDto;
 import com.mgnt.ticketing.domain.auth.entity.RefreshToken;
+import com.mgnt.ticketing.domain.auth.repository.RefreshTokenJpaRepository;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
-import com.mgnt.ticketing.base.jwt.JwtUtil;
-import com.mgnt.ticketing.base.jwt.UserDetailsImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Optional;
 
 @Slf4j
@@ -93,7 +92,8 @@ public class AuthService implements AuthInterface {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
             );
-            String accessToken = jwtUtil.generateAccessToken(userDetails);
+//            String accessToken = jwtUtil.generateAccessToken(userDetails);
+            String accessToken = jwtUtil.createAccessToken(dto.getEmail());
             String refreshToken;
 
             Optional<RefreshToken> existingTokenOpt = refreshTokenJpaRepository.findByUser_Email(dto.getEmail());
@@ -103,7 +103,8 @@ public class AuthService implements AuthInterface {
                 refreshToken = existingToken.getToken();
                 refreshTokenJpaRepository.save(existingToken);
             } else {
-                refreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
+                refreshToken = jwtUtil.createRefreshToken(dto.getEmail());
+//                refreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
                 RefreshToken refreshTokenEntity = RefreshToken.builder()
                         .user(userJpaRepository.findByEmail(dto.getEmail()).get())
                         .token(refreshToken)
@@ -125,11 +126,11 @@ public class AuthService implements AuthInterface {
     @Transactional
     public ResponseEntity<LogoutResponseDto> logout(String accessToken) {
         try {
-            if (accessToken == null || !accessToken.startsWith(JwtUtil.BEARER_PREFIX)) {
+            if (accessToken == null || !accessToken.startsWith("Bearer ")) {
                 return LogoutResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE.getCode(), ErrorCode.INVALID_INPUT_VALUE.getMessage());
             }
 
-            String token = accessToken.substring(JwtUtil.BEARER_PREFIX.length());
+            String token = accessToken.substring(7);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
@@ -139,8 +140,8 @@ public class AuthService implements AuthInterface {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             try {
-                jwtUtil.extractUsername(token); // 만료된 토큰일 경우 예외 발생
-                if (!jwtUtil.isTokenValid(token, userDetails)) {
+                jwtUtil.getEmailFromToken(token); // 만료된 토큰일 경우 예외 발생
+                if (!jwtUtil.validateToken(token)) {
                     return LogoutResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
                 }
             } catch (ExpiredJwtException e) {
@@ -163,15 +164,15 @@ public class AuthService implements AuthInterface {
     @Transactional
     public ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
         try {
-            if (accessToken == null || !accessToken.startsWith(JwtUtil.BEARER_PREFIX))
+            if (accessToken == null || !accessToken.startsWith("Bearer "))
                 return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);
 
 
-            final String token = accessToken.substring(JwtUtil.BEARER_PREFIX.length());
+            final String token = accessToken.substring(7);
             String userEmail;
 
             try {
-                userEmail = jwtUtil.extractUsername(token);
+                userEmail = jwtUtil.getEmailFromToken(token);
             } catch (ExpiredJwtException e) {
                 userEmail = e.getClaims().getSubject(); // 만료된 토큰에서 이메일을 추출
             }
@@ -186,8 +187,8 @@ public class AuthService implements AuthInterface {
                     .map(UserDetailsImpl::new)
                     .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.INVALID_CREDENTIALS.getMessage()));
 
-            String newAccessToken = jwtUtil.generateAccessToken(userDetails);
-            String newRefreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
+            String newAccessToken = jwtUtil.createAccessToken(userDetails.getUsername());
+            String newRefreshToken = jwtUtil.createRefreshToken(userDetails.getUsername());
 
             refreshTokenJpaRepository.deleteByUser_Email(userEmail);
 

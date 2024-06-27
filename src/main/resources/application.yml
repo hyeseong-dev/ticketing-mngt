@@ -73,8 +73,11 @@ spring:
       hibernate.default_batch_fetch_size: 1000 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
 
 jwt:
-  secret:
-    key: ${JWT_SECRET_KEY}
+#  secret:
+#    key: ${JWT_SECRET_KEY}
+    secret: "7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg=="
+    access-token-validity: 3600000 # 1 hour
+    refresh-token-validity: 1296000000 # 15 days
 
 security:
   allowed-uris:
@@ -90,3 +93,11 @@ security:
     - /payments
   jackson:
     property-naming-strategy: SNAKE_CASE
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

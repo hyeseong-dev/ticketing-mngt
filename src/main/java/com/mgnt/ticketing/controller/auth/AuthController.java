@@ -5,15 +5,15 @@ import com.mgnt.ticketing.controller.auth.dto.request.SignUpRequestDto;
 import com.mgnt.ticketing.controller.auth.dto.response.LoginResponseDto;
 import com.mgnt.ticketing.controller.auth.dto.response.LogoutResponseDto;
 import com.mgnt.ticketing.controller.auth.dto.response.RefreshResponseDto;
-import com.mgnt.ticketing.controller.auth.dto.response.SignUpResponseDto;
 import com.mgnt.ticketing.domain.auth.service.AuthInterface;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -22,8 +22,9 @@ public class AuthController {
     private final AuthInterface authInterface;
 
     @PostMapping("/signup")
-    public ResponseEntity<? super SignUpResponseDto> signUp(
+    public ResponseEntity<?> signUp(
             @RequestBody @Valid SignUpRequestDto requestBody) {
+        log.info("Received SignUpRequestDto: {}", requestBody);
         return authInterface.signUp(requestBody);
     }
 
