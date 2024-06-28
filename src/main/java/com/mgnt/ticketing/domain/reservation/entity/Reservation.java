@@ -4,8 +4,6 @@ import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
-import com.mgnt.ticketing.domain.payment.entity.Payment;
-import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
 import com.mgnt.ticketing.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -56,6 +54,7 @@ public class Reservation extends BaseDateTimeEntity {
     private Seat seat;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Reservation.Status status;
 
     private ZonedDateTime reservedAt;
@@ -65,6 +64,10 @@ public class Reservation extends BaseDateTimeEntity {
         ING,
         RESERVED,
         CANCEL
+    }
+
+    public void toComplete() {
+        this.status = Status.RESERVED;
     }
 
     /**
@@ -87,18 +90,6 @@ public class Reservation extends BaseDateTimeEntity {
         this.reservedAt = reservedAt;
     }
 
-    public void toComplete() {
-        this.status = Status.RESERVED;
-    }
-
-    /**
-     * 결제 생성 요청 DTO로 변환
-     *
-     * @return 결제 생성 요청 DTO
-     */
-    public CreatePaymentReqDto toCreatePayment() {
-        return new CreatePaymentReqDto(this, Payment.Status.READY, this.seat.getPrice());
-    }
 
     /**
      * 객체 동등성 비교

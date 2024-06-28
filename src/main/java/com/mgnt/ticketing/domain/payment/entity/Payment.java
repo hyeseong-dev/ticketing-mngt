@@ -34,6 +34,7 @@ public class Payment extends BaseDateTimeEntity {
     private Reservation reservation;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Payment.Status status;
 
     @Column(nullable = false)
@@ -78,17 +79,6 @@ public class Payment extends BaseDateTimeEntity {
     }
 
     public Payment toPaid() {
-        this.status = Payment.Status.COMPLETE;
-        this.paidAt = ZonedDateTime.now();
-        return this;
-    }
-
-    /**
-     * 결제 적용
-     *
-     * @return 결제 상태가 업데이트된 Payment 객체
-     */
-    public Payment applyPay() {
         this.status = Payment.Status.COMPLETE;
         this.paidAt = ZonedDateTime.now();
         return this;

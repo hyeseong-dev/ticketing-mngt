@@ -52,6 +52,9 @@ public class WaitingController {
      * @param request 대기열 저장 요청 DTO
      * @return 활성 상태 확인 응답
      */
+    // TODO 대기열 저장, 확인 호출 하나로 통합해보자
+    // 없으면 넣고, 있으면 확인하고, 만료되면 만료되었다고 반환하면 되지 않을까?
+    // 대기열 범용성 포인트 : 호출 url도 같이 관리? 토큰에? 테이블 컬럼으로?
     @Operation(summary = "대기열 저장", description = "첫 진입 시 또는 새로고침 시 호출")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CheckActiveResponse.class)))
     @PostMapping(value = "/queue")

@@ -4,6 +4,8 @@ import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.concert.service.ConcertReader;
+import com.mgnt.ticketing.domain.payment.entity.Payment;
+import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
@@ -29,5 +31,9 @@ public record ReserveRequest(
                 .user(user)
                 .status(Reservation.Status.ING)
                 .build();
+    }
+
+    public CreatePaymentReqDto toCreatePayment(Reservation reservation) {
+        return new CreatePaymentReqDto(reservation, Payment.Status.READY, reservation.getSeat().getPrice());
     }
 }

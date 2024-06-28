@@ -112,6 +112,6 @@ public class TestDataHandler {
 
     // 유저, 잔액 세팅
     public void settingUser(BigDecimal balance) {
-        userRepository.save(new User(1L, balance));
+        userRepository.save(new User(null, balance));;
     }
 }

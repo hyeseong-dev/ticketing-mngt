@@ -33,8 +33,8 @@ public class WaitingQueue {
     @Column(nullable = false)
     private String token;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     private Timestamp activeTime;

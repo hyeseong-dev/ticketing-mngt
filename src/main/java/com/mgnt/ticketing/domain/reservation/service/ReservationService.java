@@ -12,12 +12,15 @@ import com.mgnt.ticketing.domain.payment.service.PaymentService;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
 import com.mgnt.ticketing.domain.reservation.ReservationExceptionEnum;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
+import com.mgnt.ticketing.domain.reservation.event.ReservationOccupiedEvent;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.logging.LogLevel;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ public class ReservationService implements ReservationInterface {
     private final PaymentService paymentService;
     private final PaymentReader paymentReader;
     private final ReservationMonitor reservationMonitor;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostConstruct
     public void init() {
@@ -60,14 +64,14 @@ public class ReservationService implements ReservationInterface {
 
             // 좌석 예약
             Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
-            // 결제 정보 생성
-            Payment payment = paymentService.create(reservation.toCreatePayment());
-            // 예약 임시 점유 (5분)
-            reservationMonitor.occupyReservation(reservation.getReservationId());
+            Payment payment = paymentService.create(request.toCreatePayment(reservation));
+
+            // 예약 임시 점유 event 발행
+            eventPublisher.publishEvent(new ReservationOccupiedEvent(this, reservation.getReservationId()));
             return ReserveResponse.from(reservation, payment);
 
-        } catch (ObjectOptimisticLockingFailureException e) {
-            // 버전 충돌 -> "이미 선택된 좌석입니다." 반환
+        } catch (DataIntegrityViolationException e) {
+            // 유니크 제약 조건(concertDateId, seatId) 위반 시
             throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, LogLevel.INFO);
         }
     }

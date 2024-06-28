@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.logging.LogLevel;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -51,6 +52,7 @@ class ReservationServiceTest {
     private UserReader userReader;
     private PaymentService paymentService;
     private PaymentReader paymentReader;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private Reservation 예약건;
     private Payment 결제건;
@@ -65,6 +67,7 @@ class ReservationServiceTest {
         userReader = Mockito.mock(UserReader.class);
         paymentService = Mockito.mock(PaymentService.class);
         paymentReader = Mockito.mock(PaymentReader.class);
+        applicationEventPublisher = Mockito.mock(ApplicationEventPublisher.class);
 
         reservationService = new ReservationService(
                                     reservationRepository,
@@ -73,7 +76,8 @@ class ReservationServiceTest {
                                     userReader,
                                     paymentService,
                                     paymentReader,
-                                    reservationMonitor
+                                    reservationMonitor,
+                                    applicationEventPublisher
                                     );
 
         // 예약 정보 세팅
@@ -128,7 +132,7 @@ class ReservationServiceTest {
         // when
         when(reservationRepository.findOneByConcertDateIdAndSeatId(request.concertDateId(), request.seatId())).thenReturn(null);
         when(reservationRepository.save(request.toEntity(concertReader, userReader))).thenReturn(예약건);
-        when(paymentService.create(예약건.toCreatePayment())).thenReturn(결제건);
+        when(paymentService.create(request.toCreatePayment(예약건))).thenReturn(결제건);
         ReserveResponse response = reservationService.reserve(request);
 
         // then
