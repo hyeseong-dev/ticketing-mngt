@@ -45,7 +45,7 @@ public class User extends BaseDateTimeEntity {
     @Column(name = "deleted_at")
     private ZonedDateTime deletedAt;
 
-    @ColumnDefault("0")
+    @ColumnDefault("FALSE")
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified;
 
@@ -53,10 +53,10 @@ public class User extends BaseDateTimeEntity {
     @Enumerated(EnumType.STRING)
     private UserRoleEnum role;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address", nullable = false, unique = true)
     private String address;
 
     public User(Long userId, BigDecimal balance) {

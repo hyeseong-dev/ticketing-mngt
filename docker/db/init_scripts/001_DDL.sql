@@ -115,7 +115,7 @@ CREATE TABLE waiting_queue (
                                waiting_queue_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '대기열 ID (기본 키)',
                                user_id BIGINT NOT NULL COMMENT '사용자 ID (외래키)',
                                token VARCHAR(255) NOT NULL COMMENT '대기열 토큰',
-                               status ENUM('WAITING', 'ENTERED') NOT NULL COMMENT '대기 상태',
+                               status ENUM('EXPIRED', 'ACTIVE', 'WAITING') NOT NULL COMMENT '대기 상태',
                                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
                                updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
                                PRIMARY KEY (waiting_queue_id),
