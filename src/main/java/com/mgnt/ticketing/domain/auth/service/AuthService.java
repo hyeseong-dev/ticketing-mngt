@@ -162,13 +162,13 @@ public class AuthService implements AuthInterface {
 
     @Override
     @Transactional
-    public ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request) {
+    public ResponseEntity<? super RefreshResponseDto> refresh(String rawToken, HttpServletRequest request) {
         try {
-            if (accessToken == null || !accessToken.startsWith("Bearer "))
+            if (rawToken == null || !rawToken.startsWith("Bearer "))
                 return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);
 
 
-            final String token = accessToken.substring(7);
+            final String token = rawToken.substring(7);
             String userEmail;
 
             try {

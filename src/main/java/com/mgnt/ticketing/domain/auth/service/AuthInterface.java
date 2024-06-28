@@ -15,5 +15,5 @@ public interface AuthInterface {
     ResponseEntity<? super SignUpResponseDto> signUp(SignUpRequestDto dto);
     ResponseEntity<? super LoginResponseDto> login(LoginRequestDto dto, HttpServletRequest request);
     ResponseEntity<? super LogoutResponseDto> logout(String accessToken);
-    ResponseEntity<? super RefreshResponseDto> refresh(String accessToken, HttpServletRequest request);
+    ResponseEntity<? super RefreshResponseDto> refresh(String refreshToken, HttpServletRequest request);
 }

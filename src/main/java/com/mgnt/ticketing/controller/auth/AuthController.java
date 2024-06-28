@@ -54,7 +54,7 @@ public class AuthController {
     @Operation(summary = "토큰 갱신", description = "토큰 갱신을 위한 API입니다.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = RefreshResponseDto.class)))
     @GetMapping("/refresh")
-    public ResponseEntity<? super RefreshResponseDto> refresh(@RequestHeader("Authorization") String accessToken, HttpServletRequest request) {
-        return authInterface.refresh(accessToken, request);
+    public ResponseEntity<? super RefreshResponseDto> refresh(@RequestHeader("ReAuthroization") String refreshToken, HttpServletRequest request) {
+        return authInterface.refresh(refreshToken, request);
     }
 }
