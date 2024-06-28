@@ -11,6 +11,7 @@ import com.mgnt.ticketing.domain.concert.repository.ConcertRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,57 +25,38 @@ public class ConcertService implements ConcertInterface {
 
     private final ConcertRepository concertRepository;
     private final ConcertValidator concertValidator;
-    private final ConcertReader concertReader;
-    private final ConcertPlaceManager placeManager;
-    private final ConcertReservationManager reservationManager;
 
-    /**
-     * 모든 콘서트 목록 조회
-     *
-     * @return 콘서트 목록 응답 DTO 리스트
-     */
     @Override
     public List<GetConcertsResponse> getConcerts() {
         List<Concert> concerts = concertRepository.findAll();
         return concerts.stream().map(GetConcertsResponse::from).toList();
     }
 
-    /**
-     * 특정 콘서트 조회
-     *
-     * @param concertId 콘서트 ID
-     * @return 콘서트 응답 DTO
-     */
     @Override
     public GetConcertResponse getConcert(Long concertId) {
         Concert concert = concertRepository.findById(concertId);
-        Place place = concertReader.findPlace(concert.getPlaceId());
-        return GetConcertResponse.from(concert, place);
+        return GetConcertResponse.from(concert);
     }
 
-    /**
-     * 특정 콘서트의 날짜 목록 조회
-     *
-     * @param concertId 콘서트 ID
-     * @return 콘서트 날짜 응답 DTO 리스트
-     */
     @Override
     public GetDatesResponse getDates(Long concertId) {
         Concert concert = concertRepository.findById(concertId);
         // validator
         concertValidator.dateIsNull(concert.getConcertDateList());
 
-        return GetDatesResponse.from(concert.getConcertDateList());
+        // 콘서트 날짜 예약 가능 여부
+        List<GetDatesResponse.DateInfo> dateInfos = new ArrayList<>();
+        concert.getConcertDateList().forEach(concertDate -> {
+            boolean available = concertRepository.existByConcertDateAndStatus(concertDate.getConcertDateId(), Seat.Status.AVAILABLE);
+            dateInfos.add(GetDatesResponse.DateInfo.from(concertDate, available));
+        });
+
+        return new GetDatesResponse(dateInfos);
     }
 
     @Override
-    public GetSeatsResponse getSeats(Long concertId, Long concertDateId) {
-        // 콘서트 전체 좌석 정보
-        List<Seat> allSeats = placeManager.getSeatsByConcertId(concertId);
-        // 예약된 좌석 PK 조회
-        List<Long> reservedSeatIds = reservationManager.getReservedSeatIdsByConcertDate(concertDateId);
-
-        return GetSeatsResponse.from(allSeats, reservedSeatIds);
+    public GetSeatsResponse getAvailableSeats(Long concertDateId) {
+        List<Seat> availableSeats = concertRepository.findSeatsByConcertDateIdAndStatus(concertDateId, Seat.Status.AVAILABLE);
+        return GetSeatsResponse.from(availableSeats);
     }
-
 }

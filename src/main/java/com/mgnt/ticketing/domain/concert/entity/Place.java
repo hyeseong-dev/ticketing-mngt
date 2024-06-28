@@ -34,10 +34,6 @@ public class Place extends BaseDateTimeEntity {
     @Column(nullable = false)
     private int seatsCnt = 0;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "seat_id")
-    private List<Seat> seatList = new ArrayList<>();
-
     /**
      * 생성자
      *

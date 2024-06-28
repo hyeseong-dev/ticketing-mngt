@@ -52,11 +52,10 @@ public class ConcertController {
         return ApiResult.success(service.getDates(concertId));
     }
 
-    @Operation(summary = "좌석 목록 조회")
+    @Operation(summary = "예약 가능한 좌석 목록 조회")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = GetSeatsResponse.class))))
-    @GetMapping("/{concertId}/dates/{concertDateId}/seats")
-    public ApiResult<GetSeatsResponse> getSeats(@PathVariable(value = "concertId") @NotNull Long concertId,
-                                                      @PathVariable(value = "concertDateId") @NotNull Long concertDateId) {
-        return ApiResult.success(service.getSeats(concertId, concertDateId));
+    @GetMapping("/dates/{concertDateId}/seats")
+    public ApiResult<GetSeatsResponse> getAvailableSeats(@PathVariable(value = "concertDateId") @NotNull Long concertDateId) {
+        return ApiResult.success(service.getAvailableSeats(concertDateId));
     }
 }

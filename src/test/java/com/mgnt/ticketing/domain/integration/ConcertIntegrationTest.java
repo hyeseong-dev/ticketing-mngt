@@ -79,7 +79,6 @@ class ConcertIntegrationTest extends BaseIntegrationTest {
         // then
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body().jsonPath().getObject("data", GetConcertResponse.class).name()).isEqualTo("아이유 2024 콘서트");
-        assertThat(response.body().jsonPath().getObject("data", GetConcertResponse.class).price()).isEqualTo("89,000원~139,000원");
     }
 
     @Test
@@ -115,7 +114,7 @@ class ConcertIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("콘서트 좌석 목록을 조회하면, 좌석 예약 상태를 포함한 전체 좌석 목록을 반환한다.")
+    @DisplayName("콘서트 좌석 목록을 조회하면, 예약가능한 좌석 목록을 반환한다.")
     void getSeatsTest_success() {
         // given
         long concertId = 1L;
@@ -127,7 +126,6 @@ class ConcertIntegrationTest extends BaseIntegrationTest {
         // then
         assertThat(response.statusCode()).isEqualTo(200);
         GetSeatsResponse data = response.body().jsonPath().getObject("data", GetSeatsResponse.class);
-        assertThat(data.seats().size()).isEqualTo(50);
-        assertThat(data.seats().get(4).isReserved()).isTrue();
+        assertThat(data.seats().size()).isEqualTo(48);
     }
 }

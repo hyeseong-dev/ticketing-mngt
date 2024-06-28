@@ -10,16 +10,16 @@ public record GetSeatsResponse(
 
 ) implements Serializable {
 
-    public static GetSeatsResponse from(List<Seat> allSeats, List<Long> reservedSeatIds) {
-        return new GetSeatsResponse(allSeats.stream()
-                .map(seat -> new SeatResponse(seat.getSeatId(), seat.getSeatNum(), reservedSeatIds.contains(seat.getSeatId())))
-                .toList());
+    public static GetSeatsResponse from(List<Seat> seats) {
+        return new GetSeatsResponse(seats.stream().map(SeatResponse::from).toList());
     }
 
     public record SeatResponse(
             Long seatId,
-            int seatNum,
-            boolean isReserved
+            int seatNum
     ) {
+        public static SeatResponse from(Seat seat) {
+            return new SeatResponse(seat.getSeatId(), seat.getSeatNum());
+        }
     }
 }

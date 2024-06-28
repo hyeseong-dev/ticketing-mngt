@@ -24,13 +24,12 @@ public record GetConcertResponse(
     public GetConcertResponse {
     }
 
-    public static GetConcertResponse from(Concert concert, Place place) {
+    public static GetConcertResponse from(Concert concert) {
         return GetConcertResponse.builder()
                 .concertId(concert.getConcertId())
                 .name(concert.getName())
-                .place(place != null ? place.getName() : "-")
+                .place(concert.getPlace() != null ? concert.getPlace().getName() : "-")
                 .period(getConcertDateRange(concert.getConcertDateList()))
-                .price(place != null ? getSeatPriceRange(place.getSeatList()) : "-")
                 .createdAt(concert.getCreatedAt())
                 .build();
     }
@@ -52,20 +51,4 @@ public record GetConcertResponse(
         return earliestDate + "~" + latestDate;
     }
 
-    private static String getSeatPriceRange(List<Seat> seatList) {
-        // 좌석 가격 범위 문자열로 반환
-        if (seatList.isEmpty()) {
-            return "";
-        }
-
-        DecimalFormat formatter = new DecimalFormat("###,###원");
-
-        List<Seat> sortedSeatList = seatList.stream()
-                .sorted(Comparator.comparing(Seat::getPrice))
-                .toList();
-        String lowestPrice = formatter.format(sortedSeatList.get(0).getPrice());
-        String largestPrice = formatter.format(sortedSeatList.get(sortedSeatList.size() - 1).getPrice());
-
-        return lowestPrice + "~" + largestPrice;
-    }
 }

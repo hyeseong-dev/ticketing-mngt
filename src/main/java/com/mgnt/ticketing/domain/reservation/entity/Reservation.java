@@ -1,18 +1,12 @@
 package com.mgnt.ticketing.domain.reservation.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
-import com.mgnt.ticketing.domain.concert.entity.Concert;
-import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-import com.mgnt.ticketing.domain.concert.entity.Seat;
-import com.mgnt.ticketing.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -33,25 +27,17 @@ public class Reservation extends BaseDateTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(nullable = false)
+    private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "concert_id")
-    private Concert concert;
+    @Column(nullable = false)
+    private Long concertId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "concert_date_id")
-    private ConcertDate concertDate;
+    @Column(nullable = false)
+    private Long concertDateId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "seat_id")
-    private Seat seat;
+    @Column(nullable = false)
+    private Long seatId;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -70,26 +56,15 @@ public class Reservation extends BaseDateTimeEntity {
         this.status = Status.RESERVED;
     }
 
-    /**
-     * 생성자
-     *
-     * @param user 사용자
-     * @param concert 콘서트
-     * @param concertDate 콘서트 날짜
-     * @param seat 좌석
-     * @param status 예약 상태
-     * @param reservedAt 예약 시간
-     */
     @Builder
-    public Reservation(User user, Concert concert, ConcertDate concertDate, Seat seat, Reservation.Status status, ZonedDateTime reservedAt) {
-        this.user = user;
-        this.concert = concert;
-        this.concertDate = concertDate;
-        this.seat = seat;
+    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, Status status, ZonedDateTime reservedAt) {
+        this.userId = userId;
+        this.concertId = concertId;
+        this.concertDateId = concertDateId;
+        this.seatId = seatId;
         this.status = status;
         this.reservedAt = reservedAt;
     }
-
 
     /**
      * 객체 동등성 비교

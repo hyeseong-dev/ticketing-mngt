@@ -31,7 +31,9 @@ public class Concert extends BaseDateTimeEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
-    private Long placeId;
+    @OneToOne
+    @JoinColumn(name = "place_id")
+    private Place place;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "concert_id")
@@ -41,13 +43,13 @@ public class Concert extends BaseDateTimeEntity {
      * 생성자
      *
      * @param name 콘서트 이름
-     * @param placeId 장소 ID
+     * @param place 장소 객체
      * @param concertDateList 콘서트 날짜 목록
      */
     @Builder
-    public Concert(String name, Long placeId, List<ConcertDate> concertDateList) {
+    public Concert(String name, Place place, List<ConcertDate> concertDateList) {
         this.name = name;
-        this.placeId = placeId;
+        this.place = place;
         this.concertDateList = concertDateList != null ? concertDateList : new ArrayList<>();
     }
 

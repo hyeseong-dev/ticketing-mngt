@@ -9,16 +9,13 @@ public record GetDatesResponse(
         List<DateInfo> dates
 ) {
 
-    public static GetDatesResponse from(List<ConcertDate> concertDateList) {
-        return new GetDatesResponse(concertDateList.stream().map(DateInfo::from).toList());
-    }
-
     public record DateInfo(
             Long concertDateId,
-            ZonedDateTime date
+            ZonedDateTime date,
+            boolean available
     ) {
-        public static DateInfo from(ConcertDate concertDate) {
-            return new DateInfo(concertDate.getConcertDateId(), concertDate.getConcertDate());
+        public static DateInfo from(ConcertDate concertDate, boolean available) {
+            return new DateInfo(concertDate.getConcertDateId(), concertDate.getConcertDate(), available);
         }
     }
 }

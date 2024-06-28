@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LogLevel;
 
-import static com.mgnt.ticketing.domain.integration.base.BaseIntegrationTest.LOCAL_HOST;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class ReservationIntegrationTest extends BaseIntegrationTest {

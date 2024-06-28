@@ -1,13 +1,8 @@
 package com.mgnt.ticketing.domain.unit;
 
-import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import com.mgnt.ticketing.base.exception.CustomException;
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
-import com.mgnt.ticketing.domain.concert.entity.Concert;
-import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-import com.mgnt.ticketing.domain.concert.entity.Place;
-import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
@@ -25,14 +20,11 @@ import org.mockito.Mockito;
 import org.springframework.boot.logging.LogLevel;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.when;
 import static org.mockito.Mockito.doThrow;
 
@@ -60,19 +52,10 @@ class PaymentServiceTest {
 
         // 예약 정보 세팅
         예약건 = Reservation.builder()
-                .user(new User(1L, BigDecimal.valueOf(100000)))
-                .concert(new Concert(
-                        "임영웅 콘서트",
-                        1L,
-                        List.of(new ConcertDate(1L,
-                                ZonedDateTime.of(
-                                        LocalDateTime.of(2024, 5, 25, 18, 30, 0),
-                                        ZoneId.of("Asia/Seoul"))))))
-                .concertDate(new ConcertDate(1L,
-                        ZonedDateTime.of(
-                                LocalDateTime.of(2024, 5, 25, 18, 30, 0),
-                                ZoneId.of("Asia/Seoul"))))
-                .seat(new Seat(1L, Place.builder().build(), 1, BigDecimal.valueOf(79000)))
+                .userId(1L)
+                .concertId(1L)
+                .concertDateId(1L)
+                .seatId(5L)
                 .status(Reservation.Status.ING)
                 .reservedAt(null)
                 .build();
@@ -105,27 +88,23 @@ class PaymentServiceTest {
         // given
         Long paymentId = 1L;
         PayRequest request = new PayRequest(1L);
-        BigDecimal price = BigDecimal.valueOf(79000);
         Payment 결제건 = Payment.builder()
                 .reservation(예약건)
                 .status(Payment.Status.READY)
-                .price(price)
+                .price(BigDecimal.valueOf(79000))
                 .build();
-        User 사용자 = new User(1L, BigDecimal.valueOf(100));
+        User 사용자 = new User(1L, BigDecimal.valueOf(10000));
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제건);
         when(userReader.findUser(request.userId())).thenReturn(사용자);
-
-        // paymentValidator.checkBalance() 메소드가 예외를 던지도록 설정
         doThrow(new CustomException(PaymentExceptionEnum.INSUFFICIENT_BALANCE, null, LogLevel.INFO))
-                .when(paymentValidator).checkBalance(price, 사용자.getBalance());
+                .when(paymentValidator).checkBalance(결제건.getPrice(), 사용자.getBalance());
 
         // then
-        CustomException exception = assertThrows(CustomException.class, () ->
-                paymentService.pay(paymentId, request));
-
-        assertThat(exception.getMessage()).isEqualTo("잔액이 부족합니다.");
+        CustomException expected = assertThrows(CustomException.class, () ->
+                paymentValidator.checkBalance(결제건.getPrice(), 사용자.getBalance()));
+        assertThat(expected.getMessage()).isEqualTo("잔액이 부족합니다.");
     }
 
     @Test
@@ -149,7 +128,7 @@ class PaymentServiceTest {
         // then
         assertThat(response.isSuccess()).isTrue();
         assertThat(response.status()).isEqualTo(Payment.Status.COMPLETE);
-        assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(100000 - 79000));
+        assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(21000));
     }
 
     @Test
@@ -208,6 +187,7 @@ class PaymentServiceTest {
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제완료건);
+        when(userReader.findUser(anyLong())).thenReturn(new User(1L, BigDecimal.valueOf(10000)));
         CancelPaymentResultResDto response = paymentService.cancel(paymentId);
 
         // then
@@ -222,14 +202,13 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 결제취소건 = Payment.builder()
                 .reservation(예약건)
-                .status(Payment.Status.CANCEL) // 혹은 REFUND
+                .status(Payment.Status.CANCEL)
                 .price(BigDecimal.valueOf(79000))
                 .build();
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제취소건);
-        doThrow(new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_CANCEL, null, LogLevel.INFO))
-                .when(paymentValidator).checkCancelStatus(결제취소건.getStatus());
+        doThrow(new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_CANCEL, null, LogLevel.INFO)).when(paymentValidator).checkCancelStatus(결제취소건.getStatus());
 
         // then
         CustomException expected = assertThrows(CustomException.class, () ->

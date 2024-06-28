@@ -17,7 +17,7 @@ public class BaseIntegrationTest {
     @LocalServerPort
     protected int port;
 
-    public static final String LOCAL_HOST = "http://localhost:";
+    protected static final String LOCAL_HOST = "http://localhost:";
 
     @Autowired
     private DatabaseCleanup databaseCleanup;
@@ -30,8 +30,7 @@ public class BaseIntegrationTest {
         // 데이터 초기화
         databaseCleanup.execute();
         // 초기 콘서트 정보 세팅
-        testDataHandler.settingPlaceAndSeats();
-        testDataHandler.settingConcertAndDate();
+        testDataHandler.settingConcertInfo();
         // 초기 예약 세팅
         testDataHandler.reserveSeats();
     }

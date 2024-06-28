@@ -113,7 +113,8 @@ public class PaymentService implements PaymentInterface {
      */
     private Payment cancelPayment(Payment payment) {
         Payment updatedPayment = payment;
-        User user = payment.getReservation().getUser();
+        Long userId = payment.getReservation().getUserId();
+        User user = userReader.findUser(userId);
 
         if (Payment.Status.READY.equals(payment.getStatus())) {
             // 결제 대기 상태 - 즉시 취소

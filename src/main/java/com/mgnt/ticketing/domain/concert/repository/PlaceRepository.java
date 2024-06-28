@@ -11,9 +11,5 @@ public interface PlaceRepository {
 
     Place findById(Long placeId);
 
-    Seat findSeatById(Long seatId);
-
-    void addSeats(List<Seat> seats);
-
     void addPlace(Place place);
 }

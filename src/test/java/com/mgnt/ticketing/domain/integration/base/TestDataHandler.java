@@ -36,30 +36,15 @@ public class TestDataHandler {
 
     private final EntityManager entityManager;
 
-    // 콘서트 공연장, 좌석 정보 세팅
-    public void settingPlaceAndSeats() {
-        List<Seat> seats = new ArrayList<>();
+    // 콘서트 정보 세팅
+    public void settingConcertInfo() {
         int seatsCnt = 50;
         Place place = Place.builder()
                 .name("서울 올림픽경기장")
                 .seatsCnt(seatsCnt)
                 .build();
-
-        for (int i = 1; i <= seatsCnt; i++) {
-            if (i <= 20) {
-                seats.add(Seat.builder().place(place).seatNum(i).price(BigDecimal.valueOf(89000)).build());
-            } else if (i <= 40) {
-                seats.add(Seat.builder().place(place).seatNum(i).price(BigDecimal.valueOf(119000)).build());
-            } else {
-                seats.add(Seat.builder().place(place).seatNum(i).price(BigDecimal.valueOf(139000)).build());
-            }
-        }
         placeRepository.addPlace(place);
-        placeRepository.addSeats(seats);
-    }
 
-    // 콘서트, 회차 정보 세팅
-    public void settingConcertAndDate() {
         List<ConcertDate> concertDates = new ArrayList<>();
         concertDates.add(ConcertDate.builder()
                 .concertDate(ZonedDateTime.of(LocalDateTime.of(2024, 5, 25, 18, 30), ZoneId.of("Asia/Seoul")))
@@ -70,32 +55,42 @@ public class TestDataHandler {
 
         concertRepository.addConcert(Concert.builder()
                 .name("아이유 2024 콘서트")
-                .placeId(1L)
+                .place(place)
                 .concertDateList(concertDates)
                 .build());
         concertRepository.addConcertDates(concertDates);
+
+        List<Seat> seats = new ArrayList<>();
+        for (int i = 1; i <= seatsCnt; i++) {
+            if (i <= 20) {
+                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(89000)).build());
+            } else if (i <= 40) {
+                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(119000)).build());
+            } else {
+                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(139000)).build());
+            }
+        }
+        concertRepository.addSeats(seats);
     }
 
     // 5, 10번 좌석 예약
     public void reserveSeats() {
         long concertId = 1L;
         long concertDateId = 1L;
-        Concert concert = entityManager.find(Concert.class, concertId);
-        ConcertDate concertDate = entityManager.find(ConcertDate.class, concertDateId);
-        Seat seat_5 = entityManager.find(Seat.class, 5L);
-        Seat seat_10 = entityManager.find(Seat.class, 10L);
 
         reservationRepository.save(Reservation.builder()
-                .concert(concert)
-                .concertDate(concertDate)
-                .seat(seat_5)
+                .concertId(1L)
+                .concertDateId(1L)
+                .seatId(5L)
+                .userId(1L)
                 .status(Reservation.Status.ING)
                 .reservedAt(ZonedDateTime.now().minusMinutes(3)).build());
 
         reservationRepository.save(Reservation.builder()
-                .concert(concert)
-                .concertDate(concertDate)
-                .seat(seat_10)
+                .concertId(1L)
+                .concertDateId(1L)
+                .seatId(10L)
+                .userId(1L)
                 .status(Reservation.Status.RESERVED)
                 .reservedAt(ZonedDateTime.now().minusHours(1)).build());
     }
@@ -112,6 +107,6 @@ public class TestDataHandler {
 
     // 유저, 잔액 세팅
     public void settingUser(BigDecimal balance) {
-        userRepository.save(new User(null, balance));;
+        userRepository.save(new User(null, balance));
     }
 }
