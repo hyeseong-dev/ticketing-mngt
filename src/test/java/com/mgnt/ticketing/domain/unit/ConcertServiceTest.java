@@ -86,13 +86,19 @@ class ConcertServiceTest {
                 .name("상암 월드컵경기장")
                 .seatsCnt(5)
                 .build();
+
         좌석 = List.of(
                 new Seat(1L, 상암_월드컵경기장, 1, BigDecimal.valueOf(119000)),
                 new Seat(2L, 상암_월드컵경기장,2, BigDecimal.valueOf(119000)),
                 new Seat(3L, 상암_월드컵경기장,3, BigDecimal.valueOf(139000)),
                 new Seat(4L, 상암_월드컵경기장,4, BigDecimal.valueOf(139000)),
                 new Seat(5L, 상암_월드컵경기장,5, BigDecimal.valueOf(179000)));
+
+        // 공연장에 좌석 추가
+        상암_월드컵경기장.getSeatList().addAll(좌석);
+
     }
+
 
     @Test
     @DisplayName("콘서트_전체_목록_조회")
@@ -102,7 +108,7 @@ class ConcertServiceTest {
         List<GetConcertsResponse> responses = concertService.getConcerts();
 
         // then
-        assertThat(responses.get(0).name()).isEqualTo("2024 임영웅 콘서트 [IM HERO - THE STADIUM]");
+        assertThat(responses.get(0).name()).isEqualTo(임영웅_콘서트.getName());
     }
 
     @Test

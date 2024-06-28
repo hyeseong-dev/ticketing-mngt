@@ -105,22 +105,27 @@ class PaymentServiceTest {
         // given
         Long paymentId = 1L;
         PayRequest request = new PayRequest(1L);
+        BigDecimal price = BigDecimal.valueOf(79000);
         Payment 결제건 = Payment.builder()
                 .reservation(예약건)
                 .status(Payment.Status.READY)
-                .price(BigDecimal.valueOf(79000))
+                .price(price)
                 .build();
-        User 사용자 = new User(1L, BigDecimal.valueOf(10000));
+        User 사용자 = new User(1L, BigDecimal.valueOf(100));
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제건);
         when(userReader.findUser(request.userId())).thenReturn(사용자);
-        doThrow(new CustomException(PaymentExceptionEnum.INSUFFICIENT_BALANCE, null, LogLevel.INFO)).when(paymentValidator).checkBalance(결제건.getPrice(), 사용자.getBalance());
+
+        // paymentValidator.checkBalance() 메소드가 예외를 던지도록 설정
+        doThrow(new CustomException(PaymentExceptionEnum.INSUFFICIENT_BALANCE, null, LogLevel.INFO))
+                .when(paymentValidator).checkBalance(price, 사용자.getBalance());
 
         // then
-        CustomException expected = assertThrows(CustomException.class, () ->
-                paymentValidator.checkBalance(결제건.getPrice(), 사용자.getBalance()));
-        assertThat(expected.getMessage()).isEqualTo("잔액이 부족합니다.");
+        CustomException exception = assertThrows(CustomException.class, () ->
+                paymentService.pay(paymentId, request));
+
+        assertThat(exception.getMessage()).isEqualTo("잔액이 부족합니다.");
     }
 
     @Test
@@ -144,7 +149,7 @@ class PaymentServiceTest {
         // then
         assertThat(response.isSuccess()).isTrue();
         assertThat(response.status()).isEqualTo(Payment.Status.COMPLETE);
-        assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(21000));
+        assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(100000 - 79000));
     }
 
     @Test
@@ -217,13 +222,14 @@ class PaymentServiceTest {
         Long paymentId = 1L;
         Payment 결제취소건 = Payment.builder()
                 .reservation(예약건)
-                .status(Payment.Status.CANCEL)
+                .status(Payment.Status.CANCEL) // 혹은 REFUND
                 .price(BigDecimal.valueOf(79000))
                 .build();
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제취소건);
-        doThrow(new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_CANCEL, null, LogLevel.INFO)).when(paymentValidator).checkCancelStatus(결제취소건.getStatus());
+        doThrow(new CustomException(PaymentExceptionEnum.NOT_AVAILABLE_CANCEL, null, LogLevel.INFO))
+                .when(paymentValidator).checkCancelStatus(결제취소건.getStatus());
 
         // then
         CustomException expected = assertThrows(CustomException.class, () ->
