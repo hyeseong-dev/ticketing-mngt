@@ -35,7 +35,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.when;
 import static org.mockito.Mockito.doThrow;
 
-
 @Slf4j
 class ConcertServiceTest {
 
@@ -81,18 +80,19 @@ class ConcertServiceTest {
                 .place(상암_월드컵경기장)
                 .concertDateList(List.of(회차1, 회차2))
                 .build();
-
+        // 좌석 정보 세팅
         좌석 = List.of(
                 new Seat(1L, 회차1, 1, BigDecimal.valueOf(119000), Seat.Status.AVAILABLE),
                 new Seat(2L, 회차1,2, BigDecimal.valueOf(119000), Seat.Status.AVAILABLE),
                 new Seat(3L, 회차1,3, BigDecimal.valueOf(139000), Seat.Status.DISABLE),
                 new Seat(4L, 회차1,4, BigDecimal.valueOf(139000), Seat.Status.AVAILABLE),
-                new Seat(5L, 회차1,5, BigDecimal.valueOf(179000), Seat.Status.AVAILABLE));
+                new Seat(5L, 회차1,5, BigDecimal.valueOf(179000), Seat.Status.AVAILABLE)
+        );
     }
 
     @Test
-    @DisplayName("콘서트_전체_목록_조회")
-    void getConcertsTest_콘서트_전체_목록_조회() {
+    @DisplayName("콘서트 전체 목록을 조회한다.")
+    void getConcertsTest_all() {
         // when
         when(concertRepository.findAll()).thenReturn(List.of(임영웅_콘서트));
         List<GetConcertsResponse> responses = concertService.getConcerts();
@@ -102,8 +102,8 @@ class ConcertServiceTest {
     }
 
     @Test
-    @DisplayName("콘서트_상세정보_조회")
-    void getConcertTest_콘서트_상세정보_조회() {
+    @DisplayName("콘서트 상세정보를 조회한다.")
+    void getConcertTest_detail() {
         // given
         Long concertId = 1L;
 
@@ -119,8 +119,8 @@ class ConcertServiceTest {
     }
 
     @Test
-    @DisplayName("예정된_날짜가_없음")
-    void getDatesTest_예정된_날짜가_없음() {
+    @DisplayName("예정된 날짜가 없으면 예외 처리")
+    void getDatesTest_date_is_null() {
         // given
         Long concertId = 1L;
 
@@ -139,8 +139,8 @@ class ConcertServiceTest {
     }
 
     @Test
-    @DisplayName("콘서트_회차_목록_조회")
-    void getDatesTest_콘서트_회차_목록_조회() {
+    @DisplayName("콘서트 회차 목록을 조회한다.")
+    void getDatesTest_dates() {
         // given
         Long concertId = 1L;
 
@@ -157,8 +157,8 @@ class ConcertServiceTest {
     }
 
     @Test
-    @DisplayName("콘서트_회차별_좌석_목록_조회")
-    void getAvailableSeatsTest_콘서트_회차별_좌석_목록_조회() {
+    @DisplayName("콘서트 회차의 예약 가능한 좌석 목록을 조회한다.")
+    void getAvailableSeatsTest_seats() {
         // given
         Long concertDateId = 1L;
 

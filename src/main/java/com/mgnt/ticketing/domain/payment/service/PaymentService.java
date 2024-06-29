@@ -1,11 +1,14 @@
 package com.mgnt.ticketing.domain.payment.service;
 
+import com.mgnt.ticketing.controller.payment.dto.request.CreateRequest;
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
+import com.mgnt.ticketing.controller.payment.dto.response.CreateResponse;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
-import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
+import com.mgnt.ticketing.domain.reservation.entity.Reservation;
+import com.mgnt.ticketing.domain.reservation.service.ReservationReader;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,7 @@ public class PaymentService implements PaymentInterface {
     private final PaymentRepository paymentRepository;
     private final PaymentValidator paymentValidator;
     private final UserReader userReader;
+    private final ReservationReader reservationReader;
 
     /**
      * 결제 요청을 처리합니다.
@@ -68,15 +72,14 @@ public class PaymentService implements PaymentInterface {
         return PayResponse.from(isSuccess, payment, usedBalance);
     }
 
-    /**
-     * 결제 정보를 생성합니다.
-     *
-     * @param reqDto 결제 요청 DTO
-     * @return 생성된 결제 객체
-     */
     @Override
-    public Payment create(CreatePaymentReqDto reqDto) {
-        return paymentRepository.save(reqDto.toEntity());
+    public CreateResponse create(CreateRequest request) {
+        Reservation reservation = reservationReader.findReservation(request.reservationId());
+        Payment payment = paymentRepository.save(request.toEntity(reservation));
+        if (payment == null) {
+            return new CreateResponse(null);
+        }
+        return new CreateResponse(payment.getPaymentId());
     }
 
     /**

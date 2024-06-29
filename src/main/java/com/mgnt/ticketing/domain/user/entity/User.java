@@ -20,7 +20,7 @@ import java.time.ZonedDateTime;
  */
 @Getter
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseDateTimeEntity {
 

@@ -1,7 +1,9 @@
 package com.mgnt.ticketing.domain.unit;
 
 import com.mgnt.ticketing.base.exception.CustomException;
+import com.mgnt.ticketing.controller.payment.dto.request.CreateRequest;
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
+import com.mgnt.ticketing.controller.payment.dto.response.CreateResponse;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
 import com.mgnt.ticketing.domain.payment.PaymentExceptionEnum;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
@@ -9,8 +11,8 @@ import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.PaymentService;
 import com.mgnt.ticketing.domain.payment.service.PaymentValidator;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
-import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
+import com.mgnt.ticketing.domain.reservation.service.ReservationReader;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,7 @@ class PaymentServiceTest {
     private PaymentRepository paymentRepository;
     private PaymentValidator paymentValidator;
     private UserReader userReader;
+    private ReservationReader reservationReader;
 
     private Reservation 예약건;
 
@@ -43,11 +46,13 @@ class PaymentServiceTest {
         paymentRepository = Mockito.mock(PaymentRepository.class);
         paymentValidator = Mockito.mock(PaymentValidator.class);
         userReader = Mockito.mock(UserReader.class);
+        reservationReader = Mockito.mock(ReservationReader.class);
 
         paymentService = new PaymentService(
                 paymentRepository,
                 paymentValidator,
-                userReader
+                userReader,
+                reservationReader
         );
 
         // 예약 정보 세팅
@@ -62,8 +67,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_요청_불가능한_상태")
-    void payTest_결제_요청_불가능한_상태() {
+    @DisplayName("결제 요청이 불가능한 상태")
+    void payTest_status_disable() {
         // given
         Long paymentId = 1L;
         Payment 완료된_결제건 = Payment.builder()
@@ -83,8 +88,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_잔액_부족하여_실패")
-    void payTest_결제_잔액_부족하여_실패() {
+    @DisplayName("결제 시 잔액이 부족하면 실패된다.")
+    void payTest_lack_balance() {
         // given
         Long paymentId = 1L;
         PayRequest request = new PayRequest(1L);
@@ -108,8 +113,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_요청_처리_성공")
-    void payTest_결제_요청_처리_성공() {
+    @DisplayName("결제 요청 처리됨")
+    void payTest_success() {
         // given
         Long paymentId = 1L;
         PayRequest request = new PayRequest(1L);
@@ -132,31 +137,30 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_생성")
-    void createTest_결제_생성() {
+    @DisplayName("결제를 생성한다.")
+    void createTest_create() {
         // given
-        CreatePaymentReqDto reqDto = new CreatePaymentReqDto(
-                예약건,
-                Payment.Status.READY,
+        CreateRequest reqDto = new CreateRequest(
+                1L,
                 BigDecimal.valueOf(79000)
         );
 
         // when
-        when(paymentRepository.save(reqDto.toEntity())).thenReturn(Payment.builder()
-                .reservation(reqDto.reservation())
-                .status(reqDto.status())
+        when(paymentRepository.save(reqDto.toEntity(예약건))).thenReturn(Payment.builder()
+                .paymentId(1L)
+                .reservation(예약건)
+                .status(Payment.Status.READY)
                 .price(reqDto.price())
                 .build());
-        Payment response = paymentService.create(reqDto);
+        CreateResponse response = paymentService.create(reqDto);
 
         // then
-        assertThat(response.getReservation()).isEqualTo(예약건);
-        assertThat(response.getStatus()).isEqualTo(Payment.Status.READY);
+        assertThat(response.paymentId()).isEqualTo(1L);
     }
 
     @Test
-    @DisplayName("결제_대기건은_즉시취소")
-    void cancelTest_결제_대기건은_즉시취소() {
+    @DisplayName("취소 시 결제 대기건은 즉시취소된다.")
+    void cancelTest_direct_cancel() {
         // given
         Long paymentId = 1L;
         Payment 결제대기건 = Payment.builder()
@@ -175,8 +179,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_완료건은_환불")
-    void cancelTest_결제_완료건은_환불() {
+    @DisplayName("취소 시 결제 완료건은 환불된다.")
+    void cancelTest_refund() {
         // given
         Long paymentId = 1L;
         Payment 결제완료건 = Payment.builder()
@@ -196,8 +200,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("결제_취소_불가능한_상태")
-    void cancelTest_결제_취소_불가능한_상태() {
+    @DisplayName("결제 취소 불가능한 상태")
+    void cancelTest_not_available() {
         // given
         Long paymentId = 1L;
         Payment 결제취소건 = Payment.builder()

@@ -9,6 +9,7 @@ import com.mgnt.ticketing.domain.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -21,16 +22,17 @@ class UserServiceTest {
 
     private UserService userService;
     private UserRepository userRepository;
-    private UserJpaRepository userJpaRepository;
     private PasswordEncoder passwordEncoder;
+    private UserJpaRepository userJpaRepository;
     private User 사용자;
 
     @BeforeEach
     void setUp() {
         // mocking
         userRepository = Mockito.mock(UserRepository.class);
+        passwordEncoder = Mockito.mock(PasswordEncoder.class);
         userJpaRepository = Mockito.mock(UserJpaRepository.class);
-        passwordEncoder = Mockito.mock(PasswordEncoder.class) ;
+
         userService = new UserService(
                 userRepository,
                 userJpaRepository,
@@ -42,8 +44,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("잔액_조회")
-    void getBalanceTest_잔액_조회() {
+    @DisplayName("잔액을 조회한다.")
+    void getBalanceTest_balance() {
         // given
         Long userId = 1L;
 
@@ -56,8 +58,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("잔액_충전")
-    void chargeTest_잔액_충전() {
+    @DisplayName("잔액을 충전한다.")
+    void chargeTest_charge() {
         // given
         Long userId = 1L;
         ChargeRequest request = new ChargeRequest(10000);

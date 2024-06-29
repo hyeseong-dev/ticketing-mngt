@@ -7,6 +7,7 @@ import com.mgnt.ticketing.domain.waiting.entity.WaitingQueue;
 import com.mgnt.ticketing.domain.waiting.repository.WaitingQueueRepository;
 import com.mgnt.ticketing.domain.waiting.service.WaitingService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.when;
 
-
+@Slf4j
 class WaitingServiceTest {
 
     private WaitingService waitingService;
@@ -57,7 +58,7 @@ class WaitingServiceTest {
     }
 
     @Test
-    @DisplayName("대기열_추가_활성유저")
+    @DisplayName("대기열_추가_활성(ACTIVE) 유저")
     void addWaitingQueueTest_대기열_추가_활성유저() {
         // given
         Long userId = 1L;
@@ -73,7 +74,7 @@ class WaitingServiceTest {
     }
 
     @Test
-    @DisplayName("대기열_추가_대기유저")
+    @DisplayName("대기열_추가_대기(WAITING) 유저")
     void addWaitingQueueTest_대기열_추가_대기유저() {
         // given
         Long userId = 1L;
@@ -92,7 +93,7 @@ class WaitingServiceTest {
     }
 
     @Test
-    @DisplayName("대기열_상태_확인_대기열_정보_없거나_만료됨")
+    @DisplayName("대기열_상태_확인_대기열_정보_없거나_만료됨(EXPIRED)")
     void checkActiveTest_대기열_상태_확인_대기열_정보_없거나_만료됨() {
         // given
         Long userId = 1L;
@@ -108,7 +109,7 @@ class WaitingServiceTest {
     }
 
     @Test
-    @DisplayName("대기열_상태_확인_활성유저")
+    @DisplayName("대기열_상태_확인_활성(ACTIVE) 유저")
     void checkActiveTest_대기열_상태_확인_활성유저() {
         // given
         Long userId = 1L;
@@ -123,7 +124,7 @@ class WaitingServiceTest {
     }
 
     @Test
-    @DisplayName("대기열_상태_확인_대기유저")
+    @DisplayName("대기열_상태_확인_대기(WAITING) 유저")
     void checkActiveTest_대기열_상태_확인_대기유저() {
         // given
         Long userId = 1L;

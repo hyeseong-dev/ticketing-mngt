@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Component
 @RequiredArgsConstructor
 public class TestDataHandler {
@@ -53,21 +54,24 @@ public class TestDataHandler {
                 .concertDate(ZonedDateTime.of(LocalDateTime.of(2024, 5, 26, 19, 30), ZoneId.of("Asia/Seoul")))
                 .build());
 
-        concertRepository.addConcert(Concert.builder()
+        Concert concert = Concert.builder()
                 .name("아이유 2024 콘서트")
                 .place(place)
                 .concertDateList(concertDates)
-                .build());
-        concertRepository.addConcertDates(concertDates);
+                .build();
+
+        concertRepository.addConcert(concert);
+
+        ConcertDate concertDate = concertDates.get(0);
 
         List<Seat> seats = new ArrayList<>();
         for (int i = 1; i <= seatsCnt; i++) {
             if (i <= 20) {
-                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(89000)).build());
+                seats.add(Seat.builder().concertDate(concertDate).seatNum(i).price(BigDecimal.valueOf(89000)).status(Seat.Status.AVAILABLE).build());
             } else if (i <= 40) {
-                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(119000)).build());
+                seats.add(Seat.builder().concertDate(concertDate).seatNum(i).price(BigDecimal.valueOf(119000)).status(Seat.Status.AVAILABLE).build());
             } else {
-                seats.add(Seat.builder().concertDate(concertDates.get(0)).seatNum(i).price(BigDecimal.valueOf(139000)).build());
+                seats.add(Seat.builder().concertDate(concertDate).seatNum(i).price(BigDecimal.valueOf(139000)).status(Seat.Status.AVAILABLE).build());
             }
         }
         concertRepository.addSeats(seats);
@@ -75,9 +79,6 @@ public class TestDataHandler {
 
     // 5, 10번 좌석 예약
     public void reserveSeats() {
-        long concertId = 1L;
-        long concertDateId = 1L;
-
         reservationRepository.save(Reservation.builder()
                 .concertId(1L)
                 .concertDateId(1L)

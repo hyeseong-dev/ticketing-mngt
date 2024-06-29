@@ -91,8 +91,8 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("이미_선택된_좌석입니다")
-    void reserveTest_이미_선택된_좌석입니다() {
+    @DisplayName("이미 선택된 좌석입니다 예외처리")
+    void reserveTest_already_reserved() {
         // given
         ReserveRequest request = new ReserveRequest(1L, 1L, 1L, 1L);
 
@@ -107,8 +107,8 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("좌석_예약_성공")
-    void reserveTest_좌석_예약_성공() {
+    @DisplayName("좌석 예약을 성공")
+    void reserveTest_success() {
         // given
         ReserveRequest request = new ReserveRequest(1L, 1L, 1L, 1L);
 
@@ -125,8 +125,8 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("예약_취소")
-    void cancelTest_예약_취소() {
+    @DisplayName("예약을 취소한다.")
+    void cancelTest_cancel() {
         // given
         Long reservationId = 1L;
         CancelRequest request = new CancelRequest(1L);
@@ -137,8 +137,8 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("예약_내역_조회")
-    void getMyReservationsTest_예약_내역_조회() {
+    @DisplayName("예약 내역 목록을 조회한다.")
+    void getMyReservationsTest_my() {
         // given
         Long userId = 1L;
 

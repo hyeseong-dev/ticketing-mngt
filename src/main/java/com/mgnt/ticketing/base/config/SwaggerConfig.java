@@ -17,7 +17,7 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("티켓팅 API - 항해 리부트 백엔드 3기 서버 구축 프로젝트")
+                        .title("티켓팅 API - 항해 리부트 백엔드 3기 예약 구매 프로젝트")
                         .description("콘서트 좌석을 예약한다.")
                         .version("1.0.0"))
                 .components(new Components()

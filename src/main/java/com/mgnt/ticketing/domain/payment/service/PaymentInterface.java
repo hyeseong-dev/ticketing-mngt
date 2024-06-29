@@ -1,10 +1,10 @@
 package com.mgnt.ticketing.domain.payment.service;
 
+import com.mgnt.ticketing.controller.payment.dto.request.CreateRequest;
 import com.mgnt.ticketing.controller.payment.dto.request.PayRequest;
+import com.mgnt.ticketing.controller.payment.dto.response.CreateResponse;
 import com.mgnt.ticketing.controller.payment.dto.response.PayResponse;
-import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
-import com.mgnt.ticketing.domain.payment.service.dto.CreatePaymentReqDto;
 
 /**
  * 결제 서비스 인터페이스
@@ -22,13 +22,7 @@ public interface PaymentInterface {
      */
     PayResponse pay(Long paymentId, PayRequest request);
 
-    /**
-     * 결제 정보 생성
-     *
-     * @param reqDto 결제 생성 요청 DTO
-     * @return 생성된 결제 정보
-     */
-    Payment create(CreatePaymentReqDto reqDto);
+    CreateResponse create(CreateRequest request);
 
     /**
      * 결제 취소

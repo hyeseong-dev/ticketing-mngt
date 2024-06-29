@@ -64,7 +64,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public boolean existByConcertDateAndStatus(Long concertDateId, Seat.Status status) {
-        return seatJpaRepository.existsByConcertDate_ConcertDateIdAndStatus(concertDateId, status);
+        return seatJpaRepository.existsByConcertDate_concertDateIdAndStatus(concertDateId, status);
     }
 
     @Override
