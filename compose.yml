@@ -1,13 +1,13 @@
-version: "3.9"
+version: '3.8'
 
 services:
   db:
     build:
-      context: .
+      context: docker/db
       dockerfile: Dockerfile
     container_name: db_container
     ports:
-      - ${MYSQL_BINDING_PORT}:${MYSQL_PORT}  # 호스트와 컨테이너 간의 포트 매핑
+      - 3306:3306  # 호스트와 컨테이너 간의 포트 매핑
     environment:
       environment:
       SPRING_PROFILES_ACTIVE: dev
@@ -21,24 +21,26 @@ services:
     networks:
       - ticket_network
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    ports:
-#      - 8080:8080
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=dev
-#      - SPRING_DATASOURCE_URL=jdbc:mysql://${TICKETING_MYSQL_HOST}:${TICKETING_MYSQL_PORT}/${TICKETING_MYSQL_DB_NAME}
-#      - SPRING_DATASOURCE_USERNAME=${TICKETING_MYSQL_USERNAME}
-#      - SPRING_DATASOURCE_PASSWORD=${TICKETING_MYSQL_PASSWORD}
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    networks:
-#      - ticket_network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_container
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - db
+    restart: always
+    networks:
+      - ticket_network
 
 networks:
   ticket_network:

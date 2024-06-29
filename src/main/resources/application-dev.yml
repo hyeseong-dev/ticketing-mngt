@@ -60,7 +60,7 @@ spring:
       idle-timeout: 600000  # 10분 (밀리초 단위)
       connection-timeout: 30000 # 30초 (밀리초 단위)
       validation-timeout: 5000  # 5초 (밀리초 단위)
-    url: jdbc:mysql://localhost:13306/ticketing # 데이터베이스 URL을 설정합니다.
+    url: jdbc:mysql://db:3306/ticketing # 데이터베이스 URL을 설정합니다.
     username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
     password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.

@@ -1,8 +1,10 @@
 ### 환경변수
 .env
+.git/
+.github/
 
 # DB Dockerfile, my.cnf, init_scripts
-#/docker/db/
+/docker
 
 HELP.md
 .gradle
