@@ -4,6 +4,7 @@ import com.mgnt.ticketing.domain.concert.dto.GetSeatsQueryResDto;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

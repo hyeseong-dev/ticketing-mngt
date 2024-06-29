@@ -72,7 +72,7 @@ public class PaymentService implements PaymentInterface {
         return PayResponse.from(isSuccess, payment, usedBalance);
     }
 
-    @Override
+    @Transactional
     public CreateResponse create(CreateRequest request) {
         Reservation reservation = reservationReader.findReservation(request.reservationId());
         Payment payment = paymentRepository.save(request.toEntity(reservation));

@@ -1,34 +1,15 @@
-# Use an official OpenJDK runtime as a parent image
 FROM openjdk:17-jdk-slim
 
-# Install Gradle
-RUN apt-get update && apt-get install -y wget unzip && \
-    wget https://services.gradle.org/distributions/gradle-7.6-bin.zip && \
-    unzip gradle-7.6-bin.zip && \
-    mv gradle-7.6 /opt/gradle && \
-    ln -s /opt/gradle/bin/gradle /usr/bin/gradle && \
-    rm gradle-7.6-bin.zip
+ENV TZ=Asia/Seoul
 
-# Set the working directory
+# 컨테이너 내부에서 애플리케이션 파일을 저장할 디렉토리를 생성합니다.
 WORKDIR /app
 
-# Copy the Gradle wrapper files and the build script files
-COPY gradle /app/gradle
-COPY gradlew /app/gradlew
-COPY build.gradle /app/build.gradle
-COPY settings.gradle /app/settings.gradle
+# 빌드된 JAR 파일을 현재 위치에서 컨테이너의 /app 디렉토리로 복사합니다.
+COPY build/libs/my-spring-boot-app-0.0.1-SNAPSHOT.jar /app/my-app.jar
 
-# Copy the source code
-COPY src /app/src
+# 기본값으로 'dev'를 설정합니다.
+ENV ACTIVE_PROFILES=dev
 
-# Build the application
-RUN ./gradlew build
-
-# Copy the built JAR file to the final image
-COPY build/libs/*.jar app.jar
-
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
-
-# Run the jar file
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# 애플리케이션을 실행합니다.
+ENTRYPOINT ["java", "-jar", "/app/my-app.jar", "--spring.profiles.active=${ACTIVE_PROFILES}"]

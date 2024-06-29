@@ -5,11 +5,10 @@ logging:
   level:
     org:
       springframework:
-        core:
-          LocalVariableTableParameterNameDiscoverer: error
+        web:
+          servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
         security: DEBUG
     com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
-    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
 
 server:
@@ -23,14 +22,10 @@ server:
       throwExceptionIfNoHandlerFound: true
 
 spring:
-  profiles:
-    active: local
-    group:
-      test: test
-      local: local
-      dev: dev
-      sta: sta
-      prod: prod
+  config:
+    import: optional:files:.env[.properties]
+    activate:
+      on-profile: prod
 
   docker:
     compose:
@@ -39,13 +34,9 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
-  config:
-    import: optional:files:.env[.properties]
-
   web:
     resources:
       add-mappings: false
-
   mail:
     host: smtp.gmail.com
     port: 587
@@ -83,7 +74,7 @@ spring:
         format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
         show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
-      hibernate.default_batch_fetch_size: 1000 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+        default_batch_fetch_size: 500 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
 
 jwt:
 #  secret:
@@ -94,9 +85,6 @@ jwt:
 
 
 springdoc:
-  cache:
-    disabled: true
-
   api-docs:
     path: /api-docs
   swagger-ui:

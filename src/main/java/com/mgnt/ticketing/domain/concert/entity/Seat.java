@@ -52,6 +52,10 @@ public class Seat extends BaseDateTimeEntity {
         DISABLE
     }
 
+    public void patchStatus(Status status) {
+        this.status = status;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

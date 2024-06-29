@@ -13,12 +13,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LogLevel;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
+@ActiveProfiles("test")
 class PaymentIntegrationTest extends BaseIntegrationTest {
 
     @Autowired

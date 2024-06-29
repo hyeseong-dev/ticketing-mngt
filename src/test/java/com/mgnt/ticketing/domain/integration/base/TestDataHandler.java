@@ -1,10 +1,13 @@
 package com.mgnt.ticketing.domain.integration.base;
 
+import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import com.mgnt.ticketing.domain.concert.entity.Concert;
 import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
 import com.mgnt.ticketing.domain.concert.entity.Place;
 import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.concert.repository.ConcertJpaRepository;
 import com.mgnt.ticketing.domain.concert.repository.ConcertRepository;
+import com.mgnt.ticketing.domain.concert.repository.PlaceJpaRepository;
 import com.mgnt.ticketing.domain.concert.repository.PlaceRepository;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
@@ -12,10 +15,11 @@ import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.user.entity.User;
 import com.mgnt.ticketing.domain.user.repository.UserRepository;
+import com.mgnt.ticketing.domain.waiting.entity.WaitingQueue;
 import jakarta.persistence.EntityManager;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,7 +27,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Component
 @RequiredArgsConstructor
@@ -54,15 +57,13 @@ public class TestDataHandler {
                 .concertDate(ZonedDateTime.of(LocalDateTime.of(2024, 5, 26, 19, 30), ZoneId.of("Asia/Seoul")))
                 .build());
 
-        Concert concert = Concert.builder()
+        concertRepository.addConcert(Concert.builder()
                 .name("아이유 2024 콘서트")
                 .place(place)
                 .concertDateList(concertDates)
-                .build();
-
-        concertRepository.addConcert(concert);
-
-        ConcertDate concertDate = concertDates.get(0);
+                .build());
+        concertRepository.addConcertDates(concertDates);
+        ConcertDate concertDate = entityManager.find(ConcertDate.class, 1L);
 
         List<Seat> seats = new ArrayList<>();
         for (int i = 1; i <= seatsCnt; i++) {

@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -40,12 +42,6 @@ public class ConcertDate extends BaseDateTimeEntity {
         this.concertDate = concertDate;
     }
 
-    /**
-     * 객체 동등성 비교
-     *
-     * @param o 비교할 객체
-     * @return 객체가 같으면 true, 그렇지 않으면 false
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -54,11 +50,6 @@ public class ConcertDate extends BaseDateTimeEntity {
         return Objects.equals(concertDateId, that.concertDateId);
     }
 
-    /**
-     * 객체 해시 코드 반환
-     *
-     * @return 해시 코드
-     */
     @Override
     public int hashCode() {
         return Objects.hash(concertDateId);

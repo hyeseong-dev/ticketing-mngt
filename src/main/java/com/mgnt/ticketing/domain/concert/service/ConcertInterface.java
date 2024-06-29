@@ -4,6 +4,7 @@ import com.mgnt.ticketing.controller.concert.dto.response.GetConcertResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetConcertsResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetDatesResponse;
 import com.mgnt.ticketing.controller.concert.dto.response.GetSeatsResponse;
+import com.mgnt.ticketing.domain.concert.entity.Seat;
 
 import java.util.List;
 
@@ -21,3 +22,4 @@ public interface ConcertInterface {
     /* 예약 가능 좌석 조회 */
     GetSeatsResponse getAvailableSeats(Long concertDateId);
 }
+

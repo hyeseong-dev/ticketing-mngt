@@ -19,7 +19,7 @@ public interface ReservationJpaRepository extends JpaRepository<Reservation, Lon
             "FROM Reservation r " +
             "JOIN Concert c on c.concertId = r.concertId " +
             "JOIN ConcertDate cd on cd.concertDateId = r.concertDateId " +
-            "JOIN Seat s on s.seatId = r.seatId " +
+            "JOIN Seat s on s.seatNum = r.seatNum " +
             "WHERE r.userId = :userId")
     List<GetReservationAndPaymentResDto> getMyReservations(Long userId);
 }

@@ -53,18 +53,32 @@ CREATE TABLE concert (
                          FOREIGN KEY (place_id) REFERENCES place (place_id)
 ) COMMENT '콘서트 정보를 저장하는 테이블';
 
+-- -- 콘서트 날짜 테이블
+-- CREATE TABLE concert_date (
+--                               concert_date_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 날짜 ID (기본 키)',
+--                               concert_id BIGINT NOT NULL COMMENT '콘서트 ID (외래키)', // 추후 복원
+-- --                               place_id BIGINT NOT NULL COMMENT '공연장 ID (외래키)',// 추후 복원
+--                               concert_date DATETIME NOT NULL COMMENT '콘서트 날짜',
+--                               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
+--                               updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
+--                               PRIMARY KEY (concert_date_id),
+--                               FOREIGN KEY (concert_id) REFERENCES concert (concert_id)
+-- --                               FOREIGN KEY (place_id) REFERENCES place (place_id)
+-- ) COMMENT '콘서트 날짜 정보를 저장하는 테이블';
+
 -- 콘서트 날짜 테이블
 CREATE TABLE concert_date (
                               concert_date_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 날짜 ID (기본 키)',
---                               concert_id BIGINT NOT NULL COMMENT '콘서트 ID (외래키)',
---                               place_id BIGINT NOT NULL COMMENT '공연장 ID (외래키)',
+                              concert_id BIGINT NOT NULL COMMENT '콘서트 ID (외래키)',
+--                               place_id BIGINT NOT NULL COMMENT '공연장 ID (외래키)',// 추후 복원
                               concert_date DATETIME NOT NULL COMMENT '콘서트 날짜',
                               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
                               updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
-                              PRIMARY KEY (concert_date_id)
---                               FOREIGN KEY (concert_id) REFERENCES concert (concert_id),
+                              PRIMARY KEY (concert_date_id),
+                              FOREIGN KEY (concert_id) REFERENCES concert (concert_id)
 --                               FOREIGN KEY (place_id) REFERENCES place (place_id)
 ) COMMENT '콘서트 날짜 정보를 저장하는 테이블';
+
 
 -- 좌석 테이블
 CREATE TABLE seat (
