@@ -1,0 +1,92 @@
+debug: true # 디버그 모드를 비활성화합니다.
+management.endpoints.web.exposure.include: "*" # 모든 관리 엔드포인트를 노출합니다.
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+    com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
+    org.springframework.web.servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
+#    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+    include-message: always
+  servlet:
+    context-path: /
+    context-parameters:
+      throwExceptionIfNoHandlerFound: true
+
+spring:
+
+  docker:
+    compose:
+      enabled: false
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  config:
+    import: optional:files:.env[.properties]
+  web:
+    resources:
+      add-mappings: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  application:
+    name: ticketing # 애플리케이션 이름을 'ticketing'으로 설정합니다.
+
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      max-lifetime: 150000  # 150초 (밀리초 단위)
+      idle-timeout: 600000  # 10분 (밀리초 단위)
+      connection-timeout: 30000 # 30초 (밀리초 단위)
+      validation-timeout: 5000  # 5초 (밀리초 단위)
+    url: jdbc:mysql://localhost:13306/ticketing_test # 데이터베이스 URL을 설정합니다.
+    username: test_developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
+    password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
+
+  jpa:
+    defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
+    hibernate.ddl-auto: none # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
+    show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
+    properties:
+      hibernate:
+        format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
+        show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
+        dialect: org.hibernate.dialect.MySQLDialect
+      hibernate.default_batch_fetch_size: 1000 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+
+jwt:
+#  secret:
+#    key: ${JWT_SECRET_KEY}
+    secret: "7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg=="
+    access-token-validity: 3600000 # 1 hour
+    refresh-token-validity: 1296000000 # 15 days
+
+security:
+
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

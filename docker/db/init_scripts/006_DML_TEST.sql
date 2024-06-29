@@ -1,4 +1,4 @@
-USE ticketing;
+USE ticketing_test;
 
 INSERT INTO user (email, password, name, role, balance, address, phone_number, email_verified)
 VALUES

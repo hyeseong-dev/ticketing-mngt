@@ -1,7 +1,7 @@
 
-DROP DATABASE IF EXISTS ticketing;
-CREATE DATABASE ticketing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ticketing;
+DROP DATABASE IF EXISTS ticketing_test;
+CREATE DATABASE ticketing_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ticketing_test;
 -- 사용자 테이블
 CREATE TABLE user (
                        user_id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '사용자 ID (기본 키)',
@@ -56,8 +56,8 @@ CREATE TABLE concert (
 -- 콘서트 날짜 테이블
 CREATE TABLE concert_date (
                               concert_date_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 날짜 ID (기본 키)',
---                               concert_id BIGINT NOT NULL COMMENT '콘서트 ID (외래키)', // 추후 복원
---                               place_id BIGINT NOT NULL COMMENT '공연장 ID (외래키)',// 추후 복원
+--                               concert_id BIGINT NOT NULL COMMENT '콘서트 ID (외래키)',
+--                               place_id BIGINT NOT NULL COMMENT '공연장 ID (외래키)',
                               concert_date DATETIME NOT NULL COMMENT '콘서트 날짜',
                               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
                               updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
