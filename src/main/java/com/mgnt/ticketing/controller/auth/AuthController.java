@@ -2,10 +2,12 @@ package com.mgnt.ticketing.controller.auth;
 
 import com.mgnt.ticketing.controller.auth.request.LoginRequestDto;
 import com.mgnt.ticketing.controller.auth.request.SignUpRequestDto;
+import com.mgnt.ticketing.controller.auth.response.EmailResponseDto;
 import com.mgnt.ticketing.controller.auth.response.LoginResponseDto;
 import com.mgnt.ticketing.controller.auth.response.LogoutResponseDto;
 import com.mgnt.ticketing.controller.auth.response.RefreshResponseDto;
 import com.mgnt.ticketing.domain.auth.service.AuthInterface;
+import com.mgnt.ticketing.domain.auth.service.EmailInterface;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthInterface authInterface;
+    private final EmailInterface emailInterface;
 
     @Operation(summary = "회원 가입", description = "회원 가입을 위한 API입니다.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SignUpRequestDto.class)))
@@ -56,5 +59,12 @@ public class AuthController {
     @GetMapping("/refresh")
     public ResponseEntity<? super RefreshResponseDto> refresh(@RequestHeader("ReAuthroization") String refreshToken, HttpServletRequest request) {
         return authInterface.refresh(refreshToken, request);
+    }
+
+    @Operation(summary = "계정 활성화(via 이메일)", description = "회원 가입이후 계정 활성화 처리를 위한 이메일 인증 API입니다.")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = EmailResponseDto.class)))
+    @GetMapping("/email")
+    public ResponseEntity<? super EmailResponseDto> verifyEmail(@RequestParam(value = "token") String token) {
+        return emailInterface.verifyEmail(token);
     }
 }

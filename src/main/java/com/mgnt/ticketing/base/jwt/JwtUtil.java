@@ -74,31 +74,9 @@ public class JwtUtil {
             Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
+            log.error(e.getMessage());
             return false;
         }
     }
 
-    // JWT를 쿠키에 추가
-    public void addJwtToCookie(String token, HttpServletResponse res, String cookieName, long maxAgeInMillis) {
-        try {
-            String encodedToken = URLEncoder.encode(token, "utf-8").replaceAll("\\+", "%20");
-            Cookie cookie = new Cookie(cookieName, encodedToken);
-            cookie.setPath("/");
-            cookie.setMaxAge((int) maxAgeInMillis / 1000);
-//            cookie.setHttpOnly(true);
-            res.addCookie(cookie);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    // Access Token을 쿠키에 추가
-    public void addAccessTokenToCookie(String token, HttpServletResponse res) {
-        addJwtToCookie(token, res, "Authorization", accessTokenValidityInMilliseconds);
-    }
-
-    // Refresh Token을 쿠키에 추가
-    public void addRefreshTokenToCookie(String token, HttpServletResponse res) {
-        addJwtToCookie(token, res, "Refresh-Token", refreshTokenValidityInMilliseconds);
-    }
 }

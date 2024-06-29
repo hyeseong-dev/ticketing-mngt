@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.base.config;
 
-import com.mgnt.ticketing.base.filter.JwtTokenFilter;
+import com.mgnt.ticketing.base.filter.JwtAuthenticationFilter;
 import com.mgnt.ticketing.base.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +24,7 @@ public class WebSecurityConfig {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -32,13 +33,12 @@ public class WebSecurityConfig {
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/user/**").permitAll()
-                                .requestMatchers("/", "/css/**", "/js/**","/swagger-ui/**", "/api-docs/**").permitAll() // 정적 리소스 허용
-                                .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/email", "/api/auth/refresh").permitAll() // 루트 경로 허용
-                                .requestMatchers("/hello").permitAll()
-                                .requestMatchers("/").permitAll() // 루트 경로 허용
+//                                .requestMatchers( "/css/**", "/js/**","/swagger-ui/**", "/api-docs/**").permitAll() // 정적 리소스 허용
+//                                .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/email", "/api/auth/refresh", "/api/auth/email").permitAll() // 루트 경로 허용
+//                                .requestMatchers("/hello").permitAll()
+                                .requestMatchers("/**").permitAll() // 루트 경로 허용
                                 .anyRequest().authenticated())
-                .addFilterBefore(new JwtTokenFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

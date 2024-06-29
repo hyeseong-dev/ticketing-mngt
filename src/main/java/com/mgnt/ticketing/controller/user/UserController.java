@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -67,8 +68,8 @@ public class UserController {
      */
     @Operation(summary = "사용자 상세 조회")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GetUserResponse.class)))
-    @GetMapping("/{id}")
-    public ResponseEntity<GetUserResponse> getUserDetail(@PathVariable Long id) {
+    @GetMapping("/{userId}")
+    public ResponseEntity<GetUserResponse> getUserDetail(@PathVariable(value = "userId") Long id) {
         return userInterface.getUserDetail(id);
     }
 
@@ -83,7 +84,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
     @PatchMapping("/{id}")
     public ResponseEntity<UpdateUserResponse> modifyUser(
-            @PathVariable Long id,
+            @PathVariable(value = "userId") Long id,
             @RequestBody @Valid UserModifyRequest requestBody
     ) {
         return userInterface.modifyUser(id, requestBody);
@@ -92,17 +93,19 @@ public class UserController {
     /**
      * 마이페이지 정보 수정
      *
-     * @param id 사용자 ID
+     *
      * @param requestBody 수정 요청 정보
      * @return 수정된 사용자 정보 응답
      */
     @Operation(summary = "마이페이지 정보 수정")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
-    @PatchMapping("/mypage/{id}")
+    @PatchMapping("/mypage")
     public ResponseEntity<UpdateUserResponse> modifyMypage(
-            @PathVariable Long id,
+            Authentication authentication,
             @RequestBody @Valid MypageRequest requestBody
     ) {
+        System.out.println(authentication);
+        long id = 1L;
         return userInterface.modifyMypage(id, requestBody);
     }
 

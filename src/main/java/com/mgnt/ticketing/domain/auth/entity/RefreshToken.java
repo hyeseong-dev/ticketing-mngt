@@ -46,4 +46,17 @@ public class RefreshToken {
         this.deviceInfo = deviceInfo;
         this.expiryDate = expiryDate;
     }
+
+    public RefreshToken(User user, String refreshToken){
+        this.user = user;
+        this.token = refreshToken;
+    }
+
+    public void updateRefreshToken(String token){
+        this.token = token;
+    }
+
+    public boolean validateRefreshToken(String refreshToken){
+        return this.token == refreshToken;
+    }
 }
