@@ -1,3 +1,7 @@
+# 워크플로 파일을 무시하지 않도록 예외 처리
+!.github/
+!.github/workflows/
+
 ### 환경변수
 .env
 .git/
