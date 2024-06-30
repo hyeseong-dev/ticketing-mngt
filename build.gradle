@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.3.0'
     id 'io.spring.dependency-management' version '1.1.5'
     id 'java'
+    id 'jacoco'
     id 'checkstyle'
 }
 
@@ -71,6 +72,9 @@ dependencies {
     implementation 'com.google.guava:guava:33.0.0-jre'
 
     testImplementation 'io.rest-assured:rest-assured:5.3.1'
+
+    // jacoco
+    testImplementation 'org.jacoco:org.jacoco.agent:0.8.7'
 }
 
 // Querydsl 프로젝트 build Directory 설정
@@ -101,4 +105,21 @@ tasks.named('test') {
 // mainClass 설정
 bootJar {
     mainClass = 'com.mgnt.TicketingApplication'
+}
+
+// jacoco 설정
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestReport
+}
+
+tasks.jacocoTestReport {
+    dependsOn tasks.test
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
 }
