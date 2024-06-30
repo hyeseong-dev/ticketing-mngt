@@ -1,4 +1,4 @@
-name: CI develop
+name: CI 개발 브랜치
 
 on:
   pull_request:
