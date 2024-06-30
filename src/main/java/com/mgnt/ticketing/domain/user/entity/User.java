@@ -4,10 +4,7 @@ import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import com.mgnt.ticketing.controller.auth.request.SignUpRequestDto;
 import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -15,7 +12,7 @@ import java.time.ZonedDateTime;
 
 /**
  * 사용자 엔티티 클래스
- *
+ * <p>
  * 이 클래스는 사용자 정보를 나타내며, 데이터베이스의 'users' 테이블과 매핑됩니다.
  */
 @Getter
@@ -25,6 +22,7 @@ import java.time.ZonedDateTime;
 public class User extends BaseDateTimeEntity {
 
     @Id
+    @Setter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -67,16 +65,16 @@ public class User extends BaseDateTimeEntity {
     /**
      * 생성자
      *
-     * @param userId 사용자 ID
-     * @param email 이메일
-     * @param password 비밀번호
-     * @param name 이름
-     * @param balance 잔액
-     * @param deletedAt 삭제된 시간
+     * @param userId        사용자 ID
+     * @param email         이메일
+     * @param password      비밀번호
+     * @param name          이름
+     * @param balance       잔액
+     * @param deletedAt     삭제된 시간
      * @param emailVerified 이메일 인증 여부
-     * @param role 사용자 역할
-     * @param phoneNumber 전화번호
-     * @param address 주소
+     * @param role          사용자 역할
+     * @param phoneNumber   전화번호
+     * @param address       주소
      */
     @Builder
     public User(Long userId,
@@ -103,7 +101,7 @@ public class User extends BaseDateTimeEntity {
     /**
      * 회원가입 요청 DTO로부터 사용자 엔티티 생성
      *
-     * @param dto 회원가입 요청 DTO
+     * @param dto      회원가입 요청 DTO
      * @param password 암호화된 비밀번호
      * @return 생성된 사용자 엔티티
      */
@@ -181,9 +179,9 @@ public class User extends BaseDateTimeEntity {
     /**
      * 사용자 정보 업데이트
      *
-     * @param name 새 이름
+     * @param name        새 이름
      * @param phoneNumber 새 전화번호
-     * @param address 새 주소
+     * @param address     새 주소
      */
     public void updateUserInfo(String name, String phoneNumber, String address) {
         this.name = name;

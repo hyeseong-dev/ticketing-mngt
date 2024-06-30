@@ -65,28 +65,39 @@ class ConcertServiceTest {
                 .name("상암 월드컵경기장")
                 .seatsCnt(5)
                 .build();
-
-        회차1 = new ConcertDate(1L,
-                ZonedDateTime.of(
-                        LocalDateTime.of(2024, 5, 25, 18, 30, 0),
-                        ZoneId.of("Asia/Seoul")));
-        회차2 = new ConcertDate(1L,
-                ZonedDateTime.of(
-                        LocalDateTime.of(2024, 5, 26, 19, 0, 0),
-                        ZoneId.of("Asia/Seoul")));
+        // 수동으로 ID 설정
+        상암_월드컵경기장.setPlaceId(1L);
 
         임영웅_콘서트 = Concert.builder()
                 .name("2024 임영웅 콘서트 [IM HERO - THE STADIUM]")
                 .place(상암_월드컵경기장)
-                .concertDateList(List.of(회차1, 회차2))
+                .concertDateList(new ArrayList<>()) // 초기화 중 null pointer를 피하기 위해 임시로 빈 리스트 설정
                 .build();
+        // 수동으로 ID 설정
+        임영웅_콘서트.setConcertId(1L);
+
+        // null pointer를 피하기 위해 콘서트 초기화 후 ConcertDate 인스턴스 생성
+        회차1 = new ConcertDate(1L,
+                임영웅_콘서트,
+                ZonedDateTime.of(
+                        LocalDateTime.of(2024, 5, 25, 18, 30, 0),
+                        ZoneId.of("Asia/Seoul")));
+        회차2 = new ConcertDate(2L,
+                임영웅_콘서트,
+                ZonedDateTime.of(
+                        LocalDateTime.of(2024, 5, 26, 19, 0, 0),
+                        ZoneId.of("Asia/Seoul")));
+
+        // 생성된 ConcertDate를 콘서트에 추가
+        임영웅_콘서트.getConcertDateList().addAll(List.of(회차1, 회차2));
+
         // 좌석 정보 세팅
         좌석 = List.of(
                 new Seat(1L, 회차1, 1, BigDecimal.valueOf(119000), Seat.Status.AVAILABLE),
-                new Seat(2L, 회차1,2, BigDecimal.valueOf(119000), Seat.Status.AVAILABLE),
-                new Seat(3L, 회차1,3, BigDecimal.valueOf(139000), Seat.Status.DISABLE),
-                new Seat(4L, 회차1,4, BigDecimal.valueOf(139000), Seat.Status.AVAILABLE),
-                new Seat(5L, 회차1,5, BigDecimal.valueOf(179000), Seat.Status.AVAILABLE)
+                new Seat(2L, 회차1, 2, BigDecimal.valueOf(119000), Seat.Status.AVAILABLE),
+                new Seat(3L, 회차1, 3, BigDecimal.valueOf(139000), Seat.Status.DISABLE),
+                new Seat(4L, 회차1, 4, BigDecimal.valueOf(139000), Seat.Status.AVAILABLE),
+                new Seat(5L, 회차1, 5, BigDecimal.valueOf(179000), Seat.Status.AVAILABLE)
         );
     }
 

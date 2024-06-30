@@ -2,10 +2,7 @@ package com.mgnt.ticketing.domain.concert.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.ArrayList;
@@ -14,7 +11,7 @@ import java.util.Objects;
 
 /**
  * 공연 장소 엔티티 클래스
- *
+ * <p>
  * 이 클래스는 공연 장소 정보를 나타내며, 데이터베이스의 'place' 테이블과 매핑됩니다.
  */
 @Entity
@@ -25,6 +22,7 @@ import java.util.Objects;
 public class Place extends BaseDateTimeEntity {
 
     @Id
+    @Setter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long placeId;
 
@@ -37,7 +35,7 @@ public class Place extends BaseDateTimeEntity {
     /**
      * 생성자
      *
-     * @param name 장소 이름
+     * @param name     장소 이름
      * @param seatsCnt 좌석 수
      */
     @Builder

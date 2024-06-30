@@ -2,10 +2,7 @@ package com.mgnt.ticketing.domain.concert.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.math.BigDecimal;
@@ -19,6 +16,7 @@ import java.util.Objects;
 public class Seat extends BaseDateTimeEntity {
 
     @Id
+    @Setter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "seat_id")
     private Long seatId;
