@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dev-ticketing:latest
+    container_name: dev-app-container
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    restart: always
+    networks:
+      - ticket_network
+
+networks:
+  ticket_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

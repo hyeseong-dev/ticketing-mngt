@@ -6,6 +6,7 @@ services:
       context: docker/db
       dockerfile: Dockerfile
     container_name: db_container
+    image: ${DOCKER_DB_IMAGE_NAME}:latest
     ports:
       - 3306:3306  # 호스트와 컨테이너 간의 포트 매핑
     environment:
@@ -31,6 +32,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ${PROJECT_NAME}:latest
     container_name: app_container
     ports:
       - 8080:8080

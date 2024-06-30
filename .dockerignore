@@ -1,53 +1,51 @@
-build/
+/build/
+!/build/libs/ticketing-0.0.1-SNAPSHOT.jar
 
-# Except the specific JAR file
-!build/libs/ticketing-0.0.1-SNAPSHOT.jar
+# DB Docker 디렉토리 제외
+/docker
+/docker/db/
+/docker/redis/
+/mysql/
+/init_scripts/
 
-# DB Docker directory
-docker/db/
-mysql/
-init_scripts/
-
-# exclude critical info
+# 중요한 정보 제외
 .env
 
-temp/
+/temp/
 
-# Ignore node_modules
-node_modules
+# node_modules 제외
+/node_modules
 
-# Ignore Gradle build files
-.gradle
+# Gradle 빌드 파일 제외
+/.gradle
 
-# Ignore IntelliJ IDEA project files
-.idea/
+# IntelliJ IDEA 프로젝트 파일 제외
+/.idea/
 
-# Ignore Eclipse project files
-.project
-.classpath
-.settings/
+# Eclipse 프로젝트 파일 제외
+/.project
+/.classpath
+/.settings/
 
-# Ignore macOS system files
-.DS_Store
+# macOS 시스템 파일 제외
+/.DS_Store
 
-# Ignore logs and temp files
+# 로그 및 임시 파일 제외
 *.log
 *.tmp
 
-# Ignore other OS system files
-Thumbs.db
+# 다른 OS 시스템 파일 제외
+/Thumbs.db
 
-# Include Docker-related files
-# docker-compose.yml
-# Dockerfile
+# Docker 관련 파일 포함
+!/dev-compose.yml
+!/Dockerfile
 
-# Ignore the src directory as it's not needed for the db service
-src/
+# src 디렉토리 포함
+!/src/**
 
-# Ignore other unnecessary directories
-HELP.md
-build.gradle
-gradle/
-gradlew
-gradlew.bat
-settings.gradle
+# 기타 필요한 파일 포함
+!/settings.gradle
+!/build.gradle
+!/gradlew
+!/gradlew.bat
