@@ -3,7 +3,7 @@ name: CI 개발 브랜치
 on:
   pull_request:
   push:
-    branches: [ develop release-* ]
+    branches: [ develop, release-* ]
 
 env:
   PROFILE: dev
