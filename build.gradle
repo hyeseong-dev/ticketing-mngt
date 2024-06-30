@@ -74,6 +74,7 @@ dependencies {
 
     // jacoco
     testImplementation 'org.jacoco:org.jacoco.agent:0.8.7'
+
 }
 
 // Querydsl 프로젝트 build Directory 설정
@@ -142,6 +143,12 @@ tasks.jacocoTestReport {
     reports {
         html.required.set(true)
     }
+}
+
+checkstyle {
+//    maxWarnings = 0 // 규칙이 어긋나는 코드가 하나라도 있을 경우 빌드 fail
+    toolVersion = '10.15.0'
+    configFile = file("${rootDir}/config/checkstyle/google_checks.xml")
 }
 
 
