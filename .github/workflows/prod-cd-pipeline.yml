@@ -79,8 +79,28 @@ jobs:
           echo "PROJECT_NAME: ${PROJECT_NAME}"
           echo "ECR_URI: ${ECR_URI}"
           echo "ECR_NAME: ${ECR_NAME}"
-          docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
-          docker push ${ECR_URI}/${ECR_NAME}:latest
+          
+            echo "ECR 로그인 시도 중..."
+            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
+            if [ $? -ne 0 ]; then
+            echo "ECR 로그인 실패"
+            exit 1
+            fi
+          
+            echo "Docker 이미지 태그 중..."
+            docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
+            if [ $? -ne 0 ]; then
+            echo "Docker 이미지 태그 실패"
+            exit 1
+            fi
+          
+            echo "Docker 이미지 ECR로 푸시 중..."
+            docker push ${ECR_URI}/${ECR_NAME}:latest
+            if [ $? -ne 0 ]; then
+            echo "Docker 이미지 푸시 실패"
+            exit 1
+            fi
+          
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
 
       # Step 6: .env.prod 파일 다운로드 및 EC2 배포
