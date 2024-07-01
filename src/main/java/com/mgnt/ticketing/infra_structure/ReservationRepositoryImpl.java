@@ -18,14 +18,9 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         this.reservationJpaRepository = reservationJpaRepository;
     }
 
-    @Override
-    public List<Reservation> findAllByConcertDateId(Long concertDateId) {
-        return reservationJpaRepository.findAllByConcertDateId(concertDateId);
-    }
 
-    @Override
-    public Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
-        return reservationJpaRepository.findOneByConcertDateIdAndSeatId(concertDateId, seatId);
+    public Reservation findOneByConcertDateIdAndSeatNum(Long concertDateId, int seatNum) {
+        return reservationJpaRepository.findOneByConcertDateIdAndSeatNum(concertDateId, seatNum);
     }
 
     @Override

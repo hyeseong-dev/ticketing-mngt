@@ -88,7 +88,7 @@ public class TestDataHandler {
         reservationRepository.save(Reservation.builder()
                 .concertId(1L)
                 .concertDateId(1L)
-                .seatId(5L)
+                .seatNum(5)
                 .userId(1L)
                 .status(Reservation.Status.ING)
                 .reservedAt(ZonedDateTime.now().minusMinutes(3)).build());
@@ -96,7 +96,7 @@ public class TestDataHandler {
         reservationRepository.save(Reservation.builder()
                 .concertId(1L)
                 .concertDateId(1L)
-                .seatId(10L)
+                .seatNum(1)
                 .userId(1L)
                 .status(Reservation.Status.RESERVED)
                 .reservedAt(ZonedDateTime.now().minusHours(1)).build());

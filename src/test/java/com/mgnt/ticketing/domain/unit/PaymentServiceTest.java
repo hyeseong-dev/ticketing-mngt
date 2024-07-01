@@ -60,7 +60,7 @@ class PaymentServiceTest {
                 .userId(1L)
                 .concertId(1L)
                 .concertDateId(1L)
-                .seatId(5L)
+                .seatNum(5)
                 .status(Reservation.Status.ING)
                 .reservedAt(null)
                 .build();

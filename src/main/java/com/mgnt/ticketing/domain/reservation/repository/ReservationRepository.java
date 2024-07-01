@@ -9,9 +9,7 @@ import java.util.List;
 @Repository
 public interface ReservationRepository {
 
-    List<Reservation> findAllByConcertDateId(Long concertDateId);
-
-    Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
+    Reservation findOneByConcertDateIdAndSeatNum(Long concertDateId, int seatNum);
 
     Reservation save(Reservation reservation);
 

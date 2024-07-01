@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 public record ReserveRequest(
         @NotNull Long concertId,
         @NotNull Long concertDateId,
-        @NotNull Long seatId,
+        @NotNull int seatNum,
         @NotNull Long userId
 ) {
 
@@ -16,7 +16,7 @@ public record ReserveRequest(
         return Reservation.builder()
                 .concertId(concertId)
                 .concertDateId(concertDateId)
-                .seatId(seatId)
+                .seatNum(seatNum)
                 .userId(userId)
                 .status(Reservation.Status.ING)
                 .build();

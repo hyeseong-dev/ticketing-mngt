@@ -21,5 +21,8 @@ public interface ConcertInterface {
 
     /* 예약 가능 좌석 조회 */
     GetSeatsResponse getAvailableSeats(Long concertDateId);
+
+    /* 좌석 상태 변경 */
+    void patchSeatStatus(Long concertDateId, int seatNum, Seat.Status status);
 }
 

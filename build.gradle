@@ -101,49 +101,7 @@ configurations {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-// mainClass 설정
-bootJar {
-    mainClass = 'com.mgnt.TicketingApplication'
-}
-
-// jacoco 설정
-jacoco {
-    toolVersion = "0.8.7"
-}
-
-tasks.test {
     finalizedBy tasks.jacocoTestReport
-}
-
-tasks.jacocoTestReport {
-    dependsOn tasks.test
-    afterEvaluate {
-        classDirectories.setFrom(
-                files(classDirectories.files.collect {
-                    fileTree(dir: it, excludes: [
-                            '**/*Application*',
-                            '**/*Exception*',
-                            '**/dto/**',
-                    ])
-                })
-        )
-    }
-    jacocoTestCoverageVerification {
-        violationRules {
-            rule {
-                excludes = [
-                        '*.*Application',
-                        '*.*Exception',
-                        '*.dto.*',
-                ]
-            }
-        }
-    }
-    reports {
-        html.required.set(true)
-    }
 }
 
 checkstyle {
@@ -152,7 +110,58 @@ checkstyle {
     configFile = file("${rootDir}/config/checkstyle/google_checks.xml")
 }
 
-buildScan {
-    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-    termsOfServiceAgree = 'no'
+jacoco {
+    toolVersion = "10.15.0"
+    reportsDirectory = file("${buildDir}/JacocoTestReport")
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.00
+            }
+
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 0.00
+            }
+        }
+    }
+}
+
+task testAndGenerateReport {
+    group 'verification'
+    description 'test w/ jacoco'
+
+    dependsOn ':test', ':jacocoTestReport', ':jacocoTestCoverageVerification'
+
+    tasks.jacocoTestReport.mustRunAfter tasks.test
+    tasks.jacocoTestCoverageVerification.mustRunAfter tasks.jacocoTestReport
+}
+
+bootJar {
+    mainClass = 'com.mgnt.ticketing.TicketingApplication'
+}
+
+jar {
+    enabled = false
 }

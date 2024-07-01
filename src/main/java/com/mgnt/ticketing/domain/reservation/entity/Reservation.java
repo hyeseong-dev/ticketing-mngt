@@ -1,6 +1,7 @@
 package com.mgnt.ticketing.domain.reservation.entity;
 
 import com.mgnt.ticketing.base.entity.BaseDateTimeEntity;
+import com.mgnt.ticketing.domain.payment.entity.Payment;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.util.Objects;
 
 /**
  * 예약 엔티티 클래스
- *
+ * <p>
  * 이 클래스는 예약 정보를 나타내며, 데이터베이스의 'reservation' 테이블과 매핑됩니다.
  */
 @Entity
@@ -37,7 +38,7 @@ public class Reservation extends BaseDateTimeEntity {
     private Long concertDateId;
 
     @Column(nullable = false)
-    private Long seatId;
+    private int seatNum;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -56,12 +57,15 @@ public class Reservation extends BaseDateTimeEntity {
         this.status = Status.RESERVED;
     }
 
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.REMOVE)
+    private Payment payment;
+
     @Builder
-    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, Status status, ZonedDateTime reservedAt) {
+    public Reservation(Long userId, Long concertId, Long concertDateId, int seatNum, Status status, ZonedDateTime reservedAt) {
         this.userId = userId;
         this.concertId = concertId;
         this.concertDateId = concertDateId;
-        this.seatId = seatId;
+        this.seatNum = seatNum;
         this.status = status;
         this.reservedAt = reservedAt;
     }

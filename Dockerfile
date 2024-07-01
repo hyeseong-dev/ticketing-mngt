@@ -1,27 +1,57 @@
-# 빌더 이미지
-FROM gradle:8.8.0-jdk17 AS builder
+#
+# Dev phase
+#
+FROM amazoncorretto:17-alpine as dev
+RUN apk add --no-cache bash dos2unix
 
-# 필요한 폴더 생성
-RUN mkdir -p /app
-
-WORKDIR /app
-COPY . /app
-RUN gradle clean build
-
-# 프로덕션 이미지
-FROM openjdk:17-jdk-slim
-
-# 타임존 설정
-ENV TZ=Asia/Seoul
-
-# 기본값으로 'dev' 설정
-ENV ACTIVE_PROFILES=dev
-
-# 작업 디렉토리 설정
+# 프로젝트 디렉토리 생성
 WORKDIR /app
 
-# 빌더 스테이지에서 생성된 JAR 파일 복사
-COPY --from=builder /app/build/libs/ticketing-0.0.1-SNAPSHOT.jar /app/ticketing.jar
+COPY gradlew .
+COPY gradle gradle
+RUN dos2unix ./gradlew
+RUN chmod +x ./gradlew
 
-# 애플리케이션 실행
-ENTRYPOINT ["java", "-jar", "/app/ticketing.jar", "--spring.profiles.active=${ACTIVE_PROFILES}"]
+# Gradle 설정 파일 복사
+COPY build.gradle settings.gradle ./
+COPY config/checkstyle/google_checks.xml config/checkstyle/google_checks.xml
+
+# Gradle 종속성 다운로드
+COPY --chown=gradle:gradle gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.properties
+COPY --chown=gradle:gradle gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.jar
+
+# Gradle Wrapper 사용
+RUN ./gradlew --version
+RUN ./gradlew dependencies
+
+# 소스 코드 복사
+COPY src src
+
+#
+# Prod-build phase
+#
+FROM dev as build
+
+# 프로덕션 환경 설정
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# 애플리케이션 빌드
+RUN ./gradlew build -x test
+
+# 생성된 JAR 파일을 더 Docker 친화적인 구조로 추출
+RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+
+#
+# Prod-deploy phase
+#
+FROM amazoncorretto:17-alpine as prod
+
+WORKDIR /app
+
+# 앱 실행에 필요한 환경 변수 설정
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# build 단계에서 빌드된 애플리케이션 파일 복사
+COPY --from=build /app/build/libs/*.jar /app/app.jar
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar", "--spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]

@@ -1,6 +1,8 @@
 package com.mgnt.ticketing.domain.reservation.service;
 
 
+import com.mgnt.ticketing.domain.concert.entity.Seat;
+import com.mgnt.ticketing.domain.concert.service.ConcertService;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.PaymentReader;
@@ -16,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 예약 모니터링 클래스
- *
+ * <p>
  * 예약 요청을 5분 동안 임시 점유하고, 5분 후 상태를 추적하여 점유 해제 처리하는 역할을 합니다.
  */
 @Slf4j
@@ -27,6 +29,7 @@ public class ReservationMonitor {
     private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentReader paymentReader;
+    private final ConcertService concertService;
 
     // 예약 요청을 저장할 큐
     private final Queue<OccupyTempReservationDto> tempReservationQueue = new ConcurrentLinkedQueue<>();
@@ -58,6 +61,7 @@ public class ReservationMonitor {
                     if ((reservation != null && reservation.getStatus().equals(Reservation.Status.ING))
                             && (payment == null)) {
                         // 임시 점유 해제: 완료되지 않은 예약 취소
+                        concertService.patchSeatStatus(reservation.getConcertDateId(), reservation.getSeatNum(), Seat.Status.AVAILABLE);
                         reservationRepository.delete(reservation);
                         log.info("완료되지 않은 예약 취소: {}", occupyDto.reservationId());
                         // 처리된 요청을 큐에서 제거

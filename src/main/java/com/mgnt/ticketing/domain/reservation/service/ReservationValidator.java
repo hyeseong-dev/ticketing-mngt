@@ -16,8 +16,8 @@ public class ReservationValidator {
 
     private final ReservationRepository reservationRepository;
 
-    public void checkReserved(Long concertDateId, Long seatId) {
-        Reservation reservation = reservationRepository.findOneByConcertDateIdAndSeatId(concertDateId, seatId);
+    public void checkReserved(Long concertDateId, int seatNum) {
+        Reservation reservation = reservationRepository.findOneByConcertDateIdAndSeatNum(concertDateId, seatNum);
         // 이미 선택된 좌석
         if (reservation != null
                 && List.of(Reservation.Status.RESERVED, Reservation.Status.ING).contains(reservation.getStatus())) {

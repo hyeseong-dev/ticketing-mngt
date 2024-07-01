@@ -54,6 +54,7 @@ public class Seat extends BaseDateTimeEntity {
         this.status = status;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

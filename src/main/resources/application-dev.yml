@@ -67,7 +67,7 @@ spring:
 
   jpa:
     defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
-    hibernate.ddl-auto: none # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
+    hibernate.ddl-auto: create # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
     show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
     properties:
       hibernate:
@@ -77,11 +77,11 @@ spring:
         default_batch_fetch_size: 500 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
 
 jwt:
-#  secret:
-#    key: ${JWT_SECRET_KEY}
-    secret: "7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg=="
-    access-token-validity: 3600000 # 1 hour
-    refresh-token-validity: 1296000000 # 15 days
+  #  secret:
+  #    key: ${JWT_SECRET_KEY}
+  secret: "7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg=="
+  access-token-validity: 3600000 # 1 hour
+  refresh-token-validity: 1296000000 # 15 days
 
 
 springdoc:

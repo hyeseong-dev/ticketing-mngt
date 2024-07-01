@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * 콘서트 서비스 클래스
- *
+ * <p>
  * 이 클래스는 콘서트와 관련된 비즈니스 로직을 처리합니다.
  */
 @Service
@@ -58,5 +58,11 @@ public class ConcertService implements ConcertInterface {
     public GetSeatsResponse getAvailableSeats(Long concertDateId) {
         List<Seat> availableSeats = concertRepository.findSeatsByConcertDateIdAndStatus(concertDateId, Seat.Status.AVAILABLE);
         return GetSeatsResponse.from(availableSeats);
+    }
+
+    @Override
+    public void patchSeatStatus(Long concertDateId, int seatNum, Seat.Status status) {
+        Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum);
+        seat.patchStatus(status);
     }
 }

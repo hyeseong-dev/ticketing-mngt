@@ -73,8 +73,8 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     }
 
     @Override
-    public Seat findSeatById(Long seatId) {
-        return seatJpaRepository.findById(seatId).orElseThrow(EntityNotFoundException::new);
+    public Seat findSeatByConcertDateIdAndSeatNum(Long concertDateId, int seatNum) {
+        return seatJpaRepository.findSeatByConcertDate_concertDateIdAndSeatNum(concertDateId, seatNum);
     }
 
     @Override
@@ -82,3 +82,4 @@ public class ConcertRepositoryImpl implements ConcertRepository {
         seatJpaRepository.saveAll(seats);
     }
 }
+
