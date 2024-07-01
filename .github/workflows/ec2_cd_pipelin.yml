@@ -40,3 +40,4 @@ jobs:
           ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi'
           scp -i ~/private-key.pem -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prod-deploy-compose.yml
           ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo "hello world!"'
+
