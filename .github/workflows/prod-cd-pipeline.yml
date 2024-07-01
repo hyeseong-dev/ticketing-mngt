@@ -8,7 +8,7 @@ env:
   ENVIRONMENT: prod
   AWS_REGION: ap-northeast-2
   ECR_REGISTRY: 471112705943.dkr.ecr.ap-northeast-2.amazonaws.com
-  ECR_REPOSITORY: ticketing
+  ECR_REPOSITORY: ticketing-prod
   JAVA_VERSION: '17'
 
 jobs:
