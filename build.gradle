@@ -152,4 +152,7 @@ checkstyle {
     configFile = file("${rootDir}/config/checkstyle/google_checks.xml")
 }
 
-
+buildScan {
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'no'
+}

@@ -6,6 +6,8 @@ on:
 
 env:
   ENVIRONMENT: dev
+  ECR_NAME: ticketing-dev
+  ECR_URI: 471112705943.dkr.ecr.ap-northeast-2.amazonaws.com
   AWS_REGION: ap-northeast-2
 
 jobs:
@@ -27,8 +29,9 @@ jobs:
         id: login-ecr
         run: aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 471112705943.dkr.ecr.ap-northeast-2.amazonaws.com
 
-      - name: Build and tag Docker images
-        run: make build
+      - name: Build, Tag and Push Docker Image
+        run: |
+          docker build -t ticketing-dev
+          docker tag ${{ env.ECR_NAME }}:latest ${{env.ECR_URI}}/${{env.ECR_NAME}}
+          docker push ${{env.ECR_URI}}/${{env.ECR_NAME}}:latest
 
-      - name: Push app image to ECR
-        run: make push-app

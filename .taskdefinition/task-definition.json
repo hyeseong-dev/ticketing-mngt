@@ -1,0 +1,36 @@
+{
+  "family": "ticketing-prod",
+  "containerDefinitions": [
+    {
+      "name": "service-prod",
+      "image": "471112705943.dkr.ecr.ap-northeast-2.amazonaws.com/ticketing-prod",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/ticketing-prod",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "taskRoleArn": "arn:aws:iam::471112705943:role/role-ecs-tasks",
+  "executionRoleArn": "arn:aws:iam::471112705943:role/role-ecs-tasks",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024"
+}
