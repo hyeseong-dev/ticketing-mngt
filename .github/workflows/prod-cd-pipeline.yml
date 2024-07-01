@@ -6,6 +6,7 @@ on:
 
 env:
   ENVIRONMENT: prod
+  PROJECT_NAME: ticketing
   ECR_NAME: ticketing-prod
   ECR_URI: ${{ secrets.ECR_URI }}
   AWS_REGION: ap-northeast-2
@@ -35,7 +36,7 @@ jobs:
       # Step 3: Create .env.prod file with secrets
       - name: Create .env.prod file
         run: |
-          echo "PROJECT_NAME=ticketing" > .env.prod
+          echo "PROJECT_NAME=${{env.PROJECT_NAME}}" > .env.prod
           echo "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}" >> .env.prod
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.prod
           echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.prod
@@ -53,7 +54,7 @@ jobs:
       # Step 5: Tag and Push Docker image to ECR
       - name: Tag and Push Docker image to ECR
         run: |
-          docker tag ${ECR_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
+          docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
           docker push ${ECR_URI}/${ECR_NAME}:latest
 
       # Step 6: Deploy to EC2 using SSH

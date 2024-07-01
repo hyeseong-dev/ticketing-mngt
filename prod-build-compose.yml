@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         - SPRING_PROFILES_ACTIVE=prod
-    image: ${ECR_URI}/${ECR_NAME}
+    image: ${PROJECT_NAME}
     container_name: app_container
     ports:
       - 8080:8080
