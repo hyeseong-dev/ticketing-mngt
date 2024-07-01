@@ -2,21 +2,17 @@ name: Build and Deploy to EC2
 
 on:
   push:
-    branches: [ develop, release-* ]
+    branches: [ release ]
 
 env:
   ENVIRONMENT: prod
   ECR_NAME: ticketing-prod
   ECR_URI: ${{ secrets.ECR_URI }}
   AWS_REGION: ap-northeast-2
-<<<<<<< Updated upstream
-  ECR_REGISTRY: 471112705943.dkr.ecr.ap-northeast-2.amazonaws.com
   ECR_REPOSITORY: ticketing
   JAVA_VERSION: '17'
-=======
   EC2_USER: ubuntu
   EC2_HOST: ${{ secrets.EC2_HOST }}
->>>>>>> Stashed changes
 
 jobs:
   build-and-deploy:
