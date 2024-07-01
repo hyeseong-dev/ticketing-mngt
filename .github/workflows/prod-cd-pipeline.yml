@@ -14,6 +14,7 @@ env:
   JAVA_VERSION: '17'
   EC2_USER: ubuntu
   EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
 
 jobs:
   build-and-deploy:
@@ -85,26 +86,26 @@ jobs:
           echo "ECR_URI: ${ECR_URI}"
           echo "ECR_NAME: ${ECR_NAME}"
           
-            echo "ECR 로그인 시도 중..."
-            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
-            if [ $? -ne 0 ]; then
+          echo "ECR 로그인 시도 중..."
+          aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
+          if [ $? -ne 0 ]; then
             echo "ECR 로그인 실패"
             exit 1
-            fi
+          fi
           
-            echo "Docker 이미지 태그 중..."
-            docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
-            if [ $? -ne 0 ]; then
+          echo "Docker 이미지 태그 중..."
+          docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
+          if [ $? -ne 0 ]; then
             echo "Docker 이미지 태그 실패"
             exit 1
-            fi
+          fi
           
-            echo "Docker 이미지 ECR로 푸시 중..."
-            docker push ${ECR_URI}/${ECR_NAME}:latest
-            if [ $? -ne 0 ]; then
+          echo "Docker 이미지 ECR로 푸시 중..."
+          docker push ${ECR_URI}/${ECR_NAME}:latest
+          if [ $? -ne 0 ]; then
             echo "Docker 이미지 푸시 실패"
             exit 1
-            fi
+          fi
           
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
 
@@ -117,21 +118,19 @@ jobs:
       - run: |
           echo "Step 7: .env.prod 파일 다운로드 완료"
 
-      - name: SSH를 사용하여 EC2에 배포
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            echo "Step 8: .env.prod 파일을 EC2에 전송"
-            scp -o StrictHostKeyChecking=no .env.prod ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/.env.prod
-            echo "Step 8: Docker Compose 파일을 EC2에 전송"
-            scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
-            echo "Step 8: SSH를 통해 EC2에 접속하여 Docker Compose로 배포 시작"
-            ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-              aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
-              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml --env-file /home/${{ env.EC2_USER }}/.env.prod pull
-              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml --env-file /home/${{ env.EC2_USER }}/.env.prod up -d
-              echo "Step 8: 배포 완료"
-            EOF
+      - name: Execute deployment commands on EC2 via SSM
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=[
+              "aws s3 cp s3://your-bucket-name/.env.prod /home/ubuntu/.env.prod",
+              "aws s3 cp s3://your-bucket-name/prod-deploy-compose.yml /home/ubuntu/prod-deploy-compose.yml",
+              "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_URI }}",
+              "docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod pull",
+              "docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod up -d"
+            ]' \
+            --comment "Deploying to EC2 instance" \
+            --timeout-seconds 600 \
+            --max-concurrency "50" \
+            --max-errors "0"
