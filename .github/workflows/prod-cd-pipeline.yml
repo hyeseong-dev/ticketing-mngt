@@ -26,7 +26,18 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v2
 
-      # Step 2: AWS 자격 증명 설정
+      # Step 2: Gradle 캐시 복원
+      - name: Gradle 캐시 복원
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # Step 3: AWS 자격 증명 설정
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -34,15 +45,22 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-      # Step 3: AWS ECR 로그인
+      # Step 4: Docker Hub 로그인
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # Step 5: AWS ECR 로그인
       - name: AWS ECR 로그인
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Step 4: .env.prod 파일 생성
+      # Step 6: .env.prod 파일 생성
       - name: .env.prod 파일 생성
         run: |
-          echo "Step 3: .env.prod 파일 생성 시작"
+          echo "Step 6: .env.prod 파일 생성 시작"
           echo "PROJECT_NAME=${{env.PROJECT_NAME}}" > .env.prod
           echo "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}" >> .env.prod
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.prod
@@ -52,28 +70,28 @@ jobs:
           echo "GMAIL_USERNAME=${{ secrets.GMAIL_USERNAME }}" >> .env.prod
           echo "GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}" >> .env.prod
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env.prod
-          echo "Step 3: .env.prod 파일 생성 완료"
+          echo "Step 6: .env.prod 파일 생성 완료"
 
-      # Step 5: .env.prod 파일 아티팩트 업로드
+      # Step 7: .env.prod 파일 아티팩트 업로드
       - name: .env.prod 파일 아티팩트 업로드
         uses: actions/upload-artifact@v2
         with:
           name: env-prod-file
           path: .env.prod
 
-      # Step 6: Docker Compose를 사용하여 Docker 이미지 빌드
+      # Step 8: Docker Compose를 사용하여 Docker 이미지 빌드
       - name: Docker 이미지 빌드
         run: |
-          echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
+          echo "Step 8: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
           docker-compose -f prod-build-compose.yml --env-file .env.prod build
-          echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 완료"
+          echo "Step 8: Docker Compose를 사용하여 Docker 이미지 빌드 완료"
           echo "Built Docker images:"
           docker images
 
-      # Step 7: Docker 이미지 태그 및 ECR에 푸시
+      # Step 9: Docker 이미지 태그 및 ECR에 푸시
       - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
-          echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 시작"
+          echo "Step 9: Docker 이미지 태그 및 ECR에 푸시 시작"
           echo "PROJECT_NAME: ${PROJECT_NAME}"
           echo "ECR_URI: ${ECR_URI}"
           echo "ECR_NAME: ${ECR_NAME}"
@@ -99,9 +117,9 @@ jobs:
             exit 1
           fi
           
-          echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
+          echo "Step 9: Docker 이미지 태그 및 ECR에 푸시 완료"
 
-      # Step 8: 파일을 EC2로 전송하고 배포 준비
+      # Step 10: 파일을 EC2로 전송하고 배포 준비
       - name: EC2에 파일 전송 및 배포 준비
         run: |
           aws ssm send-command \
@@ -117,7 +135,7 @@ jobs:
             --max-concurrency "50" \
             --max-errors "0"
 
-      # Step 9: EC2에서 Docker Compose를 사용하여 배포
+      # Step 11: EC2에서 Docker Compose를 사용하여 배포
       - name: EC2에서 Docker Compose로 배포
         run: |
           aws ssm send-command \
