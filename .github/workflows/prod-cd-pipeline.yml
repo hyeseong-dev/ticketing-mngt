@@ -24,7 +24,8 @@ jobs:
       # Step 1: 코드 체크아웃
       - name: 코드 체크아웃
         uses: actions/checkout@v2
-      - run:
+      - name: Step 1 완료
+        run:
           echo "Step 1: 코드 체크아웃 완료"
 
       # Step 2: AWS 자격 증명 설정
@@ -34,12 +35,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-      - run:
+      - name: Step 2 완료
+        run:
           echo "Step 2: AWS 자격 증명 설정 완료"
 
       # Step 3: .env.prod 파일 생성 및 업로드
       - name: .env.prod 파일 생성
-      - run: |
+        run: |
           echo "Step 3: .env.prod 파일 생성 시작"
           echo "PROJECT_NAME=${{env.PROJECT_NAME}}" > .env.prod
           echo "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}" >> .env.prod
@@ -57,12 +59,13 @@ jobs:
         with:
           name: env-prod-file
           path: .env.prod
-      - run:
+      - name: Step 4 완료
+        run:
           echo "Step 4: .env.prod 파일 아티팩트 업로드 완료"
 
       # Step 4: Docker Compose를 사용하여 Docker 이미지 빌드
       - name: Docker Compose를 사용하여 Docker 이미지 빌드
-      - run: |
+        run: |
           echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
           docker-compose -f prod-build-compose.yml --env-file .env.prod build
           echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 완료"
@@ -81,7 +84,8 @@ jobs:
         with:
           name: env-prod-file
           path: .
-      - run:
+      - name: Step 7 완료
+        run:
           echo "Step 7: .env.prod 파일 다운로드 완료"
 
       - name: SSH를 사용하여 EC2에 배포
