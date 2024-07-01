@@ -18,26 +18,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Create SSH Key
-        run: |
-          echo "${{ secrets.SSH_PEM_KEY }}" > ~/private-key.pem
-          chmod 600 ~/private-key.pem  # 보안상의 이유로 읽기 전용 권한 설정
-
-      - name: Create SSH directory
-        run: |
-          mkdir -p ~/.ssh
-
-      - name: Add known host
-        run: |
-          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
       - name: Copy prod-deploy-compose.yml to remote server
-        run: |
-          scp -i ~/private-key.pem -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.REMOTE_TARGET }}/prod-deploy-compose.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.SSH_PEM_KEY }}
+          port: 22
+          source: "prod-deploy-compose.yml"
+          target: ${{ env.REMOTE_TARGET }}
 
-      - name: Remove existing prod-deploy-compose.yml on remote server and deploy
-        run: |
-          ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi'
-          scp -i ~/private-key.pem -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prod-deploy-compose.yml
-          ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo "hello world!"'
-
+      - name: SSH to EC2 and execute commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.SSH_PEM_KEY }}
+          script: |
+            if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
+            echo "hello world!"
