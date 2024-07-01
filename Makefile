@@ -3,7 +3,7 @@ DEV_DOCKER_COMPOSE_FILE = dev-compose.yml
 AWS_REGION = ap-northeast-2
 ECR_REGISTRY = 471112705943.dkr.ecr.ap-northeast-2.amazonaws.com
 APP_IMAGE_NAME = ticketing
-ELASTIC_SERVICE_REGISTRY_NAME = ticketing
+ELASTIC_SERVICE_REGISTRY_NAME = ticketing-dev
 DB_IMAGE_NAME = ticketing-db
 
 # Targets
