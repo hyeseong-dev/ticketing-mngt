@@ -118,15 +118,22 @@ jobs:
       - run: |
           echo "Step 7: .env.prod 파일 다운로드 완료"
 
+      - name: Remove existing prod-deploy-compose.yml on EC2 if it exists
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml ]; then rm /home/${{ env.EC2_USER }}/prod-deploy-compose.yml; fi'
+
+      - name: Copy files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no .env.prod ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/.env.prod
+          scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
+
       - name: Execute deployment commands on EC2 via SSM
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=[
-              "aws s3 cp s3://your-bucket-name/.env.prod /home/ubuntu/.env.prod",
-              "aws s3 cp s3://your-bucket-name/prod-deploy-compose.yml /home/ubuntu/prod-deploy-compose.yml",
-              "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_URI }}",
+            --parameters commands='[
+              "aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}",
               "docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod pull",
               "docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod up -d"
             ]' \
