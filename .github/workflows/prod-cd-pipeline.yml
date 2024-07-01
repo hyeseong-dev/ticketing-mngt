@@ -69,11 +69,16 @@ jobs:
           echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
           docker-compose -f prod-build-compose.yml --env-file .env.prod build
           echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 완료"
+          echo "Built Docker images:"
+          docker images
 
       # Step 5: Docker 이미지 태그 및 ECR에 푸시
       - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 시작"
+          echo "PROJECT_NAME: ${PROJECT_NAME}"
+          echo "ECR_URI: ${ECR_URI}"
+          echo "ECR_NAME: ${ECR_NAME}"
           docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
           docker push ${ECR_URI}/${ECR_NAME}:latest
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
