@@ -1,4 +1,4 @@
-name: Build and Deploy to EC2
+name: [ 운영 ] EC2 이미지 빌드 및 배포
 
 on:
   push:
@@ -17,25 +17,26 @@ env:
 
 jobs:
   build-and-deploy:
-    name: Build and Deploy
+    name: 빌드 그리고 배포
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out code from the repository
-      - name: Check out code
+      # Step 1: 코드 체크아웃
+      - name: 코드 체크아웃
         uses: actions/checkout@v2
 
-      # Step 2: Set up AWS credentials
-      - name: Set up AWS credentials
+      # Step 2: AWS 자격 증명 설정
+      - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-      # Step 3: Create .env.prod file with secrets
-      - name: Create .env.prod file
+      # Step 3: .env.prod 파일 생성 및 업로드
+      - name: .env.prod 파일 생성
         run: |
+          echo "Step 3: .env.prod 파일 생성 시작"
           echo "PROJECT_NAME=${{env.PROJECT_NAME}}" > .env.prod
           echo "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}" >> .env.prod
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.prod
@@ -45,37 +46,55 @@ jobs:
           echo "GMAIL_USERNAME=${{ secrets.GMAIL_USERNAME }}" >> .env.prod
           echo "GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}" >> .env.prod
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env.prod
+          echo "Step 3: .env.prod 파일 생성 완료"
 
-      # Step 4: Build Docker image using Docker Compose
-      - name: Build Docker image using Docker Compose
+      - name: .env.prod 파일 아티팩트 업로드
+        uses: actions/upload-artifact@v2
+        with:
+          name: env-prod-file
+          path: .env.prod
+        run:
+          echo "Step 4: .env.prod 파일 아티팩트 업로드 완료"
+
+      # Step 4: Docker Compose를 사용하여 Docker 이미지 빌드
+      - name: Docker Compose를 사용하여 Docker 이미지 빌드
         run: |
+          echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
           docker-compose -f prod-build-compose.yml --env-file .env.prod build
+          echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 완료"
 
-      # Step 5: Tag and Push Docker image to ECR
-      - name: Tag and Push Docker image to ECR
+      # Step 5: Docker 이미지 태그 및 ECR에 푸시
+      - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
+          echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 시작"
           docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
           docker push ${ECR_URI}/${ECR_NAME}:latest
+          echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
 
-      # Step 6: Deploy to EC2 using SSH
-      - name: Deploy to EC2 using SSH
+      # Step 6: .env.prod 파일 다운로드 및 EC2 배포
+      - name: .env.prod 파일 다운로드
+        uses: actions/download-artifact@v2
+        with:
+          name: env-prod-file
+          path: .
+        run:
+          echo "Step 7: .env.prod 파일 다운로드 완료"
+
+      - name: SSH를 사용하여 EC2에 배포
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            # Copy Docker Compose file to EC2
+            echo "Step 8: .env.prod 파일을 EC2에 전송"
+            scp -o StrictHostKeyChecking=no .env.prod ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/.env.prod
+            echo "Step 8: Docker Compose 파일을 EC2에 전송"
             scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
-            
-            # SSH into EC2 and deploy the application
+            echo "Step 8: SSH를 통해 EC2에 접속하여 Docker Compose로 배포 시작"
             ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-              # Login to Amazon ECR
               aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
-            
-              # Pull the latest image from ECR
-              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml pull
-            
-              # Start the application using Docker Compose
-              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml up -d
+              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml --env-file /home/${{ env.EC2_USER }}/.env.prod pull
+              docker-compose -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml --env-file /home/${{ env.EC2_USER }}/.env.prod up -d
+              echo "Step 8: 배포 완료"
             EOF
