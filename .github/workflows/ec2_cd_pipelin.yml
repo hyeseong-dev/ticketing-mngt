@@ -7,7 +7,7 @@ on:
 env:
   EC2_USER: ubuntu
   EC2_HOST: ${{ secrets.EC2_HOST }}
-  AWS_REGION: ap-northeast-2
+  REMOTE_TARGET: /home/ubuntu
 
 jobs:
   deploy-to-ec2:
@@ -15,20 +15,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 코드 체크아웃
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Install SSH key
+      - name: Create SSH Key
+        run: |
+          echo "${{ secrets.SSH_PEM_KEY }}" > ~/private-key.pem
+          chmod 400 ~/private-key.pem  # 보안상의 이유로 읽기 전용 권한 설정
+
+      - name: Create SSH directory
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
 
-      - name: EC2에 파일 전송 및 기존 파일 삭제
+      - name: Add known host
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml ]; then rm /home/${{ env.EC2_USER }}/prod-deploy-compose.yml; fi'
-          scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
+          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: EC2에서 명령어 실행
+      - name: Copy prod-deploy-compose.yml to remote server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo "hello world!"'
+          scp -i ~/private-key.pem -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.REMOTE_TARGET }}/prod-deploy-compose.yml
+
+      - name: Remove existing prod-deploy-compose.yml on remote server and deploy
+        run: |
+          ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi'
+          scp -i ~/private-key.pem -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prod-deploy-compose.yml
+          ssh -i ~/private-key.pem -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo "hello world!"'
