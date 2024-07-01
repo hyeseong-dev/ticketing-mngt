@@ -1,0 +1,34 @@
+name: EC2 파일 전송 및 명령어 실행
+
+on:
+  push:
+    branches: [ ec2_branch ]
+
+env:
+  EC2_USER: ubuntu
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  deploy-to-ec2:
+    name: 파일 전송 및 명령어 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v2
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: EC2에 파일 전송 및 기존 파일 삭제
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml ]; then rm /home/${{ env.EC2_USER }}/prod-deploy-compose.yml; fi'
+          scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
+
+      - name: EC2에서 명령어 실행
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo "hello world!"'
