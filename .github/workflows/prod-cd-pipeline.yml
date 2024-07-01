@@ -25,9 +25,6 @@ jobs:
       # Step 1: 코드 체크아웃
       - name: 코드 체크아웃
         uses: actions/checkout@v2
-      - name: 코드 체크아웃 완료
-        run: |
-          echo "Step 1: 코드 체크아웃 완료"
 
       # Step 2: AWS 자격 증명 설정
       - name: AWS 자격 증명 설정
@@ -37,15 +34,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-      - name: AWS 자격 증명 설정 완료
-        run: |
-          echo "Step 2: AWS 자격 증명 설정 완료"
-
-      - name: Login AWS ECR service
+      # Step 3: AWS ECR 로그인
+      - name: AWS ECR 로그인
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Step 3: .env.prod 파일 생성 및 업로드
+      # Step 4: .env.prod 파일 생성
       - name: .env.prod 파일 생성
         run: |
           echo "Step 3: .env.prod 파일 생성 시작"
@@ -60,17 +54,15 @@ jobs:
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env.prod
           echo "Step 3: .env.prod 파일 생성 완료"
 
+      # Step 5: .env.prod 파일 아티팩트 업로드
       - name: .env.prod 파일 아티팩트 업로드
         uses: actions/upload-artifact@v2
         with:
           name: env-prod-file
           path: .env.prod
-      - name: .env.prod 파일 아티팩트 업로드 완료
-        run: |
-          echo "Step 4: .env.prod 파일 아티팩트 업로드 완료"
 
-      # Step 4: Docker Compose를 사용하여 Docker 이미지 빌드
-      - name: Docker Compose를 사용하여 Docker 이미지 빌드
+      # Step 6: Docker Compose를 사용하여 Docker 이미지 빌드
+      - name: Docker 이미지 빌드
         run: |
           echo "Step 5: Docker Compose를 사용하여 Docker 이미지 빌드 시작"
           docker-compose -f prod-build-compose.yml --env-file .env.prod build
@@ -78,7 +70,7 @@ jobs:
           echo "Built Docker images:"
           docker images
 
-      # Step 5: Docker 이미지 태그 및 ECR에 푸시
+      # Step 7: Docker 이미지 태그 및 ECR에 푸시
       - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 시작"
@@ -109,25 +101,24 @@ jobs:
           
           echo "Step 6: Docker 이미지 태그 및 ECR에 푸시 완료"
 
-      # Step 6: .env.prod 파일 다운로드 및 EC2 배포
-      - name: .env.prod 파일 다운로드
-        uses: actions/download-artifact@v2
-        with:
-          name: env-prod-file
-          path: .
-      - run: |
-          echo "Step 7: .env.prod 파일 다운로드 완료"
-
-      - name: Remove existing prod-deploy-compose.yml on EC2 if it exists
+      # Step 8: 파일을 EC2로 전송하고 배포 준비
+      - name: EC2에 파일 전송 및 배포 준비
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }} 'if [ -f /home/${{ env.EC2_USER }}/prod-deploy-compose.yml ]; then rm /home/${{ env.EC2_USER }}/prod-deploy-compose.yml; fi'
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters commands='[
+              "rm -f /home/ubuntu/prod-deploy-compose.yml",
+              "cat > /home/ubuntu/.env.prod <<EOF\n$(cat .env.prod)\nEOF",
+              "cat > /home/ubuntu/prod-deploy-compose.yml <<EOF\n$(cat prod-deploy-compose.yml)\nEOF"
+            ]' \
+            --comment "Prepare EC2 for deployment" \
+            --timeout-seconds 300 \
+            --max-concurrency "50" \
+            --max-errors "0"
 
-      - name: Copy files to EC2
-        run: |
-          scp -o StrictHostKeyChecking=no .env.prod ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/.env.prod
-          scp -o StrictHostKeyChecking=no prod-deploy-compose.yml ${{ env.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ env.EC2_USER }}/prod-deploy-compose.yml
-
-      - name: Execute deployment commands on EC2 via SSM
+      # Step 9: EC2에서 Docker Compose를 사용하여 배포
+      - name: EC2에서 Docker Compose로 배포
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
