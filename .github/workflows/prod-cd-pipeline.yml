@@ -5,7 +5,7 @@ on:
     branches: [ release ]
 
 env:
-  ENVIRONMENT: prod
+  SPRING_PROFILES_ACTIVE: prod
   PROJECT_NAME: ticketing
   ECR_NAME: ticketing-prod
   ECR_URI: ${{ secrets.ECR_URI }}
@@ -104,23 +104,25 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            cat > /home/ubuntu/.env.prod << 'EOF'
-            PROJECT_NAME=${PROJECT_NAME}
-            MYSQL_USERNAME=${MYSQL_USERNAME}
-            MYSQL_PASSWORD=${MYSQL_PASSWORD}
-            MYSQL_HOST=${MYSQL_HOST}
-            MYSQL_PORT=${MYSQL_PORT}
-            MYSQL_DB_NAME=${MYSQL_DB_NAME}
-            GMAIL_USERNAME=${GMAIL_USERNAME}
-            GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
-            JWT_SECRET_KEY=${JWT_SECRET_KEY}
+            cat > /home/ubuntu/.env.prod <<EOF
+            PROJECT_NAME=${{ secrets.PROJECT_NAME }}
+            MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_DB_NAME=${{ secrets.MYSQL_DB_NAME }}
+            GMAIL_USERNAME=${{ secrets.GMAIL_USERNAME }}
+            GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
             EOF
 
-            cat > /home/ubuntu/prod-deploy-compose.yml << 'EOF'
+            cat > /home/ubuntu/prod-deploy-compose.yml <<EOF
             version: '3.8'
             services:
               app:
                 image: ${ECR_URI}/${ECR_NAME}:latest
+                container_name: app_container
                 ports:
                   - "80:80"
                 environment:
@@ -134,5 +136,12 @@ jobs:
                   GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
                   JWT_SECRET_KEY: ${JWT_SECRET_KEY}
             EOF
+
+            # 기존 컨테이너가 존재하면 중지하고 제거
+            if [ "$(docker ps -q -f name=app)" ]; then
+              docker stop app_container
+              docker rm app_container
+            fi
+
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod up -d
             echo "Hello, World!"
