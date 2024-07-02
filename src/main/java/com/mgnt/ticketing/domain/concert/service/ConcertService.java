@@ -63,6 +63,8 @@ public class ConcertService implements ConcertInterface {
     @Override
     public void patchSeatStatus(Long concertDateId, int seatNum, Seat.Status status) {
         Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum);
-        seat.patchStatus(status);
+        if (seat != null) {
+            seat.patchStatus(status);
+        }
     }
 }

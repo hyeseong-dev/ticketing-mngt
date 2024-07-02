@@ -21,6 +21,7 @@ import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.PessimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,7 +41,6 @@ public class ReservationService implements ReservationInterface {
     private final ReservationMonitor reservationMonitor;
     private final ConcertReader concertReader;
     private final ConcertService concertService;
-    private final UserReader userReader;
     private final PaymentService paymentService;
     private final PaymentReader paymentReader;
     private final ApplicationEventPublisher eventPublisher;
@@ -54,10 +54,14 @@ public class ReservationService implements ReservationInterface {
     @Transactional
     public ReserveResponse reserve(ReserveRequest request) {
         try {
+            // 동시성 제어 - 비관적 락 적용
+            concertService.patchSeatStatus(request.concertDateId(), request.seatNum(), Seat.Status.DISABLE);
+
             // validator
             reservationValidator.checkReserved(request.concertDateId(), request.seatNum());
 
-            Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
+            Reservation reservation = addReservation(request);
+
             Concert concert = concertReader.findConcert(reservation.getConcertId());
             ConcertDate concertDate = concertReader.findConcertDate(reservation.getConcertDateId());
             Seat seat = concertReader.findSeat(reservation.getConcertDateId(), reservation.getSeatNum());
@@ -67,10 +71,14 @@ public class ReservationService implements ReservationInterface {
 
             return ReserveResponse.from(reservation, concert, concertDate, seat);
 
-        } catch (DataIntegrityViolationException e) {
-            // 유니크 제약 조건(concertDateId, seatNum) 위반 시
+        } catch (PessimisticLockException e) {
+            // 락 획득 실패 시
             throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, LogLevel.INFO);
         }
+    }
+
+    public Reservation addReservation(ReserveRequest request) {
+        return reservationRepository.save(request.toEntity());
     }
 
     @Override

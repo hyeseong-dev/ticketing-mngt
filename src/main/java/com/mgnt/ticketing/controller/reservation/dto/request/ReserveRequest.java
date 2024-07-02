@@ -12,7 +12,7 @@ public record ReserveRequest(
         @NotNull Long userId
 ) {
 
-    public Reservation toEntity(ConcertReader concertReader, UserReader userReader) {
+    public Reservation toEntity() {
         return Reservation.builder()
                 .concertId(concertId)
                 .concertDateId(concertDateId)

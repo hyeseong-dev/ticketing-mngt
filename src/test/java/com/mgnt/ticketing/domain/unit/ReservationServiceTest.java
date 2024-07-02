@@ -70,7 +70,6 @@ class ReservationServiceTest {
                 reservationMonitor,
                 concertReader,
                 concertService,
-                userReader,
                 paymentService,
                 paymentReader,
                 applicationEventPublisher
@@ -111,7 +110,7 @@ class ReservationServiceTest {
 
         // when
         when(reservationRepository.findOneByConcertDateIdAndSeatNum(request.concertDateId(), request.seatNum())).thenReturn(null);
-        when(reservationRepository.save(request.toEntity(concertReader, userReader))).thenReturn(예약건);
+        when(reservationRepository.save(request.toEntity())).thenReturn(예약건);
         when(concertReader.findConcert(anyLong())).thenReturn(Concert.builder().build());
         when(concertReader.findConcertDate(anyLong())).thenReturn(ConcertDate.builder().build());
         when(concertReader.findSeat(anyLong(), anyInt())).thenReturn(Seat.builder().build());
