@@ -30,9 +30,5 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     public Payment findById(Long paymentId) {
         return paymentJpaRepository.findById(paymentId).orElseThrow(EntityNotFoundException::new);
     }
-
-    @Override
-    public void delete(Payment payment) {
-        paymentJpaRepository.delete(payment);
-    }
+    
 }

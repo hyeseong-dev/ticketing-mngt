@@ -3,7 +3,7 @@ name: CI 개발 브랜치
 on:
   pull_request:
   push:
-    branches: [ develop, release-* ]
+    branches: [ develop ]
 
 env:
   PROFILE: dev
@@ -34,7 +34,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-
 
       - name: Run tests and generate Jacoco report
-        run: ./gradlew test jacocoTestReport
+        run: ./gradlew test -Dspring.profiles.active=test jacocoTestReport
 
   lint:
     runs-on: ubuntu-latest

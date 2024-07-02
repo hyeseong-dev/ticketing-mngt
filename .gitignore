@@ -1,4 +1,6 @@
 
+src/main/generated
+
 ### 환경변수
 .env
 .env.prod

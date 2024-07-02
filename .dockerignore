@@ -1,3 +1,4 @@
+src/main/generated
 /build/
 !/build/libs/ticketing-0.0.1-SNAPSHOT.jar
 
