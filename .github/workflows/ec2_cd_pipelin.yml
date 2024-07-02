@@ -18,31 +18,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Create SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/private-key.pem
+          chmod 600 ~/private-key.pem
+
       - name: Copy prod-deploy-compose.yml to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.SSH_PEM_KEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
           source: "prod-deploy-compose.yml"
           target: ${{ env.REMOTE_TARGET }}
-
-      - name: Verify file on remote server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ secrets.SSH_PEM_KEY }}
-          script: |
-            ls -al /home/ubuntu/prod-deploy-compose.yml
 
       - name: SSH to EC2 and execute commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.SSH_PEM_KEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
             echo "hello world!"
