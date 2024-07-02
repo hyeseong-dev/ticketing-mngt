@@ -8,8 +8,8 @@ WORKDIR /app
 
 COPY gradlew .
 COPY gradle gradle
-RUN dos2unix ./gradlew
-RUN chmod +x ./gradlew
+RUN dos2unix ./gradlew && chmod +x ./gradlew
+COPY config config
 
 # Gradle 설정 파일 복사 및 Gradle Wrapper 설치
 COPY build.gradle settings.gradle ./
