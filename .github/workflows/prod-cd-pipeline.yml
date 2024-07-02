@@ -97,33 +97,30 @@ jobs:
             echo "Instance is already running."
           fi
 
-      - name: EC2에 이미 존재하는 prod-deploy-compose.yml 삭제
+      - name: EC2에서 Docker Compose 실행
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
-
-      - name: EC2에 prod-deploy-compose.yml 전송 하기
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          port: 22
-          source: "prod-deploy-compose.yml"
-          target: ${{ env.REMOTE_TARGET }}
-
-      - name: Verify file on remote server and execute commands
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            ls -al /home/ubuntu/prod-deploy-compose.yml
+            cat > /home/ubuntu/prod-deploy-compose.yml << 'EOF'
+            version: '3.8'
+            services:
+              app:
+                image: ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
+                ports:
+                  - "80:80"
+                environment:
+                  SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+                  MYSQL_USERNAME: ${MYSQL_USERNAME}
+                  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+                  MYSQL_HOST: ${MYSQL_HOST}
+                  MYSQL_PORT: ${MYSQL_PORT}
+                  MYSQL_DB_NAME: ${MYSQL_DB_NAME}
+                  GMAIL_USERNAME: ${GMAIL_USERNAME}
+                  GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+                  JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+            EOF
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod up -d
-          comment: Deploying to EC2 instance
-          working-directory: /home/ubuntu
+            echo "Hello, World!"
