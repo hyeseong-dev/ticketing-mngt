@@ -25,37 +25,34 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v2
 
-      - name: Gradle 캐시 복원
-        uses: actions/cache@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+          distribution: 'adopt'
+          java-version: '17'
 
-      - name: AWS 자격 증명 설정
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+      - name: Build the project
+        run: ./gradlew build
 
-      - name: Docker Hub 로그인
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_ACCOUNT }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      - name: AWS ECR 로그인
-        id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Docker 이미지 빌드
+      - name: Build and push Docker image
         run: |
-          docker-compose -f prod-build-compose.yml build
-          docker images
+          docker buildx create --use
+          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest --push .
+
+      - name: AWS ECR 로그인
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
@@ -86,16 +83,7 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            # AWS CLI 설정
-            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
-            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
-            aws configure set region ${{ env.AWS_REGION }}
-            aws configure set output json
-
-            # AWS ECR 로그인
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
-
-            # Docker Compose 파일 생성
+            echo "${{ secrets.AWS_SECRET_KEY }}" | docker login -u "${{ secrets.AWS_ACCESS_KEY }}" --password-stdin ${{ env.ECR_URI }}
             cat > /home/ubuntu/prod-deploy-compose.yml <<EOF
             version: '3.8'
             services:
@@ -122,7 +110,6 @@ jobs:
               docker rm app_container
             fi
 
-            # Docker Compose를 사용하여 컨테이너 실행
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml pull
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml up -d
             echo "Hello, World!"
