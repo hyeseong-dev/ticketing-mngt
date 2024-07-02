@@ -66,7 +66,7 @@ jobs:
       - name: 도커 이미지 빌드 및 푸시
         run: |
           docker buildx create --use
-          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest --push .
+          docker buildx build --platform linux/amd64,linux/arm64 --target prod -t ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest --push .
 
       - name: EC2 인스턴스 상태 확인 및 시작
         run: |

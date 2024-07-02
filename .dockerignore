@@ -13,6 +13,9 @@
 .env.prod
 /temp/
 
+# queryDSL 파일 제외
+/src/main/generated
+
 # node_modules 제외
 /node_modules
 
