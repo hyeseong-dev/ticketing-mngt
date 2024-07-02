@@ -59,8 +59,8 @@ jobs:
 
       - name: Docker 이미지 태그 및 ECR에 푸시
         run: |
-          docker tag ${PROJECT_NAME}:latest ${ECR_URI}/${ECR_NAME}:latest
-          docker push ${ECR_URI}/${ECR_NAME}:latest
+          docker tag ${{ env.PROJECT_NAME }}:latest ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
+          docker push ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
 
       - name: EC2 인스턴스 상태 확인 및 시작
         run: |
@@ -86,11 +86,12 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
             cat > /home/ubuntu/prod-deploy-compose.yml <<EOF
             version: '3.8'
             services:
               app:
-                image: ${{env.ECR_URI}}/${{env.ECR_NAME}}:latest
+                image: ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
                 container_name: app_container
                 ports:
                   - "80:80"
@@ -107,7 +108,7 @@ jobs:
             EOF
 
             # 기존 컨테이너가 존재하면 중지하고 제거
-            if [ "$(docker ps -q -f name=app)" ]; then
+            if [ "$(docker ps -q -f name=app_container)" ]; then
               docker stop app_container
               docker rm app_container
             fi
