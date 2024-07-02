@@ -20,7 +20,7 @@ jobs:
 
       - name: Create SSH Key
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/private-key.pem
+          echo "${{ secrets.EC2_SSH_PRIVATEKEY }}" > ~/private-key.pem
           chmod 600 ~/private-key.pem
 
       - name: Remove existing prod-deploy-compose.yml on remote server
@@ -28,7 +28,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATEKEY }}
           script: |
             if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
 
