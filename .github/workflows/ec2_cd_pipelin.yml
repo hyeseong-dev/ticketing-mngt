@@ -23,17 +23,26 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SSH_PEM_KEY }}
           port: 22
           source: "prod-deploy-compose.yml"
           target: ${{ env.REMOTE_TARGET }}
+
+      - name: Verify file on remote server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.SSH_PEM_KEY }}
+          script: |
+            ls -al /home/ubuntu/prod-deploy-compose.yml
 
       - name: SSH to EC2 and execute commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SSH_PEM_KEY }}
           script: |
             if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
             echo "hello world!"
