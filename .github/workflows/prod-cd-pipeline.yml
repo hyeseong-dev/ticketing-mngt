@@ -104,11 +104,23 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
+            cat > /home/ubuntu/.env.prod << 'EOF'
+            PROJECT_NAME=${PROJECT_NAME}
+            MYSQL_USERNAME=${MYSQL_USERNAME}
+            MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            MYSQL_HOST=${MYSQL_HOST}
+            MYSQL_PORT=${MYSQL_PORT}
+            MYSQL_DB_NAME=${MYSQL_DB_NAME}
+            GMAIL_USERNAME=${GMAIL_USERNAME}
+            GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+            JWT_SECRET_KEY=${JWT_SECRET_KEY}
+            EOF
+
             cat > /home/ubuntu/prod-deploy-compose.yml << 'EOF'
             version: '3.8'
             services:
               app:
-                image: ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
+                image: ${ECR_URI}/${ECR_NAME}:latest
                 ports:
                   - "80:80"
                 environment:
