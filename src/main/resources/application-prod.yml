@@ -20,6 +20,7 @@ server:
     context-path: /
     context-parameters:
       throwExceptionIfNoHandlerFound: true
+  port: 8080
 
 spring:
   config:
