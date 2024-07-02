@@ -97,26 +97,21 @@ jobs:
             echo "Instance is already running."
           fi
 
-      - name: Create SSH Key
-        run: |
-          echo "${{ secrets.EC2_SSH_PRIVATEKEY }}" > ~/private-key.pem
-          chmod 600 ~/private-key.pem
-
-      - name: Remove existing prod-deploy-compose.yml on remote server
+      - name: EC2에 이미 존재하는 prod-deploy-compose.yml 삭제
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATEKEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
 
-      - name: Copy prod-deploy-compose.yml to remote server
+      - name: EC2에 prod-deploy-compose.yml 전송 하기
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATEKEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
           source: "prod-deploy-compose.yml"
           target: ${{ env.REMOTE_TARGET }}
@@ -126,7 +121,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATEKEY }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             ls -al /home/ubuntu/prod-deploy-compose.yml
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml --env-file /home/ubuntu/.env.prod up -d
