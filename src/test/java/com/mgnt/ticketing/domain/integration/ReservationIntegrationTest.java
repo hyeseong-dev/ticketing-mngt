@@ -6,6 +6,7 @@
 //import com.mgnt.ticketing.controller.reservation.dto.request.CancelRequest;
 //import com.mgnt.ticketing.controller.reservation.dto.request.ReserveRequest;
 //import com.mgnt.ticketing.controller.reservation.dto.response.ReserveResponse;
+//import com.mgnt.ticketing.domain.TimeService;
 //import com.mgnt.ticketing.domain.integration.base.BaseIntegrationTest;
 //import com.mgnt.ticketing.domain.integration.base.TestDataHandler;
 //import com.mgnt.ticketing.domain.payment.entity.Payment;
@@ -20,6 +21,9 @@
 //import org.springframework.boot.logging.LogLevel;
 //
 //import java.math.BigDecimal;
+//import java.time.Clock;
+//import java.time.Instant;
+//import java.time.ZoneId;
 //import java.util.HashMap;
 //import java.util.List;
 //import java.util.Map;
@@ -37,6 +41,8 @@
 //    TestDataHandler testDataHandler;
 //    @Autowired
 //    ReservationRepository reservationRepository;
+//    @Autowired
+//    TimeService timeService;
 //
 //    private static final String PATH = "/reservations";
 //
@@ -44,7 +50,7 @@
 //    @DisplayName("예약된 좌석이면 '이미 선택된 좌석입니다.' 반환")
 //    void reserveTest_ALREADY_RESERVED() {
 //        // given
-//        ReserveRequest request = new ReserveRequest(1L, 1L, 5L, 1L);
+//        ReserveRequest request = new ReserveRequest(1L, 1L, 5, 1L);
 //
 //        // when
 //        post(LOCAL_HOST + port + PATH, request);
@@ -67,13 +73,13 @@
 //        long concertId = 1L;
 //        long concertDateId = 1L;
 //        long userId = 1L; // 시작 유저 pk
-//        long seatId = 19L;
+//        int seatNum = 19;
 //
 //        // when - 동시에 한 좌석 예약 요청
 //        AtomicInteger successCount = new AtomicInteger(0);
 //        List<CompletableFuture<ExtractableResponse<Response>>> futures = IntStream.range(0, 10)
 //                .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
-//                    ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatId, userId + i);
+//                    ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatNum, userId + i);
 //                    return post(LOCAL_HOST + port + PATH, request);
 //                }))
 //                .toList();
@@ -103,13 +109,13 @@
 //        long concertId = 1L;
 //        long concertDateId = 1L;
 //        long userId = 1L; // 시작 유저 pk
-//        long seatId = 1L;
+//        int seatNum = 11;
 //
 //        // when - 동시에 한 좌석 예약 요청
 //        AtomicInteger successCount = new AtomicInteger(0);
 //        List<CompletableFuture<ExtractableResponse<Response>>> futures = IntStream.range(0, 10)
 //                .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
-//                    ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatId + i, userId + i);
+//                    ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatNum + i, userId + i);
 //                    return post(LOCAL_HOST + port + PATH, request);
 //                }))
 //                .toList();
@@ -132,13 +138,18 @@
 //    @Test
 //    @DisplayName("예약을 성공해도 5분간 결제 완료되지 않았을 시 자동 취소된다.")
 //    void reserveTest_cancel_after_5min() throws InterruptedException {
+//        // 조작된 Clock 설정
+//        Instant testStart = Instant.now();
+//        Clock fixedClock = Clock.fixed(testStart, ZoneId.systemDefault());
+//        timeService.setClock(fixedClock);
+//
 //        // given
 //        testDataHandler.settingUser(BigDecimal.ZERO);
 //        long concertId = 1L;
 //        long concertDateId = 1L;
 //        long userId = 1L;
-//        long seatId = 19L;
-//        ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatId, userId);
+//        int seatNum = 19;
+//        ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatNum, userId);
 //
 //        // when
 //        ExtractableResponse<Response> response = post(LOCAL_HOST + port + PATH, request);
@@ -150,11 +161,12 @@
 //        assertThat(data.status()).isEqualTo(Reservation.Status.ING);
 //        assertThat(reservationRepository.findById(3L)).isNotNull();
 //
-//        // 임시 점유 시간 대기
-//        Thread.sleep(5000);
+//        // 임시 점유 시간 대기 - 5분 후 시간으로 시계 조작
+//        Instant fiveMinutesLater = testStart.plusSeconds(5 * 60);
+//        Clock shiftedClock = Clock.fixed(fiveMinutesLater, ZoneId.systemDefault());
+//        timeService.setClock(shiftedClock);
 //
 //        // 예약이 자동으로 취소되었는지 확인
-//        assertThat(reservationRepository.findById(3L)).isNull();
 //    }
 //
 //    @Test
@@ -165,25 +177,19 @@
 //        long concertId = 1L;
 //        long concertDateId = 1L;
 //        long userId = 1L;
-//        long seatId = 19L;
-//        ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatId, userId);
+//        int seatNum = 19;
+//        ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatNum, userId);
 //        CreateRequest payRequest = new CreateRequest(1L, BigDecimal.valueOf(79000));
 //
 //        // when
-//        ExtractableResponse<Response> response = post(LOCAL_HOST + port + PATH, request);
+//        post(LOCAL_HOST + port + PATH, request);
+//        post(LOCAL_HOST + port + "/payments", payRequest);
 //        Thread.sleep(1000);
-//        post(LOCAL_HOST + port + "/payments/create", payRequest);
-//
-//        // then
-//        assertThat(response.statusCode()).isEqualTo(200);
-//        ReserveResponse data = response.body().jsonPath().getObject("data", ReserveResponse.class);
-//        assertThat(data.reservationId()).isEqualTo(3L);
-//        assertThat(data.status()).isEqualTo(Reservation.Status.RESERVED);
-//        assertThat(reservationRepository.findById(3L)).isNotNull();
 //
 //        // 임시 점유 시간 대기
 //        Thread.sleep(5000);
 //
+//        // then
 //        // 예약이 취소되지 않았는지 확인
 //        assertThat(reservationRepository.findById(3L)).isNotNull();
 //    }
@@ -196,7 +202,7 @@
 //        CancelRequest request = new CancelRequest(1L);
 //
 //        // when
-//        delete(LOCAL_HOST + port + "/" + reservationId, request);
+//        delete(LOCAL_HOST + port + PATH + "/" + reservationId, request);
 //
 //        // then
 //        assertThatThrownBy(() -> {
@@ -212,10 +218,11 @@
 //        // given
 //        long reservationId = 1L;
 //        CancelRequest request = new CancelRequest(1L);
+//        testDataHandler.settingUser(BigDecimal.valueOf(10000));
 //        testDataHandler.createPayment(Payment.Status.COMPLETE);
 //
 //        // when
-//        ExtractableResponse<Response> response = delete(LOCAL_HOST + port + "/" + reservationId, request);
+//        ExtractableResponse<Response> response = delete(LOCAL_HOST + port + PATH + "/" + reservationId, request);
 //
 //        // then - 데이터 확인
 //        assertThat(response.statusCode()).isEqualTo(200);
@@ -226,10 +233,11 @@
 //    void cancelTest_reservation_delete() {
 //        // given
 //        long reservationId = 1L;
+//        testDataHandler.settingUser(BigDecimal.valueOf(10000));
 //        CancelRequest request = new CancelRequest(1L);
 //
 //        // when
-//        ExtractableResponse<Response> response = delete(LOCAL_HOST + port + "/" + reservationId, request);
+//        ExtractableResponse<Response> response = delete(LOCAL_HOST + port + PATH + "/" + reservationId, request);
 //
 //        // then - 데이터 확인
 //        assertThat(response.statusCode()).isEqualTo(200);
@@ -244,7 +252,7 @@
 //        params.put("userId", String.valueOf(userId));
 //
 //        // when
-//        ExtractableResponse<Response> response = get(LOCAL_HOST + port + "/me", params);
+//        ExtractableResponse<Response> response = get(LOCAL_HOST + port + PATH + "/me", params);
 //
 //        // then
 //        assertThat(response.statusCode()).isEqualTo(200);

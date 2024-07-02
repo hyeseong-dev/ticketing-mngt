@@ -22,11 +22,6 @@ server:
       throwExceptionIfNoHandlerFound: true
 
 spring:
-  config:
-    import: optional:files:.env[.properties]
-    activate:
-      on-profile: dev
-
   docker:
     compose:
       enabled: false

@@ -60,14 +60,14 @@ spring:
       idle-timeout: 600000  # 10분 (밀리초 단위)
       connection-timeout: 30000 # 30초 (밀리초 단위)
       validation-timeout: 5000  # 5초 (밀리초 단위)
-    url: jdbc:mysql://localhost:3306/ticketing # 데이터베이스 URL을 설정합니다.
+    url: jdbc:mysql://db:3306/ticketing # 데이터베이스 URL을 설정합니다.
     username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
     password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
 
   jpa:
     defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
-    hibernate.ddl-auto: none # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
+    hibernate.ddl-auto: update # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
     show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
     properties:
       hibernate:

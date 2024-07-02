@@ -117,11 +117,10 @@
 //    @DisplayName("콘서트 좌석 목록을 조회하면, 예약가능한 좌석 목록을 반환한다.")
 //    void getSeatsTest_success() {
 //        // given
-//        long concertId = 1L;
 //        long concertDateId = 1L;
 //
 //        // when
-//        ExtractableResponse<Response> response = get(LOCAL_HOST + port + PATH + "/" + concertId + "/dates/" + concertDateId + "/seats");
+//        ExtractableResponse<Response> response = get(LOCAL_HOST + port + PATH + "/dates/" + concertDateId + "/seats");
 //
 //        // then
 //        assertThat(response.statusCode()).isEqualTo(200);

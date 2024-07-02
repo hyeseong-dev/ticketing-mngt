@@ -10,7 +10,7 @@
 
 # 중요한 정보 제외
 .env
-
+.env.prod
 /temp/
 
 # node_modules 제외

@@ -32,6 +32,8 @@ public class ConcertDate extends BaseDateTimeEntity {
     @JoinColumn(name = "concert_id", nullable = false)
     private Concert concert;
 
+    @OneToMany(mappedBy = "concertDate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Seat> seats = new ArrayList<>();
 
     @Builder
     public ConcertDate(Long concertDateId, Concert concert, ZonedDateTime concertDate) {

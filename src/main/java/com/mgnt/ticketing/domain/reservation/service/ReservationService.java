@@ -39,6 +39,7 @@ public class ReservationService implements ReservationInterface {
     private final ReservationValidator reservationValidator;
     private final ReservationMonitor reservationMonitor;
     private final ConcertReader concertReader;
+    private final ConcertService concertService;
     private final UserReader userReader;
     private final PaymentService paymentService;
     private final PaymentReader paymentReader;
@@ -54,12 +55,12 @@ public class ReservationService implements ReservationInterface {
     public ReserveResponse reserve(ReserveRequest request) {
         try {
             // validator
-            reservationValidator.checkReserved(request.concertDateId(), request.seatId());
+            reservationValidator.checkReserved(request.concertDateId(), request.seatNum());
 
             Reservation reservation = reservationRepository.save(request.toEntity(concertReader, userReader));
             Concert concert = concertReader.findConcert(reservation.getConcertId());
             ConcertDate concertDate = concertReader.findConcertDate(reservation.getConcertDateId());
-            Seat seat = concertReader.findSeat(reservation.getSeatId());
+            Seat seat = concertReader.findSeat(reservation.getConcertDateId(), reservation.getSeatNum());
 
             // 예약 임시 점유 event 발행
             eventPublisher.publishEvent(new ReservationOccupiedEvent(this, reservation.getReservationId()));
@@ -67,7 +68,7 @@ public class ReservationService implements ReservationInterface {
             return ReserveResponse.from(reservation, concert, concertDate, seat);
 
         } catch (DataIntegrityViolationException e) {
-            // 유니크 제약 조건(concertDateId, seatId) 위반 시
+            // 유니크 제약 조건(concertDateId, seatNum) 위반 시
             throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, LogLevel.INFO);
         }
     }

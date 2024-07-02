@@ -11,15 +11,15 @@ public interface ReservationJpaRepository extends JpaRepository<Reservation, Lon
 
     List<Reservation> findAllByConcertDateId(Long concertDateId);
 
-    Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
-
     Reservation findByReservationIdAndUserId(Long reservationId, Long userId);
 
     @Query("SELECT new com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto(r, c, cd, s)" +
             "FROM Reservation r " +
             "JOIN Concert c on c.concertId = r.concertId " +
             "JOIN ConcertDate cd on cd.concertDateId = r.concertDateId " +
-            "JOIN Seat s on s.seatId = r.seatId " +
+            "JOIN Seat s on s.seatNum = r.seatNum " +
             "WHERE r.userId = :userId")
     List<GetReservationAndPaymentResDto> getMyReservations(Long userId);
+
+    Reservation findOneByConcertDateIdAndSeatNum(Long concertDateId, int seatNum);
 }
