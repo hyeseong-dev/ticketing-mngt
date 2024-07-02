@@ -6,9 +6,9 @@ logging:
     org:
       springframework:
         web:
-          servlet: debug # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
-        security: DEBUG
-    com.mgnt.ticketing: debug # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
+          servlet: ERROR # org.springframework.web.servlet 패키지의 로깅 레벨을 디버그로 설정합니다.
+        security: ERROR
+    com.mgnt.ticketing: ERROR # com.mgnt.ticketing 패키지의 로깅 레벨을 디버그로 설정합니다.
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace # org.hibernate.type.descriptor.sql.BasicBinder 패키지의 로깅 레벨을 추적으로 설정합니다.
 
 server:
@@ -66,7 +66,7 @@ spring:
 
   jpa:
     defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
-    hibernate.ddl-auto: create # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
+    hibernate.ddl-auto: none # Hibernate가 DDL(Domain Data Language) 명령을 자동으로 실행하지 않도록 설정합니다.
     show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
     properties:
       hibernate:

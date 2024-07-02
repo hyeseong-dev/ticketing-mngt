@@ -5,7 +5,7 @@ services:
     image: ${ECR_URI}/${ECR_NAME}
     container_name: app_container
     ports:
-      - 8080:8080
+      - 80:80
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     restart: always
