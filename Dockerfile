@@ -1,7 +1,7 @@
 #
 # Dev phase
 #
-FROM amazoncorretto:17-alpine as dev
+FROM amazoncorretto:17-alpine AS dev
 RUN apk add --no-cache bash dos2unix
 
 # 프로젝트 디렉토리 생성
@@ -30,7 +30,7 @@ COPY src src
 #
 # Prod-build phase
 #
-FROM dev as build
+FROM dev AS build
 
 # 프로덕션 환경 설정
 ENV SPRING_PROFILES_ACTIVE=prod
@@ -44,7 +44,7 @@ RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
 #
 # Prod-deploy phase
 #
-FROM amazoncorretto:17-alpine as prod
+FROM amazoncorretto:17-alpine AS prod
 
 WORKDIR /app
 

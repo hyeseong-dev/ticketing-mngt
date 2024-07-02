@@ -60,18 +60,13 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_ACCOUNT }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
+      - name: AWS ECR 로그인
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: 도커 이미지 빌드 및 푸시
         run: |
           docker buildx create --use
           docker buildx build --platform linux/amd64,linux/arm64 -t ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest --push .
-
-      - name: AWS ECR 로그인
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Docker 이미지 태그 및 ECR에 푸시
-        run: |
-          docker tag ${{ env.PROJECT_NAME }}:latest ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
-          docker push ${{ env.ECR_URI }}/${{ env.ECR_NAME }}:latest
 
       - name: EC2 인스턴스 상태 확인 및 시작
         run: |
