@@ -66,6 +66,8 @@ dependencies {
     testImplementation 'io.rest-assured:rest-assured:5.3.1'
 
     testImplementation 'org.jacoco:org.jacoco.agent:0.8.8'
+
+    testImplementation 'com.h2database:h2'
 }
 
 def generated = layout.buildDirectory.dir("/generated/querydsl").get().asFile

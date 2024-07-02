@@ -21,6 +21,9 @@ public class DatabaseCleanup implements InitializingBean {
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Autowired
+    private Environment env;
+
     private List<String> tableNames;
 
     @Override
@@ -34,13 +37,41 @@ public class DatabaseCleanup implements InitializingBean {
     @Transactional
     public void execute() {
         entityManager.flush();
-        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
 
-        for (String tableName : tableNames) {
-            entityManager.createNativeQuery("TRUNCATE TABLE " + tableName).executeUpdate();
-            entityManager.createNativeQuery("ALTER TABLE " + tableName + " AUTO_INCREMENT = 1").executeUpdate();
+        if (isTestProfile()) {
+            // test 프로파일이 활성화되었을 때 H2 데이터베이스를 위한 처리
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+
+            for (String tableName : tableNames) {
+                entityManager.createNativeQuery("TRUNCATE TABLE " + tableName).executeUpdate();
+                // H2 데이터베이스의 경우, AUTO_INCREMENT를 직접 리셋할 수 있는 명령어가 없으므로 이 부분은 생략
+            }
+
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+        } else {
+            // test 프로파일이 아닐 때, 기본 로직 실행
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+
+            for (String tableName : tableNames) {
+                entityManager.createNativeQuery("TRUNCATE TABLE " + tableName).executeUpdate();
+                entityManager.createNativeQuery("ALTER TABLE " + tableName + " AUTO_INCREMENT = 1").executeUpdate();
+            }
+
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+        }
+    }
+
+    public boolean isTestProfile() {
+        // 현재 활성화된 프로파일 확인
+        String[] activeProfiles = env.getActiveProfiles();
+        boolean isTestProfileActive = false;
+        for (String profile : activeProfiles) {
+            if ("test".equals(profile)) {
+                isTestProfileActive = true;
+                break;
+            }
         }
 
-        entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+        return isTestProfileActive;
     }
 }

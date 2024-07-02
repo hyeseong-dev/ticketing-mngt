@@ -10,6 +10,8 @@ env:
 
 jobs:
   test:
+    env:
+      PROFILE: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,6 +39,8 @@ jobs:
         run: ./gradlew test -Dspring.profiles.active=test jacocoTestReport
 
   lint:
+    env:
+      PROFILE: dev
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -64,6 +68,8 @@ jobs:
         run: ./gradlew checkstyleMain checkstyleTest
 
   build:
+    env:
+      PROFILE: dev
     runs-on: ubuntu-latest
     needs: [ test, lint ] # build 작업이 test와 lint 작업이 완료된 후에 실행되도록 설정
     steps:

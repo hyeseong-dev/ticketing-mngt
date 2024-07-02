@@ -1,6 +1,6 @@
 USE ticketing_test;
 
-INSERT INTO user (email, password, name, role, balance, address, phone_number, email_verified)
+INSERT INTO users (email, password, name, role, balance, address, phone_number, email_verified)
 VALUES
     ('test1@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', 'John Doe', 'USER', 100.00, '123 Main St', '010-5897-4855', FALSE),
     ('test2@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', 'Jane Smith', 'USER', 200.00, '456 Oak St', '010-5897-4856', FALSE),
