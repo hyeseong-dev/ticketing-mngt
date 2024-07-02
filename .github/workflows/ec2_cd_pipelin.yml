@@ -23,6 +23,15 @@ jobs:
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/private-key.pem
           chmod 600 ~/private-key.pem
 
+      - name: Remove existing prod-deploy-compose.yml on remote server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
+
       - name: Copy prod-deploy-compose.yml to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -33,12 +42,12 @@ jobs:
           source: "prod-deploy-compose.yml"
           target: ${{ env.REMOTE_TARGET }}
 
-      - name: SSH to EC2 and execute commands
+      - name: Verify file on remote server and execute commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            if [ -f /home/ubuntu/prod-deploy-compose.yml ]; then rm /home/ubuntu/prod-deploy-compose.yml; fi
+            ls -al /home/ubuntu/prod-deploy-compose.yml
             echo "hello world!"
