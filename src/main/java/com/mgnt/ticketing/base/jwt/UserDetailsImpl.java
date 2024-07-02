@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.base.jwt;
 
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,14 +10,14 @@ import java.util.List;
 
 public class UserDetailsImpl implements UserDetails {
 
-    private User user;
+    private Users user;
 
-    public UserDetailsImpl(User user) {
+    public UserDetailsImpl(Users user) {
         this.user = user;
     }
 
 
-    public User getUser() {
+    public Users getUser() {
         return user;
     }
 

@@ -9,7 +9,7 @@ import com.mgnt.ticketing.domain.payment.repository.PaymentRepository;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.service.ReservationReader;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,12 +19,13 @@ import java.math.BigDecimal;
 
 /**
  * 결제 서비스 클래스
- *
+ * <p>
  * 이 클래스는 결제와 관련된 비즈니스 로직을 처리합니다.
  */
+
 /**
  * 결제 서비스 클래스
- *
+ * <p>
  * 이 클래스는 결제와 관련된 비즈니스 로직을 처리합니다.
  */
 @Service
@@ -40,7 +41,7 @@ public class PaymentService implements PaymentInterface {
      * 결제 요청을 처리합니다.
      *
      * @param paymentId 결제 ID
-     * @param request 결제 요청 객체
+     * @param request   결제 요청 객체
      * @return 결제 응답 객체
      */
     @Override
@@ -51,7 +52,7 @@ public class PaymentService implements PaymentInterface {
         paymentValidator.checkPayStatus(payment.getStatus());
 
         // validator - 사용자 잔액 검증
-        User user = userReader.findUser(request.userId());
+        Users user = userReader.findUser(request.userId());
         paymentValidator.checkBalance(payment.getPrice(), user.getBalance());
 
         // 결제 요청
@@ -117,7 +118,7 @@ public class PaymentService implements PaymentInterface {
     private Payment cancelPayment(Payment payment) {
         Payment updatedPayment = payment;
         Long userId = payment.getReservation().getUserId();
-        User user = userReader.findUser(userId);
+        Users user = userReader.findUser(userId);
 
         if (Payment.Status.READY.equals(payment.getStatus())) {
             // 결제 대기 상태 - 즉시 취소

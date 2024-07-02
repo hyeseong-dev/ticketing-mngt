@@ -13,7 +13,7 @@ import com.mgnt.ticketing.controller.auth.response.RefreshResponseDto;
 import com.mgnt.ticketing.controller.auth.response.SignUpResponseDto;
 import com.mgnt.ticketing.domain.auth.entity.RefreshToken;
 import com.mgnt.ticketing.domain.auth.repository.RefreshTokenJpaRepository;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +57,7 @@ public class AuthService implements AuthInterface {
             boolean hasPhoneNumber = userJpaRepository.existsByPhoneNumber(dto.getPhoneNumber());
             if (hasPhoneNumber) return SignUpResponseDto.failure(ErrorCode.PHONE_NUMBER_DUPLICATED);
 
-            User user = User.from(dto, passwordEncoder.encode(dto.getPassword()));
+            Users user = Users.from(dto, passwordEncoder.encode(dto.getPassword()));
             userJpaRepository.save(user);
 
             eventPublisher.publishEvent(new AuthRegisteredEvent(user.getEmail(), user.getName()));
@@ -81,7 +81,7 @@ public class AuthService implements AuthInterface {
                     .map(UserDetailsImpl::new)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + dto.getEmail()));
 
-            User user = ((UserDetailsImpl) userDetails).getUser();
+            Users user = ((UserDetailsImpl) userDetails).getUser();
             if (!passwordEncoder.matches(dto.getPassword(), user.getPassword()))
                 return LoginResponseDto.failure(ErrorCode.LOGIN_FAILED);
 

@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.domain.auth.entity;
 
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,7 +24,7 @@ public class RefreshToken {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Users user;
 
     @Column(name = "token", nullable = false)
     private String token;
@@ -39,7 +39,7 @@ public class RefreshToken {
     private LocalDateTime expiryDate;
 
     @Builder
-    public RefreshToken(User user, String token, String ip, String deviceInfo, LocalDateTime expiryDate) {
+    public RefreshToken(Users user, String token, String ip, String deviceInfo, LocalDateTime expiryDate) {
         this.user = user;
         this.token = token;
         this.ip = ip;
@@ -47,16 +47,16 @@ public class RefreshToken {
         this.expiryDate = expiryDate;
     }
 
-    public RefreshToken(User user, String refreshToken){
+    public RefreshToken(Users user, String refreshToken) {
         this.user = user;
         this.token = refreshToken;
     }
 
-    public void updateRefreshToken(String token){
+    public void updateRefreshToken(String token) {
         this.token = token;
     }
 
-    public boolean validateRefreshToken(String refreshToken){
+    public boolean validateRefreshToken(String refreshToken) {
         return this.token == refreshToken;
     }
 }

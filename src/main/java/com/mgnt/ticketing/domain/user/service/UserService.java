@@ -3,7 +3,7 @@ package com.mgnt.ticketing.domain.user.service;
 import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.controller.user.dto.request.*;
 import com.mgnt.ticketing.controller.user.dto.response.*;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import com.mgnt.ticketing.domain.user.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * 사용자 서비스 클래스
- *
+ * <p>
  * 이 클래스는 사용자와 관련된 비즈니스 로직을 처리합니다.
  */
 @Service
@@ -40,20 +40,20 @@ public class UserService implements UserInterface {
      */
     @Override
     public GetBalanceResponse getBalance(Long userId) {
-        User user = userRepository.findById(userId);
+        Users user = userRepository.findById(userId);
         return GetBalanceResponse.from(user);
     }
 
     /**
      * 사용자 잔액 충전
      *
-     * @param userId 사용자 ID
+     * @param userId  사용자 ID
      * @param request 잔액 충전 요청 DTO
      * @return 잔액 응답 DTO
      */
     @Override
     public GetBalanceResponse charge(Long userId, ChargeRequest request) {
-        User user = userRepository.findById(userId);
+        Users user = userRepository.findById(userId);
         user = user.chargeBalance(BigDecimal.valueOf(request.amount()));
         return GetBalanceResponse.from(user);
     }
@@ -61,14 +61,14 @@ public class UserService implements UserInterface {
     /**
      * 사용자 비밀번호 수정
      *
-     * @param id 사용자 ID
+     * @param id          사용자 ID
      * @param requestBody 비밀번호 수정 요청 DTO
      * @return 비밀번호 수정 응답 엔티티
      */
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordReques requestBody) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
@@ -106,7 +106,7 @@ public class UserService implements UserInterface {
      */
     @Override
     public ResponseEntity<GetUserResponse> getUserDetail(Long id) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return GetUserResponse.success(UserResponseDto.from(user));
     }
@@ -114,14 +114,14 @@ public class UserService implements UserInterface {
     /**
      * 사용자 정보 수정
      *
-     * @param id 사용자 ID
+     * @param id          사용자 ID
      * @param requestBody 사용자 수정 요청 DTO
      * @return 사용자 수정 응답 엔티티
      */
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUser(Long id, @Valid UserModifyRequest requestBody) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 이메일 중복 확인
@@ -141,14 +141,14 @@ public class UserService implements UserInterface {
     /**
      * 마이페이지 정보 수정
      *
-     * @param id 사용자 ID
+     * @param id          사용자 ID
      * @param requestBody 마이페이지 수정 요청 DTO
      * @return 마이페이지 수정 응답 엔티티
      */
     @Override
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyMypage(Long id, @Valid MypageRequest requestBody) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updateUserInfo(user.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
@@ -159,14 +159,14 @@ public class UserService implements UserInterface {
     /**
      * 관리자가 사용자 정보 수정
      *
-     * @param id 사용자 ID
+     * @param id          사용자 ID
      * @param requestBody 사용자 수정 요청 DTO
      * @return 사용자 수정 응답 엔티티
      */
     @Override
     @Transactional
     public ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updateEmail(requestBody.getEmail());
@@ -188,7 +188,7 @@ public class UserService implements UserInterface {
     @Override
     @Transactional
     public ResponseEntity<DeleteUserResponse> deleteUser(Long id) {
-        User user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setEmailVerified(false);
@@ -206,7 +206,7 @@ public class UserService implements UserInterface {
      */
     @Transactional
     @Override
-    public Optional<User> getUserByEmail(String currentUserEmail) {
+    public Optional<Users> getUserByEmail(String currentUserEmail) {
         return userJpaRepository.findByEmail(currentUserEmail);
     }
 
@@ -218,7 +218,7 @@ public class UserService implements UserInterface {
      */
     @Transactional
     @Override
-    public Optional<User> getUserById(Long resourceId) {
+    public Optional<Users> getUserById(Long resourceId) {
         return userJpaRepository.findById(resourceId);
     }
 }

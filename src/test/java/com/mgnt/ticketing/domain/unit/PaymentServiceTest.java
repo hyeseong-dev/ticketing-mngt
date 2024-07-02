@@ -13,7 +13,7 @@ import com.mgnt.ticketing.domain.payment.service.PaymentValidator;
 import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.service.ReservationReader;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.service.UserReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -98,7 +98,7 @@ class PaymentServiceTest {
                 .status(Payment.Status.READY)
                 .price(BigDecimal.valueOf(79000))
                 .build();
-        User 사용자 = new User(1L, BigDecimal.valueOf(10000));
+        Users 사용자 = new Users(1L, BigDecimal.valueOf(10000));
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제건);
@@ -123,7 +123,7 @@ class PaymentServiceTest {
                 .status(Payment.Status.READY)
                 .price(BigDecimal.valueOf(79000))
                 .build();
-        User 사용자 = new User(1L, BigDecimal.valueOf(100000));
+        Users 사용자 = new Users(1L, BigDecimal.valueOf(100000));
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제건);
@@ -191,7 +191,7 @@ class PaymentServiceTest {
 
         // when
         when(paymentRepository.findById(paymentId)).thenReturn(결제완료건);
-        when(userReader.findUser(anyLong())).thenReturn(new User(1L, BigDecimal.valueOf(10000)));
+        when(userReader.findUser(anyLong())).thenReturn(new Users(1L, BigDecimal.valueOf(10000)));
         CancelPaymentResultResDto response = paymentService.cancel(paymentId);
 
         // then

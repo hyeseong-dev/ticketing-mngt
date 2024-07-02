@@ -1,6 +1,6 @@
 package com.mgnt.ticketing.controller.user.dto.response;
 
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public class UserResponseDto {
     }
 
 
-    public static UserResponseDto from(User user) {
+    public static UserResponseDto from(Users user) {
         return UserResponseDto.builder()
                 .id(user.getUserId())
                 .email(user.getEmail())

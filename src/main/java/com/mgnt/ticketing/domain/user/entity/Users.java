@@ -6,6 +6,7 @@ import com.mgnt.ticketing.base.constant.UserRoleEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.security.core.userdetails.User;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -19,7 +20,7 @@ import java.time.ZonedDateTime;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User extends BaseDateTimeEntity {
+public class Users extends BaseDateTimeEntity {
 
     @Id
     @Setter
@@ -57,7 +58,7 @@ public class User extends BaseDateTimeEntity {
     @Column(name = "address", nullable = false, unique = true)
     private String address;
 
-    public User(Long userId, BigDecimal balance) {
+    public Users(Long userId, BigDecimal balance) {
         this.userId = userId;
         this.balance = balance;
     }
@@ -77,16 +78,16 @@ public class User extends BaseDateTimeEntity {
      * @param address       주소
      */
     @Builder
-    public User(Long userId,
-                String email,
-                String password,
-                String name,
-                BigDecimal balance,
-                ZonedDateTime deletedAt,
-                Boolean emailVerified,
-                UserRoleEnum role,
-                String phoneNumber,
-                String address) {
+    public Users(Long userId,
+                 String email,
+                 String password,
+                 String name,
+                 BigDecimal balance,
+                 ZonedDateTime deletedAt,
+                 Boolean emailVerified,
+                 UserRoleEnum role,
+                 String phoneNumber,
+                 String address) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -105,8 +106,8 @@ public class User extends BaseDateTimeEntity {
      * @param password 암호화된 비밀번호
      * @return 생성된 사용자 엔티티
      */
-    public static User from(SignUpRequestDto dto, String password) {
-        return User.builder()
+    public static Users from(SignUpRequestDto dto, String password) {
+        return Users.builder()
                 .email(dto.getEmail())
                 .name(dto.getName())
                 .password(password)
@@ -135,7 +136,7 @@ public class User extends BaseDateTimeEntity {
      * @param amount 충전 금액
      * @return 잔액이 충전된 사용자 엔티티
      */
-    public User chargeBalance(BigDecimal amount) {
+    public Users chargeBalance(BigDecimal amount) {
         this.balance = balance.add(amount);
         return this;
     }

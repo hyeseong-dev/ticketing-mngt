@@ -4,7 +4,7 @@ import com.mgnt.ticketing.base.error.ErrorCode;
 import com.mgnt.ticketing.base.error.exceptions.EmailSendException;
 import com.mgnt.ticketing.controller.auth.request.EmailRequestDto;
 import com.mgnt.ticketing.controller.auth.response.EmailResponseDto;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import com.mgnt.ticketing.base.util.EncryptionUtil;
 import jakarta.mail.MessagingException;
@@ -32,9 +32,9 @@ public class EmailService implements EmailInterface {
             log.info("Received token: {}", token); // 로그 추가
             String email = EncryptionUtil.decrypt(token);
             log.info("Decrypted email: {}", email); // 로그 추가
-            User user = userJpaRepository.findByEmail(email).orElse(null);
+            Users user = userJpaRepository.findByEmail(email).orElse(null);
             if (user != null) {
-                if(!user.getEmailVerified()){
+                if (!user.getEmailVerified()) {
                     user.setEmailVerified(true);
                     userJpaRepository.save(user);
                 }
@@ -58,7 +58,7 @@ public class EmailService implements EmailInterface {
             mimeMessageHelper.setText(emailMessage.getBody(), true);
             javaMailSender.send(mimeMessage);
             log.info("sent email: {}", emailMessage.getBody());
-        }catch (MessagingException e) {
+        } catch (MessagingException e) {
             log.error(e.getMessage());
             throw new RuntimeException(e);
         }

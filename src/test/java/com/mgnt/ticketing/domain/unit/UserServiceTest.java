@@ -2,7 +2,7 @@ package com.mgnt.ticketing.domain.unit;
 
 import com.mgnt.ticketing.controller.user.dto.request.ChargeRequest;
 import com.mgnt.ticketing.controller.user.dto.response.GetBalanceResponse;
-import com.mgnt.ticketing.domain.user.entity.User;
+import com.mgnt.ticketing.domain.user.entity.Users;
 import com.mgnt.ticketing.domain.user.repository.UserJpaRepository;
 import com.mgnt.ticketing.domain.user.repository.UserRepository;
 import com.mgnt.ticketing.domain.user.service.UserService;
@@ -24,7 +24,7 @@ class UserServiceTest {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private UserJpaRepository userJpaRepository;
-    private User 사용자;
+    private Users 사용자;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +40,7 @@ class UserServiceTest {
         );
 
         // 사용자 정보 세팅
-        사용자 = new User(1L, BigDecimal.valueOf(100000));
+        사용자 = new Users(1L, BigDecimal.valueOf(100000));
     }
 
     @Test
