@@ -91,6 +91,7 @@ jobs:
             services:
               app:
                 image: ${{env.ECR_URI}}/${{env.ECR_NAME}}:latest
+                container_name: app_container
                 ports:
                   - "80:80"
                 environment:
@@ -107,8 +108,8 @@ jobs:
 
             # 기존 컨테이너가 존재하면 중지하고 제거
             if [ "$(docker ps -q -f name=app)" ]; then
-              docker stop app
-              docker rm app
+              docker stop app_container
+              docker rm app_container
             fi
 
             docker-compose -f /home/ubuntu/prod-deploy-compose.yml pull
