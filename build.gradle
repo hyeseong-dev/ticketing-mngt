@@ -1,29 +1,35 @@
 plugins {
-    id 'org.springframework.boot' version '3.3.0'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.0.0' apply false
+    id 'io.spring.dependency-management' version '1.1.5' apply false
     id 'java'
-    id 'jacoco'
-    id 'checkstyle'
 }
 
+allprojects {
+    group = 'com.mngt'
+    version = '1.0.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
 group = 'com.mgnt'
 version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = '17'
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation 'io.github.cdimascio:dotenv-java:2.2.0'
@@ -65,92 +71,25 @@ dependencies {
 
     testImplementation 'io.rest-assured:rest-assured:5.3.1'
 
-    testImplementation 'org.jacoco:org.jacoco.agent:0.8.8'
-
     testImplementation 'com.h2database:h2'
 }
 
-def generated = layout.buildDirectory.dir("/generated/querydsl").get().asFile
+//def generated = layout.buildDirectory.dir("/generated/querydsl").get().asFile
+//
+//sourceSets {
+//    main.java.srcDir generated
+//}
+//
+//tasks.register('cleanGenerated', Delete) {
+//    delete generated
+//}
+//
+//clean.dependsOn(cleanGenerated)
+//
+//configurations {
+//    compileOnly {
+//        extendsFrom annotationProcessor
+//    }
+//    querydsl.extendsFrom compileClasspath
+//}
 
-sourceSets {
-    main.java.srcDir generated
-}
-
-tasks.register('cleanGenerated', Delete) {
-    delete generated
-}
-
-clean.dependsOn(cleanGenerated)
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-    querydsl.extendsFrom compileClasspath
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-    finalizedBy tasks.jacocoTestReport
-}
-
-checkstyle {
-    toolVersion = '10.15.0'
-    configFile = file("${rootDir}/config/checkstyle/google_checks.xml")
-}
-
-jacoco {
-    toolVersion = "0.8.8" // 최신 버전으로 수정
-    reportsDirectory = file("${buildDir}/JacocoTestReport")
-}
-
-jacocoTestReport {
-    dependsOn test
-
-    reports {
-        xml.required = true
-        html.required = true
-        csv.required = false
-    }
-
-    finalizedBy 'jacocoTestCoverageVerification'
-}
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            enabled = true
-            element = 'CLASS'
-
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.00
-            }
-
-            limit {
-                counter = 'METHOD'
-                value = 'COVEREDRATIO'
-                minimum = 0.00
-            }
-        }
-    }
-}
-
-task testAndGenerateReport {
-    group 'verification'
-    description 'test w/ jacoco'
-
-    dependsOn ':test', ':jacocoTestReport', ':jacocoTestCoverageVerification'
-
-    tasks.jacocoTestReport.mustRunAfter tasks.test
-    tasks.jacocoTestCoverageVerification.mustRunAfter tasks.jacocoTestReport
-}
-
-bootJar {
-    mainClass = 'com.mgnt.ticketing.TicketingApplication'
-}
-
-jar {
-    enabled = false
-}

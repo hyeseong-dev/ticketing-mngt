@@ -1,11 +1,4 @@
-plugins {
-    id 'com.gradle.enterprise' version '3.11.1'
-}
-
-gradleEnterprise {
-    buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
-    }
-}
 rootProject.name = 'ticketing'
+include("common")
+include("gateway-service", "eureka-service", "config-service")
+include("user-service", "reservation-service", "payment-service", "waiting-service")
