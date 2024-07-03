@@ -13,19 +13,16 @@ import com.mgnt.ticketing.domain.concert.service.ConcertService;
 import com.mgnt.ticketing.domain.payment.entity.Payment;
 import com.mgnt.ticketing.domain.payment.service.PaymentReader;
 import com.mgnt.ticketing.domain.payment.service.PaymentService;
-import com.mgnt.ticketing.domain.payment.service.dto.CancelPaymentResultResDto;
 import com.mgnt.ticketing.domain.reservation.ReservationExceptionEnum;
 import com.mgnt.ticketing.domain.reservation.entity.Reservation;
 import com.mgnt.ticketing.domain.reservation.event.ReservationOccupiedEvent;
 import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
 import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
-import com.mgnt.ticketing.domain.user.service.UserReader;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.PessimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +57,7 @@ public class ReservationService implements ReservationInterface {
             // validator
             reservationValidator.checkReserved(request.concertDateId(), request.seatNum());
 
-            Reservation reservation = addReservation(request);
+            Reservation reservation = reservationRepository.save(request.toEntity());
 
             Concert concert = concertReader.findConcert(reservation.getConcertId());
             ConcertDate concertDate = concertReader.findConcertDate(reservation.getConcertDateId());
@@ -71,7 +68,7 @@ public class ReservationService implements ReservationInterface {
 
             return ReserveResponse.from(reservation, concert, concertDate, seat);
 
-        } catch (PessimisticLockException e) {
+        } catch (ObjectOptimisticLockingFailureException e) {
             // 락 획득 실패 시
             throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, LogLevel.INFO);
         }

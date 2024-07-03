@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.logging.LogLevel;
+import org.springframework.transaction.support.TransactionTemplate;
 
 
 import java.math.BigDecimal;
@@ -42,6 +43,7 @@ class ConcertServiceTest {
     private ConcertRepository concertRepository;
     private ConcertValidator concertValidator;
     private ConcertReader concertReader;
+    private TransactionTemplate transactionTemplate;
 
     private Concert 임영웅_콘서트;
     private Place 상암_월드컵경기장;
@@ -54,10 +56,13 @@ class ConcertServiceTest {
         // mocking
         concertRepository = Mockito.mock(ConcertRepository.class);
         concertValidator = Mockito.mock(ConcertValidator.class);
+        transactionTemplate = Mockito.mock(TransactionTemplate.class);
+
 
         concertService = new ConcertService(
                 concertRepository,
-                concertValidator
+                concertValidator,
+                transactionTemplate
         );
 
         // 콘서트 정보 세팅

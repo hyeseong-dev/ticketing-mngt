@@ -21,9 +21,6 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicUpdate
-@Table(name = "reservation", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"concertDateId", "seatNum"})
-})
 public class Reservation extends BaseDateTimeEntity {
 
     @Id

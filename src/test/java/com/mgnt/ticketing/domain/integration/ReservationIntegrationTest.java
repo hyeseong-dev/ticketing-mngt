@@ -67,12 +67,12 @@
 //    @DisplayName("유저 여러 명이 동시에 예약 신청하면 한 명만 예약 성공, 나머지 유저는 '이선좌' 반환")
 //    void reserveTest_ALREADY_RESERVED_lock() {
 //        // given
-//        for (int i = 0; i < 10; i++) {
+//        for (int i = 0; i < 100; i++) {
 //            testDataHandler.settingUser(BigDecimal.ZERO);
 //        }
 //        long concertId = 1L;
 //        long concertDateId = 1L;
-//        long userId = 1L; // 시작 유저 pk
+//        long userId = 3L; // 시작 유저 pk
 //        int seatNum = 19;
 //
 //        // when - 동시에 한 좌석 예약 요청
@@ -113,7 +113,7 @@
 //
 //        // when - 동시에 한 좌석 예약 요청
 //        AtomicInteger successCount = new AtomicInteger(0);
-//        List<CompletableFuture<ExtractableResponse<Response>>> futures = IntStream.range(0, 10)
+//        List<CompletableFuture<ExtractableResponse<Response>>> futures = IntStream.range(0, 100)
 //                .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
 //                    ReserveRequest request = new ReserveRequest(concertId, concertDateId, seatNum + i, userId + i);
 //                    return post(LOCAL_HOST + port + PATH, request);

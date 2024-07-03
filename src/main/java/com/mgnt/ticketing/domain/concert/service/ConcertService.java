@@ -10,6 +10,7 @@ import com.mgnt.ticketing.domain.concert.entity.Seat;
 import com.mgnt.ticketing.domain.concert.repository.ConcertRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,8 @@ public class ConcertService implements ConcertInterface {
 
     private final ConcertRepository concertRepository;
     private final ConcertValidator concertValidator;
+
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     public List<GetConcertsResponse> getConcerts() {
