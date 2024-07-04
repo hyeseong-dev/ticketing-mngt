@@ -1,6 +1,5 @@
 package com.mgnt.userservice.config;
 
-import com.mgnt.core.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/actuator/**").permitAll()
-                                .requestMatchers("/**").permitAll(this::hasIpAddress) // 루트 경로 허용
+                                .requestMatchers("/**").access(this::hasIpAddress) // 루트 경로 허용
                                 .anyRequest().authenticated())
                 .headers(headers ->
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))

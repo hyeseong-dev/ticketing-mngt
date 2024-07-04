@@ -1,4 +1,7 @@
 
+# queryDSL 제외
+**/generated/**
+
 **/.DS_Store
 
 src-temp/main/generated

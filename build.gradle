@@ -17,6 +17,7 @@ allprojects {
         springCloudVersion = "2023.0.2"
         queryDslVersion = "5.0.0"
         jwtVersion = "0.12.5"
+        jacksonVersion = '2.15.2'
     }
 }
 
@@ -38,6 +39,7 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        implementation "org.springframework.boot:spring-boot-starter-log4j2"
     }
 
     tasks.withType(JavaCompile) {
@@ -93,6 +95,12 @@ def configureQuerydsl = { proj ->
 }
 
 project(":core") {
+
+    dependencies {
+        api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+        api "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+    }
+
     bootJar { enabled = false }
     jar { enabled = true }
 }
