@@ -1,7 +1,5 @@
 package com.mgnt.userservice.domain.entity;
 
-import com.mgnt.core.constant.UserRoleEnum;
-import com.mgnt.core.entity.BaseDateTimeEntity;
 import com.mgnt.userservice.controller.dto.request.SignUpRequestDto;
 import jakarta.persistence.*;
 import lombok.*;

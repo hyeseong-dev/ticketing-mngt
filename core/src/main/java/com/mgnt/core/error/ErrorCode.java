@@ -22,10 +22,9 @@ public enum ErrorCode {
     CURRENT_PASSWORD_NOT_MATCHED(400, "U004", "Current password not matched."),
     NEW_PASSWORD_NOT_MATCHED(400, "U005", "NEW password not matched."),
 
-
     // Auth Errors
     LOGIN_FAILED(401, "A001", "Login information mismatch."),
-    INVALID_CREDENTIALS(401, "A002", "Invalid e mail or password."),
+    INVALID_CREDENTIALS(401, "A002", "Invalid Credentials."),
     UNVERIFED_ACCOUNT(401, "A003", "Unverified account."),
 
     // JWT Errors

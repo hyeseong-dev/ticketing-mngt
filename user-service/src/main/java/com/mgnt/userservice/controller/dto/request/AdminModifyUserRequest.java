@@ -1,6 +1,7 @@
 package com.mgnt.userservice.controller.dto.request;
 
-import com.mgnt.core.constant.UserRoleEnum;
+
+import com.mgnt.userservice.domain.entity.UserRoleEnum;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

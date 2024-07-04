@@ -1,5 +1,4 @@
 dependencies {
-    implementation project(':core')
     // 필요에 따라 추가 의존성 추가
 }
 

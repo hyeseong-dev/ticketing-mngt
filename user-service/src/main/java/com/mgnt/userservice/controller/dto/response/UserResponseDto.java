@@ -1,6 +1,6 @@
 package com.mgnt.userservice.controller.dto.response;
 
-import com.mgnt.core.constant.UserRoleEnum;
+import com.mgnt.userservice.domain.entity.UserRoleEnum;
 import com.mgnt.userservice.domain.entity.Users;
 import lombok.Builder;
 import lombok.Getter;

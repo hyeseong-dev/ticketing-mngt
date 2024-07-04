@@ -1,4 +1,4 @@
-package com.mgnt.core.entity;
+package com.mgnt.userservice.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
