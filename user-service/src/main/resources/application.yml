@@ -5,35 +5,49 @@ logging:
   level:
     org:
       springframework:
-        web:
-          servlet: DEBUG
         security: DEBUG
-    com.mgnt.ticketing: debug
-
+    com.mgnt.ticketing: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 server:
+  port: 8081
   error:
     whitelabel:
-      enabled: false
+      enabled: true
     include-message: always
   servlet:
     context-path: /
     context-parameters:
       throwExceptionIfNoHandlerFound: true
 
-
 spring:
+  application:
+    name: user-service
+
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      max-lifetime: 150000  # 150초 (밀리초 단위)
+      idle-timeout: 600000  # 10분 (밀리초 단위)
+      connection-timeout: 30000 # 30초 (밀리초 단위)
+      validation-timeout: 5000  # 5초 (밀리초 단위)
+
+    url: jdbc:mysql://localhost:3306/ticketing?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
+    username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
+    password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
+
   jackson:
     property-naming-strategy: SNAKE_CASE
 
   web:
     resources:
       add-mappings: false
+
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${spring.mail.username}
-    password: ${spring.mail.password}
+
 
     properties:
       mail:
@@ -42,50 +56,24 @@ spring:
           starttls:
             enable: true
 
-  application:
-    name: msa
-  profiles:
-    active: local
-  config:
-    import: optional:configserver:http://admin:1234@localhost:9000
-
-  
-  datasource:
-    hikari:
-      maximum-pool-size: 10
-      max-lifetime: 150000
-      idle-timeout: 600000
-      connection-timeout: 30000
-      validation-timeout: 5000
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: 12345
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
-    defer-datasource-initialization: true
+    defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
     hibernate.ddl-auto: update
-    show-sql: true
+    show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
     properties:
       hibernate:
-        format_sql: true
-        show_sql: true
+        format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
+        show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
-        default_batch_fetch_size: 500
+        default_batch_fetch_size: 500 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
 
 jwt:
-  #  secret:
-  #    key: ${JWT_SECRET_KEY}
   secret: "7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg=="
   access-token-validity: 3600000 # 1 hour
   refresh-token-validity: 1296000000 # 15 days
 
-
-springdoc:
-  api-docs:
-    path: /api-docs
-
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
+eureka:
+  client:
+    register-with-eureka: true #유레카 서버에 등록할지 여부
+    fetch-registry: true #유레카 서버의 정보를 가져올지 여부
+    service-url.defaultZone: http://admin:1234@localhost:8761/eureka #유레카 서버 주소

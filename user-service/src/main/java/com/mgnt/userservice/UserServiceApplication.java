@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@ComponentScan(basePackages = {"com.mgnt.core", "com.mgnt.userservice"})
+@ComponentScan(basePackages = {"com.mgnt.userservice", "com.mgnt.core"})
 public class UserServiceApplication {
 
     public static void main(String[] args) {
