@@ -1,10 +1,10 @@
-package com.mgnt.userservice;
+package com.mgnt.temp;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UserServiceApplicationTests {
+class TempApplicationTests {
 
     @Test
     void contextLoads() {
