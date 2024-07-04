@@ -1,4 +1,4 @@
-debug: true
+debug: false
 management.endpoints.web.exposure.include: "*"
 
 logging:
@@ -6,7 +6,7 @@ logging:
     org:
       springframework:
         web:
-          servlet: debug
+          servlet: DEBUG
         security: DEBUG
     com.mgnt.ticketing: debug
 
@@ -20,6 +20,7 @@ server:
     context-path: /
     context-parameters:
       throwExceptionIfNoHandlerFound: true
+
 
 spring:
   jackson:
@@ -83,6 +84,7 @@ jwt:
 springdoc:
   api-docs:
     path: /api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method

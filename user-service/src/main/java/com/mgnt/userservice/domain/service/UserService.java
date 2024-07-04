@@ -6,6 +6,7 @@ import com.mgnt.userservice.controller.dto.response.*;
 import com.mgnt.userservice.domain.entity.Users;
 import com.mgnt.userservice.domain.repository.UserJpaRepository;
 import com.mgnt.userservice.domain.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -69,7 +70,7 @@ public class UserService implements UserInterface {
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordRequet requestBody) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(requestBody.getCurrentPassword(), user.getPassword())) {
             return UpdateUserResponse.failure(ErrorCode.CURRENT_PASSWORD_NOT_MATCHED);
@@ -105,10 +106,10 @@ public class UserService implements UserInterface {
      * @return 사용자 상세 응답 엔티티
      */
     @Override
-    public ResponseEntity<GetUserResponse> getUserDetail(Long id) {
+    public GetUserResponse getUserDetail(Long id) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return GetUserResponse.success(UserResponseDto.from(user));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return GetUserResponse.from(user);
     }
 
     /**
@@ -122,7 +123,7 @@ public class UserService implements UserInterface {
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyUser(Long id, @Valid UserModifyRequest requestBody) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // 이메일 중복 확인
         if (!user.getEmail().equals(requestBody.getEmail()) && userJpaRepository.existsByEmail(requestBody.getEmail())) {
@@ -149,7 +150,7 @@ public class UserService implements UserInterface {
     @Transactional
     public ResponseEntity<UpdateUserResponse> modifyMypage(Long id, @Valid MypageRequest requestBody) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         user.updateUserInfo(user.getName(), requestBody.getPhoneNumber(), requestBody.getAddress());
         userJpaRepository.save(user);
@@ -167,7 +168,7 @@ public class UserService implements UserInterface {
     @Transactional
     public ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         user.updateEmail(requestBody.getEmail());
         user.updatePassword(passwordEncoder.encode(requestBody.getPassword()));
@@ -189,7 +190,7 @@ public class UserService implements UserInterface {
     @Transactional
     public ResponseEntity<DeleteUserResponse> deleteUser(Long id) {
         Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         user.setEmailVerified(false);
         user.updateDeletedAt(ZonedDateTime.now());

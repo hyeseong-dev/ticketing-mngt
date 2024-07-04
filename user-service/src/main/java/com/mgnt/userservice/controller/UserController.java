@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 사용자 관련 API 컨트롤러
  */
+@RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
@@ -55,12 +56,12 @@ public class UserController {
     /**
      * 사용자 상세 정보 조회
      *
-     * @param id 사용자 ID
+     * @param userId 사용자 ID
      * @return 사용자 상세 정보 응답
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<GetUserResponse> getUserDetail(@PathVariable(value = "userId") Long id) {
-        return userInterface.getUserDetail(id);
+    public ApiResult<GetUserResponse> getUserDetail(@PathVariable(value = "userId") Long userId) {
+        return ApiResult.success(service.getUserDetail(userId));
     }
 
     /**

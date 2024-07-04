@@ -45,7 +45,7 @@ public interface UserInterface {
      * @param id 사용자 ID
      * @return 사용자 상세 응답 엔티티
      */
-    ResponseEntity<GetUserResponse> getUserDetail(Long id);
+    GetUserResponse getUserDetail(Long id);
 
     /**
      * 관리자가 사용자 정보 수정
