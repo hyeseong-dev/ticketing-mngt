@@ -30,7 +30,7 @@ RUN ./gradlew dependencies
 # Build phase
 #
 FROM dependencies AS build
-COPY src src
+COPY src-temp src
 RUN ./gradlew build -x test
 
 # JAR 파일을 Docker 친화적인 구조로 추출

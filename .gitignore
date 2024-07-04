@@ -1,5 +1,5 @@
 
-src/main/generated
+src-temp/main/generated
 
 ### 환경변수
 .env

@@ -1,4 +1,4 @@
-src/main/generated
+src-temp/main/generated
 /build/
 !/build/libs/ticketing-0.0.1-SNAPSHOT.jar
 
@@ -43,7 +43,7 @@ src/main/generated
 !/Dockerfile
 
 # src 디렉토리 포함
-!/src/**
+!/src-temp/**
 
 # 기타 필요한 파일 포함
 !/settings.gradle

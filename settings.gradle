@@ -1,4 +1,13 @@
 rootProject.name = 'ticketing'
-include("common")
-include("gateway-service", "eureka-service", "config-service")
-include("user-service", "reservation-service", "payment-service", "waiting-service")
+
+include "core"
+include "config-server"
+include "eureka-service"
+include "gateway-service"
+
+include "concert-service"
+include "user-service"
+include "reservation-service"
+include "payment-service"
+include "waiting-service"
+
