@@ -57,8 +57,8 @@ spring:
       idle-timeout: 600000
       connection-timeout: 30000
       validation-timeout: 5000
-    url: jdbc:mysql://localhost:3306/ticketing?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
-    username: developer
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
 

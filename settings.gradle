@@ -1,7 +1,6 @@
 rootProject.name = 'ticketing'
 
 include "core"
-include "config-server"
 include "eureka-service"
 include "gateway-service"
 
