@@ -2,7 +2,6 @@ plugins {
     id 'org.springframework.boot' version '3.3.0' apply false
     id 'io.spring.dependency-management' version '1.1.5' apply false
     id 'java'
-    id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10' apply false
 }
 
 allprojects {
@@ -15,7 +14,6 @@ allprojects {
 
     ext {
         springCloudVersion = "2023.0.2"
-        queryDslVersion = "5.0.0"
         jwtVersion = "0.12.5"
         jacksonVersion = '2.15.2'
     }
@@ -59,46 +57,27 @@ subprojects {
     }
 }
 
-def configureQuerydsl = { proj ->
+// 각 서비스 모듈에 대한 기본 설정
+def configureServiceModule = { proj ->
+    proj.apply plugin: 'java'
+    proj.apply plugin: 'org.springframework.boot'
+    proj.apply plugin: 'io.spring.dependency-management'
+
     proj.dependencies {
-        implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
-        implementation "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
-        annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
-        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+        implementation project(':core')
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        runtimeOnly 'com.mysql:mysql-connector-j'
     }
 
-    def querydslDir = "${proj.buildDir}/generated/querydsl"
-
-    proj.sourceSets {
-        main {
-            java {
-                srcDirs += [querydslDir]
-            }
-        }
-    }
-
-    proj.tasks.withType(JavaCompile) {
-        options.annotationProcessorPath = proj.configurations.annotationProcessor
-        options.generatedSourceOutputDirectory = file(querydslDir)
-    }
-
-    proj.tasks.register('generateQueryDSL', JavaCompile) {
-        source = proj.sourceSets.main.java
-        classpath = proj.configurations.compileClasspath
-        options.annotationProcessorPath = proj.configurations.annotationProcessor
-        options.generatedSourceOutputDirectory = file(querydslDir)
-        destinationDirectory = file(querydslDir)
-        options.compilerArgs += [
-                "-proc:only",
-                "-processor", "com.querydsl.apt.jpa.JPAAnnotationProcessor"
-        ]
-    }
-
-    proj.compileJava {
-        dependsOn 'generateQueryDSL'
-    }
+    proj.bootJar { enabled = true }
+    proj.jar { enabled = false }
 }
+
 project(":core") {
     apply plugin: 'java-library'
     apply plugin: 'io.spring.dependency-management'
@@ -125,10 +104,13 @@ project(":eureka-service") {
 
 project(":gateway-service") {
     dependencies {
+        implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-x86_64'
+
         implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
         implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
         implementation "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
         implementation "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
@@ -137,36 +119,8 @@ project(":gateway-service") {
     jar { enabled = false }
 }
 
-def configureServiceModule = { proj ->
-    proj.apply plugin: 'java'
-    proj.apply plugin: 'org.springframework.boot'
-    proj.apply plugin: 'io.spring.dependency-management'
-
-    proj.dependencies {
-        implementation project(':core')
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-        implementation 'org.springframework.boot:spring-boot-starter-web'
-        implementation 'org.springframework.boot:spring-boot-starter-security'
-        implementation 'org.springframework.boot:spring-boot-starter-validation'
-        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-        runtimeOnly 'com.mysql:mysql-connector-j'
-    }
-
-    proj.bootJar { enabled = true }
-    proj.jar { enabled = false }
-
-    configureQuerydsl(proj)
-}
-
-project(":user-service") {
-    dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        implementation 'org.springframework.boot:spring-boot-starter-mail'
-    }
-    configureServiceModule(it)
-}
 project(":concert-service") { configureServiceModule(it) }
 project(":payment-service") { configureServiceModule(it) }
 project(":reservation-service") { configureServiceModule(it) }
 project(":waiting-service") { configureServiceModule(it) }
+project(":user-service") { configureServiceModule(it) }

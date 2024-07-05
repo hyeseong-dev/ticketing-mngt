@@ -23,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
 //    private final JwtUtil jwtUtil;
 
@@ -45,12 +46,14 @@ public class AuthService {
                 .address(request.address())
                 .build();
 
-        userRepository.save(user);
         try {
-            eventPublisher.publishEvent(new AuthRegisteredEvent(user.getEmail(), user.getName()));
+            emailService.sendVerificationEmail(user.getEmail(), user.getName());
         } catch (Exception e) {
             throw new CustomException(ErrorCode.EMAIL_SEND_ERROR, null, Level.ERROR);
         }
+
+        userRepository.save(user);
+
     }
 
 //    @Override

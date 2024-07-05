@@ -1,6 +1,7 @@
 package com.mgnt.userservice.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -20,6 +21,7 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 import java.util.function.Supplier;
 
+@Log4j2
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -52,7 +54,21 @@ public class SecurityConfig {
     }
 
     private AuthorizationDecision hasIpAddress(Supplier<Authentication> authentication, RequestAuthorizationContext object) {
-        return new AuthorizationDecision(new IpAddressMatcher(env.getProperty("gateway.ip")).matches(object.getRequest()));
+        String gatewayIp = env.getProperty("gateway.ip");
+        String requestIp = object.getRequest().getRemoteAddr();
+
+        log.debug("Gateway IP from properties: {}", gatewayIp);
+        log.debug("Request IP: {}", requestIp);
+
+        if (gatewayIp == null || gatewayIp.isEmpty()) {
+            log.warn("Gateway IP is not set in properties");
+            return new AuthorizationDecision(false);
+        }
+
+        boolean matches = new IpAddressMatcher(gatewayIp).matches(object.getRequest());
+        log.debug("IP address match result: {}", matches);
+
+        return new AuthorizationDecision(matches);
     }
 
     @Bean

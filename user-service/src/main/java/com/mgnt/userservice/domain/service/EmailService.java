@@ -2,6 +2,8 @@ package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.core.error.ErrorCode;
+import com.mgnt.userservice.domain.entity.Users;
+import com.mgnt.userservice.domain.repository.UserRepository;
 import com.mgnt.userservice.utils.EmailValidator;
 import com.mgnt.userservice.utils.RedisUtils;
 import jakarta.mail.MessagingException;
@@ -23,6 +25,7 @@ public class EmailService implements EmailInterface {
     @Value("${spring.mail.username}")
     private String sender;
 
+    private final UserRepository userRepository;
     private final JavaMailSender javaMailSender;
     private final RedisUtils redisUtils;
 
@@ -82,6 +85,11 @@ public class EmailService implements EmailInterface {
         if (isValid) {
             redisUtils.deleteKey(email);
         }
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.WARN));
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
         return isValid;
     }
 }

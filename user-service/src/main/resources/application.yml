@@ -1,5 +1,12 @@
 debug: false
-management.endpoints.web.exposure.include: "*"
+management:
+  endpoint:
+    show-details: always
+  endpoints:
+    web:
+    exposure:
+      include: health
+
 
 logging:
   level:

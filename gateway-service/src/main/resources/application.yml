@@ -1,3 +1,11 @@
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty: DEBUG
+    redisratelimiter: DEBUG
+
 server:
   port: 8080
 
@@ -5,11 +13,16 @@ spring:
   application:
     name: gateway-service
   cloud:
+    loadbalancer:
+      retry:
+        enabled: true
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 5000
       discovery:
         locator:
           enabled: true
-          lower-case-service-id: true
 
   jackson:
     property-naming-strategy: SNAKE_CASE

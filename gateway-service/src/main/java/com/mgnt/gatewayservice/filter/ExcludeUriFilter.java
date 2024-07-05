@@ -15,9 +15,9 @@ import java.util.List;
 @Slf4j
 public class ExcludeUriFilter extends AbstractGatewayFilterFactory<ExcludeUriFilter.Config> {
     private static final List<String> EXCLUDE_URI_LIST = Arrays.asList(
-            "/user-service/api/auth/signup",
-            "/user-service/api/auth/login",
-            "/user-service/api/auth/verify-email"
+            "/api/auth/signup",
+            "/api/auth/login",
+            "/api/auth/verify-email"
     );
 
     public ExcludeUriFilter() {
