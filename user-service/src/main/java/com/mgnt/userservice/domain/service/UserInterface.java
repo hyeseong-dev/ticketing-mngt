@@ -37,7 +37,7 @@ public interface UserInterface {
      *
      * @return 사용자 목록 응답 엔티티
      */
-    ResponseEntity<GetUserListResponse> getUsers();
+//    ResponseEntity<GetUserListResponse> getUsers();
 
     /**
      * 특정 사용자 상세 조회
@@ -47,63 +47,63 @@ public interface UserInterface {
      */
     GetUserResponse getUserDetail(Long id);
 
-    /**
-     * 관리자가 사용자 정보 수정
-     *
-     * @param id          사용자 ID
-     * @param requestBody 사용자 수정 요청 DTO
-     * @return 사용자 수정 응답 엔티티
-     */
-    ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody);
-
-    /**
-     * 사용자 삭제
-     *
-     * @param id 사용자 ID
-     * @return 사용자 삭제 응답 엔티티
-     */
-    ResponseEntity<DeleteUserResponse> deleteUser(Long id);
-
-    /**
-     * 이메일로 사용자 조회
-     *
-     * @param currentUserEmail 현재 사용자 이메일
-     * @return 사용자 객체 Optional
-     */
-    Optional<Users> getUserByEmail(String currentUserEmail);
-
-    /**
-     * 사용자 ID로 사용자 조회
-     *
-     * @param resourceId 사용자 ID
-     * @return 사용자 객체 Optional
-     */
-    Optional<Users> getUserById(Long resourceId);
-
-    /**
-     * 사용자 정보 수정
-     *
-     * @param id          사용자 ID
-     * @param requestBody 사용자 수정 요청 DTO
-     * @return 사용자 수정 응답 엔티티
-     */
-    ResponseEntity<UpdateUserResponse> modifyUser(Long id, UserModifyRequest requestBody);
-
-    /**
-     * 마이페이지 정보 수정
-     *
-     * @param id          사용자 ID
-     * @param requestBody 마이페이지 수정 요청 DTO
-     * @return 마이페이지 수정 응답 엔티티
-     */
-    ResponseEntity<UpdateUserResponse> modifyMypage(Long id, MypageRequest requestBody);
-
-    /**
-     * 사용자 비밀번호 수정
-     *
-     * @param id          사용자 ID
-     * @param requestBody 비밀번호 수정 요청 DTO
-     * @return 비밀번호 수정 응답 엔티티
-     */
-    ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordRequet requestBody);
+//    /**
+//     * 관리자가 사용자 정보 수정
+//     *
+//     * @param id          사용자 ID
+//     * @param requestBody 사용자 수정 요청 DTO
+//     * @return 사용자 수정 응답 엔티티
+//     */
+//    ResponseEntity<UpdateAllUserResponse> modifyUserByAdmin(Long id, AdminModifyUserRequest requestBody);
+//
+//    /**
+//     * 사용자 삭제
+//     *
+//     * @param id 사용자 ID
+//     * @return 사용자 삭제 응답 엔티티
+//     */
+//    ResponseEntity<DeleteUserResponse> deleteUser(Long id);
+//
+//    /**
+//     * 이메일로 사용자 조회
+//     *
+//     * @param currentUserEmail 현재 사용자 이메일
+//     * @return 사용자 객체 Optional
+//     */
+//    Optional<Users> getUserByEmail(String currentUserEmail);
+//
+//    /**
+//     * 사용자 ID로 사용자 조회
+//     *
+//     * @param resourceId 사용자 ID
+//     * @return 사용자 객체 Optional
+//     */
+//    Optional<Users> getUserById(Long resourceId);
+//
+//    /**
+//     * 사용자 정보 수정
+//     *
+//     * @param id          사용자 ID
+//     * @param requestBody 사용자 수정 요청 DTO
+//     * @return 사용자 수정 응답 엔티티
+//     */
+//    ResponseEntity<UpdateUserResponse> modifyUser(Long id, UserModifyRequest requestBody);
+//
+//    /**
+//     * 마이페이지 정보 수정
+//     *
+//     * @param id          사용자 ID
+//     * @param requestBody 마이페이지 수정 요청 DTO
+//     * @return 마이페이지 수정 응답 엔티티
+//     */
+//    ResponseEntity<UpdateUserResponse> modifyMypage(Long id, MypageRequest requestBody);
+//
+//    /**
+//     * 사용자 비밀번호 수정
+//     *
+//     * @param id          사용자 ID
+//     * @param requestBody 비밀번호 수정 요청 DTO
+//     * @return 비밀번호 수정 응답 엔티티
+//     */
+//    ResponseEntity<UpdateUserResponse> modifyUserPassword(Long id, PasswordRequet requestBody);
 }

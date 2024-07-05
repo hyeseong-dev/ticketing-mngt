@@ -47,9 +47,8 @@ public class EmailService implements EmailInterface {
             return ResponseEntity.badRequest().body(EmailResponseDto.failure(ErrorCode.TOKEN_INVALID));
         }
     }
-
-    @Override
-    public void sendEmail(EmailRequestDto emailMessage) {
+    
+    private void sendEmail(EmailRequestDto emailMessage) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");

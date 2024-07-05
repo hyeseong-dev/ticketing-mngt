@@ -1,6 +1,6 @@
-package com.mgnt.core.event;
+package com.mgnt.userservice.event;
 
-import com.mgnt.ticketing.domain.auth.service.EmailInterface;
+import com.mgnt.userservice.domain.service.EmailInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

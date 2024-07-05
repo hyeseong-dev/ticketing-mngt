@@ -1,6 +1,5 @@
 package com.mgnt.userservice.domain.entity;
 
-import com.mgnt.userservice.controller.dto.request.SignUpRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -96,25 +95,6 @@ public class Users extends BaseDateTimeEntity {
         this.address = address;
     }
 
-    /**
-     * 회원가입 요청 DTO로부터 사용자 엔티티 생성
-     *
-     * @param dto      회원가입 요청 DTO
-     * @param password 암호화된 비밀번호
-     * @return 생성된 사용자 엔티티
-     */
-    public static Users from(SignUpRequestDto dto, String password) {
-        return Users.builder()
-                .email(dto.getEmail())
-                .name(dto.getName())
-                .password(password)
-                .phoneNumber(dto.getPhoneNumber())
-                .address(dto.getAddress())
-                .role(dto.getRole())
-                .balance(BigDecimal.valueOf(0))
-                .emailVerified(false)
-                .build();
-    }
 
     /**
      * 잔액 사용

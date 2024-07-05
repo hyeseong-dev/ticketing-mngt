@@ -2,7 +2,7 @@ package com.mgnt.core.exception;
 
 import com.mgnt.core.enums.MessageCommInterface;
 import lombok.Getter;
-import org.springframework.boot.logging.LogLevel;
+import org.apache.logging.log4j.Level;
 
 /**
  * 커스텀 예외 클래스
@@ -14,7 +14,7 @@ public class CustomException extends RuntimeException {
     private final String errorCode;
     private final String message;
     private final Object data;
-    private final LogLevel logLevel;
+    private final Level logLevel;
 
     /**
      * MessageCommInterface를 사용하여 CustomException 생성
@@ -23,7 +23,7 @@ public class CustomException extends RuntimeException {
      * @param data                 예외와 관련된 추가 데이터
      * @param logLevel             로그 레벨
      */
-    public CustomException(MessageCommInterface messageCommInterface, Object data, LogLevel logLevel) {
+    public CustomException(MessageCommInterface messageCommInterface, Object data, Level logLevel) {
         super(messageCommInterface.getMessage());
         this.errorCode = messageCommInterface.getCode();
         this.message = messageCommInterface.getMessage();

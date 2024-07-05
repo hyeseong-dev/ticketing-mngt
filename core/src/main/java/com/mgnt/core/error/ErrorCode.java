@@ -1,11 +1,12 @@
 package com.mgnt.core.error;
 
+import com.mgnt.core.enums.MessageCommInterface;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum ErrorCode {
+public enum ErrorCode implements MessageCommInterface {
 
     // Common Errors
     INVALID_INPUT_VALUE(400, "C001", "Validation failed."),
@@ -26,6 +27,10 @@ public enum ErrorCode {
     LOGIN_FAILED(401, "A001", "Login information mismatch."),
     INVALID_CREDENTIALS(401, "A002", "Invalid Credentials."),
     UNVERIFED_ACCOUNT(401, "A003", "Unverified account."),
+    EMAIL_DUPLICATED(409, "C016", "Phone number duplicated."),
+    EMAIL_SEND_ERROR(400, "C018", "EMAIL SENDING_ERROR"),
+    VERIFICATION_CODE_NOT_FOUND(400, "C019", "Verification Code not found."),
+    INVALID_EMAIL_FORMAT(400, "E002", "Invalid email format"),
 
     // JWT Errors
     TOKEN_EXPIRED(401, "J001", "Token has expired."),
@@ -44,11 +49,21 @@ public enum ErrorCode {
     TOO_MANY_REQUESTS(429, "C013", "Too many requests."),
     ENDPOINT_NOT_FOUND(404, "C014", "Endpoint not found."),
     HTTP_METHOD_NOT_FOUND(405, "C015", "HTTP method not found."),
-    EMAIL_DUPLICATED(409, "C016", "Phone number duplicated."),
-    PHONE_NUMBER_DUPLICATED(409, "C017", "Email duplicated."),
-    EMAIL_SEND_ERROR(400, "C018", "EMAIL SENDING_ERROR");
+
+    PHONE_NUMBER_DUPLICATED(409, "C017", "Phone number duplicated.");
+
 
     private final int status;
     private final String code;
     private final String message;
+
+    @Override
+    public String getCode() {
+        return this.code;
+    }
+
+    @Override
+    public String getMessage() {
+        return this.message;
+    }
 }

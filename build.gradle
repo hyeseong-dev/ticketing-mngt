@@ -29,6 +29,10 @@ subprojects {
     sourceCompatibility = '17'
     targetCompatibility = '17'
 
+    configurations {
+        all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+
     dependencyManagement {
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
@@ -39,7 +43,11 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
         implementation "org.springframework.boot:spring-boot-starter-log4j2"
+        implementation "org.apache.logging.log4j:log4j-slf4j2-impl"
+        implementation "org.apache.logging.log4j:log4j-api"
+        implementation "org.apache.logging.log4j:log4j-core"
     }
 
     tasks.withType(JavaCompile) {
@@ -72,9 +80,6 @@ def configureQuerydsl = { proj ->
 
     proj.tasks.withType(JavaCompile) {
         options.annotationProcessorPath = proj.configurations.annotationProcessor
-    }
-
-    proj.tasks.withType(JavaCompile) {
         options.generatedSourceOutputDirectory = file(querydslDir)
     }
 
@@ -83,6 +88,7 @@ def configureQuerydsl = { proj ->
         classpath = proj.configurations.compileClasspath
         options.annotationProcessorPath = proj.configurations.annotationProcessor
         options.generatedSourceOutputDirectory = file(querydslDir)
+        destinationDirectory = file(querydslDir)
         options.compilerArgs += [
                 "-proc:only",
                 "-processor", "com.querydsl.apt.jpa.JPAAnnotationProcessor"
@@ -93,12 +99,14 @@ def configureQuerydsl = { proj ->
         dependsOn 'generateQueryDSL'
     }
 }
-
 project(":core") {
+    apply plugin: 'java-library'
+    apply plugin: 'io.spring.dependency-management'
 
     dependencies {
         api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
         api "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+        api "org.springframework:spring-web"
     }
 
     bootJar { enabled = false }
@@ -151,7 +159,13 @@ def configureServiceModule = { proj ->
     configureQuerydsl(proj)
 }
 
-project(":user-service") { configureServiceModule(it) }
+project(":user-service") {
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+    }
+    configureServiceModule(it)
+}
 project(":concert-service") { configureServiceModule(it) }
 project(":payment-service") { configureServiceModule(it) }
 project(":reservation-service") { configureServiceModule(it) }

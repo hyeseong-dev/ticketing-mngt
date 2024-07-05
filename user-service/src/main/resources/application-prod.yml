@@ -23,11 +23,6 @@ server:
 spring:
   application:
     name: user-service
-  config:
-    import:
-      - classpath:/application-local.yml
-      - classpath:/application-prod.yml
-      - classpath:/application-secrets.yml
 
   datasource:
     hikari:

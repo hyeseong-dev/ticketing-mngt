@@ -17,10 +17,10 @@ spring:
 
 eureka:
   client:
-    register-with-eureka: true #??? ??? ???? ??
-    fetch-registry: true #??? ??? ??? ???? ??
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://admin:1234@localhost:8761/eureka #??? ?? ??
+      defaultZone: http://admin:1234@localhost:8761/eureka
   instance:
     prefer-ip-address: true
 

@@ -23,7 +23,7 @@ public class UserReader {
      * @param userId 사용자 ID
      * @return 사용자 정보
      */
-    public Users findUser(Long userId) {
-        return userRepository.findById(userId);
-    }
+//    public Users findUser(Long userId) {
+//        return userRepository.findById(userId);
+//    }
 }

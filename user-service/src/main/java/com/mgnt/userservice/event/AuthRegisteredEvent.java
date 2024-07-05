@@ -1,4 +1,4 @@
-package com.mgnt.core.event;
+package com.mgnt.userservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

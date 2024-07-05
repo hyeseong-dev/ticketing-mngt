@@ -28,7 +28,6 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint entryPoint;
     private final UserDetailsService userDetailsService;
 
-
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
@@ -43,16 +42,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/actuator/**").permitAll()
-                                .requestMatchers("/**").access(this::hasIpAddress) // 루트 경로 허용
+                                .requestMatchers("/**").access(this::hasIpAddress)
                                 .anyRequest().authenticated())
                 .headers(headers ->
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))
-                .build();
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint));
 
         return http.build();
     }
-
 
     private AuthorizationDecision hasIpAddress(Supplier<Authentication> authentication, RequestAuthorizationContext object) {
         return new AuthorizationDecision(new IpAddressMatcher(env.getProperty("gateway.ip")).matches(object.getRequest()));
@@ -63,10 +60,4 @@ public class SecurityConfig {
             AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
-    @Bean
-    BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 }

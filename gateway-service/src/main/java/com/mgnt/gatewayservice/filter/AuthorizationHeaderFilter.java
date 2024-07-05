@@ -58,8 +58,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
             Long memberId = getClaimFromToken(token, "id", Long.class);
             String memberRole = getClaimFromToken(token, "role", String.class);
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("Member-Id", memberId.toString())
-                    .header("Member-Role", memberRole)
+                    .header("User-Id", memberId.toString())
+                    .header("User-Role", memberRole)
                     .build();
             ServerWebExchange modifiedExchange = exchange.mutate().request(modifiedRequest).build();
 
