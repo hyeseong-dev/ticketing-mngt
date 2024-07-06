@@ -26,6 +26,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final WebClient.Builder webClientBuilder;
+    private final String REFRESH_TOKEN_HEADER_KEY = "X-Refresh-Token";
+    private final int BEARER_NUMBER = 7;
 
     public AuthorizationHeaderFilter(JwtUtil jwtUtil, ObjectMapper objectMapper, WebClient.Builder webClientBuilder) {
         super(Config.class);
@@ -43,30 +45,39 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            String refreshTokenHeader = request.getHeaders().getFirst("X-Refresh-Token");
+            String refreshTokenHeader = request.getHeaders().getFirst(REFRESH_TOKEN_HEADER_KEY);
 
             if (!isTokenPresent(authHeader)) {
                 return onError(exchange, ErrorCode.INVALID_AUTHORIZATION);
             }
 
-            String token = authHeader.substring(7);
+            String accessToken = authHeader.substring(BEARER_NUMBER);
 
-            if (jwtUtil.isBlacklisted(token)) {
+            if (jwtUtil.isBlacklisted(accessToken)) {
                 return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
             }
 
-            if (jwtUtil.isTokenExpired(token)) {
+            if (jwtUtil.isTokenExpired(accessToken)) {
                 if (refreshTokenHeader == null) {
                     return onError(exchange, ErrorCode.REFRESH_TOKEN_NOT_FOUND);
                 }
-                return handleExpiredToken(exchange, refreshTokenHeader, token, chain);
+                return handleExpiredToken(exchange, refreshTokenHeader, accessToken, chain);
             }
 
-            if (!jwtUtil.validateToken(token)) {
+            if (!jwtUtil.validateToken(accessToken)) {
                 return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
             }
 
-            addAuthorizationHeaders(exchange, token);
+            if (isLogoutEndpoint(request.getURI().getPath())) {
+                return handleLogout(exchange, accessToken, chain);
+            }
+
+            if (isRefreshEndpoint(request.getURI().getPath())) {
+                String refreshToken = refreshTokenHeader.substring(BEARER_NUMBER);
+                return handleRefresh(exchange, refreshToken, chain);
+            }
+
+            addAuthorizationHeaders(exchange, accessToken);
             return chain.filter(exchange);
         };
     }
@@ -75,17 +86,20 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         return authorizationHeader != null && authorizationHeader.startsWith("Bearer ");
     }
 
-    private Mono<Void> handleExpiredToken(ServerWebExchange exchange, String refreshToken, String accessToken, GatewayFilterChain chain) {
-        Long userId = jwtUtil.getClaimFromToken(refreshToken, "id", Long.class);
-        String userRole = jwtUtil.getClaimFromToken(refreshToken, "role", String.class);
-        Long remainingTimeInMillis = jwtUtil.getRemainingTime(accessToken);
+    private boolean isRefreshEndpoint(String path) {
+        return path.equalsIgnoreCase("/api/auth/refresh");
+    }
 
+    private boolean isLogoutEndpoint(String path) {
+        return path.equalsIgnoreCase("/api/auth/logout");
+    }
+
+    private Mono<Void> handleExpiredToken(ServerWebExchange exchange, String refreshToken, String accessToken, GatewayFilterChain chain) {
+        Long userId = jwtUtil.getClaimFromToken(accessToken, "id", Long.class);
         return webClientBuilder.build().post()
                 .uri("http://user-service/api/auth/refresh")
                 .header("User-Id", userId.toString())
-                .header("User-Role", userRole)
-                .header("Blacklist-Token", accessToken)
-                .header("Remaining-time-in-millis", remainingTimeInMillis.toString())
+                .header("Refresh-Token", refreshToken)
                 .retrieve()
                 .bodyToMono(RefreshTokenResponseDto.class)
                 .flatMap(response -> {
@@ -99,6 +113,26 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
                     }
                 })
                 .onErrorResume(e -> onError(exchange, ErrorCode.INTERNAL_SERVER_ERROR));
+    }
+
+    private Mono<Void> handleRefresh(ServerWebExchange exchange, String refreshToken, GatewayFilterChain chain) {
+        Long userId = jwtUtil.getClaimFromToken(refreshToken, "id", Long.class);
+
+        ServerHttpRequest request = exchange.getRequest().mutate()
+                .header("Refresh-Token", refreshToken)
+                .header("User-Id", userId.toString())
+                .build();
+        return chain.filter(exchange.mutate().request(request).build());
+    }
+
+    private Mono<Void> handleLogout(ServerWebExchange exchange, String token, GatewayFilterChain chain) {
+        Long userId = jwtUtil.getClaimFromToken(token, "id", Long.class);
+
+        ServerHttpRequest request = exchange.getRequest().mutate()
+                .header("Access-Token", token)
+                .header("User-Id", userId.toString())
+                .build();
+        return chain.filter(exchange.mutate().request(request).build());
     }
 
     private void addAuthorizationHeaders(ServerWebExchange exchange, String token) {

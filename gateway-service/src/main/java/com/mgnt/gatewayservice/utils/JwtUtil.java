@@ -2,12 +2,14 @@ package com.mgnt.gatewayservice.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -17,9 +19,10 @@ public class JwtUtil {
 
     private final SecretKey key;
     private final RedisTemplate<String, String> redisTemplate;
+    private SignatureAlgorithm SIGNATURE_ALGORITHMS = SignatureAlgorithm.HS256;
 
     public JwtUtil(@Value("${jwt.app.jwtSecretKey}") String secretKey, RedisTemplate<String, String> redisTemplate) {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        this.key = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHMS.getJcaName());
         this.redisTemplate = redisTemplate;
     }
 

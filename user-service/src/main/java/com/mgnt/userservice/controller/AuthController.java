@@ -7,7 +7,6 @@ import com.mgnt.userservice.controller.dto.request.SignupRequestDto;
 import com.mgnt.userservice.controller.dto.response.LoginResponseDto;
 import com.mgnt.userservice.controller.dto.response.RefreshTokenResponseDto;
 import com.mgnt.userservice.domain.service.AuthService;
-import com.mgnt.userservice.domain.service.EmailInterface;
 import com.mgnt.userservice.domain.service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -50,21 +49,20 @@ public class AuthController {
     @GetMapping("/logout")
     public ApiResult<Void> logout(
             @RequestHeader("User-Id") String userId,
-            @RequestHeader("Remaining-time-in-millis") String remainingTimeInMillis,
-            @RequestHeader("Blacklist-Token") String blacklistToken
+            @RequestHeader("Access-Token") String accessToken
     ) {
-        authService.logout(userId, blacklistToken, remainingTimeInMillis);
+        authService.logout(userId, accessToken);
         return ApiResult.success(null);
     }
 
 
-//    @GetMapping("/refresh")
-//    public ApiResult<RefreshTokenResponseDto> refresh(
-//            @RequestHeader("User-Id") String userId,
-//            @RequestHeader("User-Role") String userRole
-//    ) {
-//        return ApiResult.success(authService.refresh(userId, userRole));
-//    }
+    @GetMapping("/refresh")
+    public ApiResult<RefreshTokenResponseDto> refresh(
+            @RequestHeader("User-Id") String userId,
+            @RequestHeader("Refresh-Token") String refreshToken
+    ) {
+        return ApiResult.success(authService.refresh(userId, refreshToken));
+    }
 
 
 }

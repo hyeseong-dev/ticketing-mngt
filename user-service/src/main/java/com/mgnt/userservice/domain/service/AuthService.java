@@ -117,65 +117,40 @@ public class AuthService {
     //    // mysql database에 등록된 PK가 userId, role이 userRole에 해당한다.
 //    // 현재 logout 코드는 대대적인 수정이 필요하다. 회원가입과 로그인 코드 처럼 일관성있는 예외처리와 반환값 처리 redis를 이용한 데이터 삭제도 필요하다.
     @Transactional
-    public void logout(String userId, String blacklistToken, String remainingTimeInMillis) {
+    public void logout(String userId, String accessToken) {
         Users user = userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
 
-
         redisUtils.deleteKey("RT:" + user.getEmail());
-        redisUtils.addToBlacklist(blacklistToken, Long.parseLong(remainingTimeInMillis));
+        Long remainingTimeInMillis = jwtUtil.getRemainingTime(accessToken);
+        redisUtils.addToBlacklist(accessToken, remainingTimeInMillis);
     }
 
-//    // 아래 코드는 수정이 필요하다.
+    //    // 아래 코드는 수정이 필요하다.
 //    // 메서드의 시그니처만 유효하며 scope영역은 대부분 수정해야 한다.
 //    // accessToken을 새로 발행하고, 기존 redis에 저장된 refreshToken을 삭제하거나 정보를 업데이트 해준다.
-//    @Override
-//    @Transactional
-//    public RefreshTokenResponseDto refresh(String userId, String userRole) {
-//        try {
-//            if (rawToken == null || !rawToken.startsWith("Bearer "))
-//                return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);
-//
-//
-//            final String token = rawToken.substring(7);
-//            String userEmail;
-//
-//            try {
-//                userEmail = jwtUtil.getEmailFromToken(token);
-//            } catch (ExpiredJwtException e) {
-//                userEmail = e.getClaims().getSubject(); // 만료된 토큰에서 이메일을 추출
-//            }
-//
-//            if (userEmail == null) return RefreshResponseDto.failure(ErrorCode.USER_UNAUTHORIZED);
-//
-//            Optional<RefreshToken> refreshTokenOpt = refreshTokenJpaRepository.findByUser_Email(userEmail);
-//            if (refreshTokenOpt.isEmpty()) return RefreshResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE);
-//
-//
-//            UserDetails userDetails = userJpaRepository.findByEmail(userEmail)
-//                    .map(UserDetailsImpl::new)
-//                    .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.INVALID_CREDENTIALS.getMessage()));
-//
-//            String newAccessToken = jwtUtil.createAccessToken(userDetails.getUsername());
-//            String newRefreshToken = jwtUtil.createRefreshToken(userDetails.getUsername());
-//
-//            refreshTokenJpaRepository.deleteByUser_Email(userEmail);
-//
-//            RefreshToken refreshToken = RefreshToken.builder()
-//                    .user(userJpaRepository.findByEmail(userEmail).get())
-//                    .token(newRefreshToken)
-//                    .ip(request.getRemoteAddr())
-//                    .deviceInfo(request.getHeader("User-Agent"))
-//                    .expiryDate(LocalDateTime.now().plusDays(7))
-//                    .build();
-//            refreshTokenJpaRepository.save(refreshToken);
-//
-//            return RefreshResponseDto.success(newAccessToken, newRefreshToken);
-//
-//        } catch (Exception e) {
-//            log.error("Error during refresh token: {}", e.getMessage());
-//            return RefreshResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-//        }
-//    }
+    @Transactional
+    public RefreshTokenResponseDto refresh(String userId, String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN, null, Level.INFO);
+        }
+        Users user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+
+        String newAccessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserId(), user.getRole().name());
+        String newRefreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserId(), user.getRole().name());
+
+        // Redis에 리프레시 토큰 업데이트
+        String redisKey = "RT:" + user.getEmail();
+        redisUtils.setData(redisKey, newRefreshToken, 7 * 24 * 60 * 60);
+
+        return new RefreshTokenResponseDto(
+                user.getUserId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRole().name(),
+                newAccessToken,
+                newRefreshToken);
+    }
 
 }

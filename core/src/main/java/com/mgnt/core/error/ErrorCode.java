@@ -38,6 +38,7 @@ public enum ErrorCode implements MessageCommInterface {
     TOKEN_MALFORMED(401, "J003", "Token is malformed."),
     TOKEN_UNSUPPORTED(401, "J004", "Token is unsupported."),
     TOKEN_CLAIM_INVALID(401, "J005", "Token claims are invalid."),
+    INVALID_REFRESH_TOKEN(401, "J006", "Invalid refresh token."),
 
     // Additional Errors
     BAD_REQUEST(400, "C007", "Bad request."),

@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -18,55 +19,57 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class JwtUtil {
 
-    private SecretKey key;
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    @Value("${jwt.app.jwtSecretKey}")
+    private String SECRET_KEY;
+
+    private SignatureAlgorithm SIGNATURE_ALGORITHMS = SignatureAlgorithm.HS256;
 
     @Value("${jwt.access-token-validity}")
-    private long accessTokenValidityInMilliseconds;
+    private long ACCES_TOKEN_VALIDITY_IN_MILLISECONDS;
 
     @Value("${jwt.refresh-token-validity}")
-    private long refreshTokenValidityInMilliseconds;
+    private long REFRESH_TOKEN_VALIDITY_IN_MILLISECONDS;
+
+    private SecretKey key;
+
+    public JwtUtil(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        this.key = new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHMS.getJcaName());
     }
 
     public String createAccessToken(String email, Long userId, String role) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
+        Date validity = new Date(now.getTime() + ACCES_TOKEN_VALIDITY_IN_MILLISECONDS);
 
         return Jwts.builder()
-                .subject(email)
+                .setSubject(email)
                 .claim("id", userId)
                 .claim("role", role)
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SIGNATURE_ALGORITHMS)
                 .compact();
     }
 
     public String createRefreshToken(String email, Long userId, String role) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
+        Date validity = new Date(now.getTime() + REFRESH_TOKEN_VALIDITY_IN_MILLISECONDS);
 
         return Jwts.builder()
-                .subject(email)
+                .setSubject(email)
                 .claim("id", userId)
                 .claim("role", role)
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SIGNATURE_ALGORITHMS)
                 .compact();
-    }
-
-    public JwtUtil(@Value("${jwt.app.jwtSecretKey}") String secretKey, RedisTemplate<String, String> redisTemplate) {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        this.redisTemplate = redisTemplate;
     }
 
     public Claims getAllClaimsFromToken(String token) {
@@ -93,10 +96,6 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public String getSubjectFromToken(String token) {
-        return getAllClaimsFromToken(token).getSubject();
     }
 
     public SecretKey getKey() {
