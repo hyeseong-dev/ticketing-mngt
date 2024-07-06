@@ -85,7 +85,7 @@ public class EmailService implements EmailInterface {
         if (isValid) {
             redisUtils.deleteKey(email);
         }
-        Users user = userRepository.findByEmail(email)
+        Users user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.WARN));
 
         user.setEmailVerified(true);
