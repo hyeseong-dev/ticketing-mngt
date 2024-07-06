@@ -27,12 +27,15 @@ public class JwtUtil {
     }
 
     public Claims getAllClaimsFromToken(String token) {
-        return Jwts
+        System.out.println("현재 시간: " + new Date());
+        Claims claims = Jwts
                 .parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+        System.out.println("토큰 만료 시간: " + claims.getExpiration());
+        return claims;
     }
 
     public <T> T getClaimFromToken(String token, String claimName, Class<T> requiredType) {
@@ -44,6 +47,7 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token) {
+        System.out.println(isTokenExpired(token));
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;

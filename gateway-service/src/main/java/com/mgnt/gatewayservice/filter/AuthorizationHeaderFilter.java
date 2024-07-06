@@ -5,6 +5,7 @@ import com.mgnt.gatewayservice.exception.ErrorCode;
 import com.mgnt.gatewayservice.exception.Response;
 import com.mgnt.gatewayservice.utils.JwtUtil;
 import com.mgnt.gatewayservice.utils.RefreshTokenResponseDto;
+import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -57,15 +58,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
                 return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
             }
 
-            if (jwtUtil.isTokenExpired(accessToken)) {
+            if (!jwtUtil.validateToken(accessToken)) {
                 if (refreshTokenHeader == null) {
                     return onError(exchange, ErrorCode.REFRESH_TOKEN_NOT_FOUND);
                 }
                 return handleExpiredToken(exchange, refreshTokenHeader, accessToken, chain);
-            }
-
-            if (!jwtUtil.validateToken(accessToken)) {
-                return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
             }
 
             if (isLogoutEndpoint(request.getURI().getPath())) {
@@ -162,4 +159,5 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         DataBuffer buffer = response.bufferFactory().wrap(responseBytes);
         return response.writeWith(Mono.just(buffer));
     }
+
 }

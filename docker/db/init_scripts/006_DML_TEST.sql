@@ -1,5 +1,6 @@
 USE ticketing_test;
 
+-- 사용자 데이터 삽입
 INSERT INTO users (email, password, name, role, balance, address, phone_number, email_verified)
 VALUES
     ('test1@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', 'John Doe', 'USER', 100.00, '123 Main St', '010-5897-4855', FALSE),
@@ -7,20 +8,6 @@ VALUES
     ('admin1@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', 'Admin User', 'ADMIN', 0, '789 Pine St', '010-5897-4857', TRUE),
     ('admin2@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', 'Alice Wonderland', 'USER', 300.00, '321 Maple St', '010-5897-4858', TRUE),
     ('hyeseong43@gmail.com', '$2a$10$HSWVFQrQtDtV6jfKEigUmOw2SZB8.dZwo7eFcfperLQt45uAUSGKm', '이혜성', 'ADMIN', 150.00, '654 Birch St', '010-5897-4859', TRUE);
-
--- 리프레시 토큰 삽입은 주석 처리된 상태입니다.
--- INSERT INTO refresh_token (user_id, token, ip, device_info, expiry_date)
--- VALUES
---     (1, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2025-01-01 00:00:00'),
---     (2, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.2', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2025-01-01 00:00:00'),
---     (3, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.3', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0)', '2025-01-01 00:00:00'),
---     (4, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.4', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)', '2025-01-01 00:00:00'),
---     (5, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.5', 'Mozilla/5.0 (Linux; Android 10; SM-G975F)', '2025-01-01 00:00:00'),
---     (1, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2025-01-01 00:00:00'),
---     (2, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.2', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2025-01-01 00:00:00'),
---     (3, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.3', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0)', '2025-01-01 00:00:00'),
---     (4, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.4', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)', '2025-01-01 00:00:00'),
---     (5, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoeWVzZW9uZzQzQGdtYWlsLmNvbSIsImlhdCI6MTcxOTE5MTA4MSwiZXhwIjoxNzE5Nzk1ODgxfQ.Ixn1D0iPRPhTHPfX-EezjkAjulMvJcV-mfdXQIQyXOY', '192.168.1.5', 'Mozilla/5.0 (Linux; Android 10; SM-G975F)', '2025-01-01 00:00:00');
 
 -- 장소 데이터 삽입
 INSERT INTO place (name, seats_cnt)
@@ -41,32 +28,13 @@ VALUES
     (5, 'Hip Hop Live');
 
 -- 콘서트 날짜 데이터 삽입
--- 추후 복원 예정
--- INSERT INTO concert_date (concert_id, place_id, concert_date)
--- VALUES
---     (1, 1, '2024-07-01 19:00:00'),
---     (2, 2, '2024-07-02 19:00:00'),
---     (3, 3, '2024-07-03 19:00:00'),
---     (4, 4, '2024-07-04 19:00:00'),
---     (5, 5, '2024-07-05 19:00:00');
-
-
-INSERT INTO concert_date (concert_id,  concert_date)
+INSERT INTO concert_date (concert_id, concert_date)
 VALUES
     (1, '2024-07-01 19:00:00'),
     (2, '2024-07-02 19:00:00'),
     (3, '2024-07-03 19:00:00'),
     (4, '2024-07-04 19:00:00'),
     (5, '2024-07-05 19:00:00');
-
--- INSERT INTO concert_date (concert_date)
--- VALUES
---     ('2024-07-01 19:00:00'),
---     ('2024-07-02 19:00:00'),
---     ('2024-07-03 19:00:00'),
---     ('2024-07-04 19:00:00'),
---     ('2024-07-05 19:00:00');
-
 
 -- 좌석 데이터 삽입
 INSERT INTO seat (concert_date_id, place_id, seat_num, price, status)

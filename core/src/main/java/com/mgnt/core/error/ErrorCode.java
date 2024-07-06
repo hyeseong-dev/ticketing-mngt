@@ -51,8 +51,12 @@ public enum ErrorCode implements MessageCommInterface {
     ENDPOINT_NOT_FOUND(404, "C014", "Endpoint not found."),
     HTTP_METHOD_NOT_FOUND(405, "C015", "HTTP method not found."),
 
-    PHONE_NUMBER_DUPLICATED(409, "C017", "Phone number duplicated.");
+    PHONE_NUMBER_DUPLICATED(409, "C017", "Phone number duplicated."),
 
+    // Concert
+    DATE_IS_NULL(400, "C018", "예정된 콘서트 날짜가 없습니다."),
+    CONCERT_NOT_FOUND(400, "C019", "해당 콘서트가 없습니다"),
+    SEAT_NOT_FOUND(404, "C020", "좌석이 없습니다");
 
     private final int status;
     private final String code;

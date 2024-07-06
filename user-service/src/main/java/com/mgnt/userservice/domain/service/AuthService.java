@@ -6,28 +6,19 @@ import com.mgnt.userservice.controller.dto.request.LoginRequestDto;
 import com.mgnt.userservice.controller.dto.request.SignupRequestDto;
 import com.mgnt.userservice.controller.dto.response.LoginResponseDto;
 import com.mgnt.userservice.controller.dto.response.RefreshTokenResponseDto;
-import com.mgnt.userservice.domain.entity.RefreshToken;
 import com.mgnt.userservice.domain.entity.Users;
 import com.mgnt.userservice.domain.repository.UserRepository;
 import com.mgnt.userservice.utils.JwtUtil;
 import com.mgnt.userservice.utils.RedisUtils;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -94,7 +85,7 @@ public class AuthService {
             redisUtils.setData(
                     redisKey,
                     refreshToken,
-                    7
+                    86400000 * 7 //7일( 1일을 초로 나타내고 그것을 7로 곱함)
             );
             if (!redisUtils.getCode(redisKey).equals(refreshToken))
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, null, Level.ERROR);

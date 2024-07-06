@@ -47,7 +47,9 @@ public class JwtUtil {
     public String createAccessToken(String email, Long userId, String role) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + ACCES_TOKEN_VALIDITY_IN_MILLISECONDS);
-
+        System.out.println("Access Token 발급 시점 (now): " + now);
+        System.out.println("Access Token 만료 시점 (validity): " + validity);
+        
         return Jwts.builder()
                 .setSubject(email)
                 .claim("id", userId)

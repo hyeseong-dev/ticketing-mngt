@@ -1,7 +1,13 @@
-CREATE USER 'developer'@'%' IDENTIFIED BY '12345';
-GRANT CREATE, ALTER, DROP, SELECT, INSERT, UPDATE, DELETE ON ticketing.* TO 'developer'@'%';
+CREATE USER 'developer'@'%' IDENTIFIED WITH mysql_native_password BY '12345';
+GRANT ALL PRIVILEGES ON ticketing.* TO 'developer'@'%';
 
-CREATE USER 'developer'@'localhost' IDENTIFIED BY '12345';
-GRANT CREATE, ALTER, DROP, SELECT, INSERT, UPDATE, DELETE ON ticketing.* TO 'developer'@'localhost';
+CREATE USER 'developer'@'localhost' IDENTIFIED WITH mysql_native_password BY '12345';
+GRANT ALL PRIVILEGES ON ticketing.* TO 'developer'@'localhost';
+
+CREATE USER 'developer'@'_gateway' IDENTIFIED WITH mysql_native_password BY '12345';
+GRANT ALL PRIVILEGES ON ticketing.* TO 'developer'@'_gateway';
 
 FLUSH PRIVILEGES;
+
+
+
