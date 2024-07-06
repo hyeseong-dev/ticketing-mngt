@@ -30,12 +30,12 @@ public class GatewayConfig {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         // TODO /api/auth/** 회원가입, 로그인, verify-email
         return builder.routes()
-                .route("user-service-auth-public", r -> r
-                        .path("/api/auth/**")
-                        .uri("lb://USER-SERVICE"))
                 .route("user-service-auth-protected", r -> r
                         .path("/api/auth/logout")
                         .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
+                        .uri("lb://USER-SERVICE"))
+                .route("user-service-auth-public", r -> r
+                        .path("/api/auth/**")
                         .uri("lb://USER-SERVICE"))
                 .route("user-service", r -> r
                         .path("/api/users/**")
@@ -50,7 +50,5 @@ public class GatewayConfig {
                         .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://PAYMENT-SERVICE"))
                 .build();
-
-
     }
 }

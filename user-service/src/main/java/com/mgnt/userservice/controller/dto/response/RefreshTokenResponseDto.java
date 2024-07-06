@@ -1,6 +1,6 @@
 package com.mgnt.userservice.controller.dto.response;
 
-public record LoginResponseDto(
+public record RefreshTokenResponseDto(
         Long userId,
         String email,
         String name,

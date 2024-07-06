@@ -1,15 +1,13 @@
 package com.mgnt.gatewayservice.filter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.gatewayservice.exception.ErrorCode;
 import com.mgnt.gatewayservice.exception.Response;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import com.mgnt.gatewayservice.utils.JwtUtil;
+import com.mgnt.gatewayservice.utils.RefreshTokenResponseDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -18,101 +16,116 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import javax.crypto.SecretKey;
 
 @Component
 @Slf4j
 public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<AuthorizationHeaderFilter.Config> {
-    private final SecretKey key;
-    private final ObjectMapper mapper;
+    private final JwtUtil jwtUtil;
+    private final ObjectMapper objectMapper;
+    private final WebClient.Builder webClientBuilder;
 
-    public AuthorizationHeaderFilter(ObjectMapper objectMapper, @Value("${jwt.app.jwtSecretKey}") String secretKey) {
+    public AuthorizationHeaderFilter(JwtUtil jwtUtil, ObjectMapper objectMapper, WebClient.Builder webClientBuilder) {
         super(Config.class);
-        this.mapper = objectMapper;
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.jwtUtil = jwtUtil;
+        this.objectMapper = objectMapper;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public static class Config {
-        // Put configuration properties here
+        // 필요한 경우 설정 속성을 여기에 추가
     }
 
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            String authorizationHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            ServerHttpRequest request = exchange.getRequest();
+            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            String refreshTokenHeader = request.getHeaders().getFirst("X-Refresh-Token");
 
-            if (!isTokenPresent(authorizationHeader)) {
+            if (!isTokenPresent(authHeader)) {
                 return onError(exchange, ErrorCode.INVALID_AUTHORIZATION);
             }
 
-            String token = authorizationHeader.substring(7);
+            String token = authHeader.substring(7);
 
-            if (!isJwtValid(token)) {
+            if (jwtUtil.isBlacklisted(token)) {
                 return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
             }
 
-            Long memberId = getClaimFromToken(token, "id", Long.class);
-            String memberRole = getClaimFromToken(token, "role", String.class);
-            ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("User-Id", memberId.toString())
-                    .header("User-Role", memberRole)
-                    .build();
-            ServerWebExchange modifiedExchange = exchange.mutate().request(modifiedRequest).build();
+            if (jwtUtil.isTokenExpired(token)) {
+                if (refreshTokenHeader == null) {
+                    return onError(exchange, ErrorCode.REFRESH_TOKEN_NOT_FOUND);
+                }
+                return handleExpiredToken(exchange, refreshTokenHeader, token, chain);
+            }
 
-            return chain.filter(modifiedExchange);
+            if (!jwtUtil.validateToken(token)) {
+                return onError(exchange, ErrorCode.INVALID_JWT_TOKEN);
+            }
+
+            addAuthorizationHeaders(exchange, token);
+            return chain.filter(exchange);
         };
     }
 
-    private static boolean isTokenPresent(String authorizationHeader) {
+    private boolean isTokenPresent(String authorizationHeader) {
         return authorizationHeader != null && authorizationHeader.startsWith("Bearer ");
     }
 
-    private <T> T getClaimFromToken(String token, String claimKey, Class<T> requiredType) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get(claimKey, requiredType);
+    private Mono<Void> handleExpiredToken(ServerWebExchange exchange, String refreshToken, String accessToken, GatewayFilterChain chain) {
+        Long userId = jwtUtil.getClaimFromToken(refreshToken, "id", Long.class);
+        String userRole = jwtUtil.getClaimFromToken(refreshToken, "role", String.class);
+        Long remainingTimeInMillis = jwtUtil.getRemainingTime(accessToken);
+
+        return webClientBuilder.build().post()
+                .uri("http://user-service/api/auth/refresh")
+                .header("User-Id", userId.toString())
+                .header("User-Role", userRole)
+                .header("Blacklist-Token", accessToken)
+                .header("Remaining-time-in-millis", remainingTimeInMillis.toString())
+                .retrieve()
+                .bodyToMono(RefreshTokenResponseDto.class)
+                .flatMap(response -> {
+                    if (response.userId() != null) {
+                        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + response.accessToken())
+                                .build();
+                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                    } else {
+                        return onError(exchange, ErrorCode.INVALID_REFRESH_TOKEN);
+                    }
+                })
+                .onErrorResume(e -> onError(exchange, ErrorCode.INTERNAL_SERVER_ERROR));
     }
 
-    // Mono, Flux -> Spring WebFlux
-    private Mono<Void> onError(ServerWebExchange exchange, ErrorCode err) {
+    private void addAuthorizationHeaders(ServerWebExchange exchange, String token) {
+        Long userId = jwtUtil.getClaimFromToken(token, "id", Long.class);
+        String userRole = jwtUtil.getClaimFromToken(token, "role", String.class);
+
+        ServerHttpRequest request = exchange.getRequest().mutate()
+                .header("User-Id", userId.toString())
+                .header("User-Role", userRole)
+                .build();
+        exchange.mutate().request(request).build();
+    }
+
+    private Mono<Void> onError(ServerWebExchange exchange, ErrorCode errorCode) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        // Response 클래스를 사용하여 에러 응답을 생성합니다.
-        Response errorResponse = new Response(err.getStatus().name(), err.getMessage());
-
-        // Response 객체를 JSON 형태로 변환하여 바디에 포함시킵니다.
-        DataBuffer dataBuffer;
+        Response errorResponse = new Response(errorCode.getStatus().name(), errorCode.getMessage());
+        byte[] responseBytes;
         try {
-            byte[] responseBytes = mapper.writeValueAsBytes(errorResponse);
-            dataBuffer = response.bufferFactory().wrap(responseBytes);
-        } catch (JsonProcessingException e) {
-            // JSON 변환에 실패한 경우 기본 오류 메시지를 사용합니다.
-            dataBuffer = response.bufferFactory().wrap(e.getMessage().getBytes());
+            responseBytes = objectMapper.writeValueAsBytes(errorResponse);
+        } catch (Exception e) {
+            responseBytes = "{'error': 'Internal Server Error'}".getBytes();
         }
 
-        return response.writeWith(Mono.just(dataBuffer));
+        DataBuffer buffer = response.bufferFactory().wrap(responseBytes);
+        return response.writeWith(Mono.just(buffer));
     }
-
-    private boolean isJwtValid(String jwt) {
-        try {
-            String subject = Jwts.parser().verifyWith(key).build()
-                    .parseSignedClaims(jwt)
-                    .getPayload()
-                    .getSubject();
-            return subject != null && !subject.isEmpty();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
 }

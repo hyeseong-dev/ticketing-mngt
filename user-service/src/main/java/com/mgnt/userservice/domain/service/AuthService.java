@@ -2,18 +2,33 @@ package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
+import com.mgnt.userservice.controller.dto.request.LoginRequestDto;
 import com.mgnt.userservice.controller.dto.request.SignupRequestDto;
+import com.mgnt.userservice.controller.dto.response.LoginResponseDto;
+import com.mgnt.userservice.controller.dto.response.RefreshTokenResponseDto;
+import com.mgnt.userservice.domain.entity.RefreshToken;
 import com.mgnt.userservice.domain.entity.Users;
 import com.mgnt.userservice.domain.repository.UserRepository;
-import com.mgnt.userservice.event.AuthRegisteredEvent;
+import com.mgnt.userservice.utils.JwtUtil;
+import com.mgnt.userservice.utils.RedisUtils;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+
 
 @Slf4j
 @Service
@@ -25,7 +40,8 @@ public class AuthService {
     private final ApplicationEventPublisher eventPublisher;
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
-//    private final JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final RedisUtils redisUtils;
 
     @Transactional
     public void signup(SignupRequestDto request) {
@@ -56,96 +72,66 @@ public class AuthService {
 
     }
 
-//    @Override
-//    public ResponseEntity<LoginResponseDto> login(LoginRequestDto dto, HttpServletRequest request) {
-//        try {
-//            // 사용자 정보 로드
-//            UserDetails userDetails = userRepository.findByEmail(dto.getEmail())
-//                    .map(UserDetailsImpl::new)
-//                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + dto.getEmail()));
-//
-//            Users user = ((UserDetailsImpl) userDetails).getUser();
-//            if (!passwordEncoder.matches(dto.getPassword(), user.getPassword()))
-//                return LoginResponseDto.failure(ErrorCode.LOGIN_FAILED);
-//
-//            // 이메일 인증 상태 확인
-//            if (!user.getEmailVerified()) return LoginResponseDto.failure(ErrorCode.UNVERIFED_ACCOUNT);
-//
-//            // 이메일과 비밀번호를 사용하여 인증 시도
-//            authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
-//            );
-////            String accessToken = jwtUtil.generateAccessToken(userDetails);
-//            String accessToken = jwtUtil.createAccessToken(dto.getEmail());
-//            String refreshToken;
-//
-//            Optional<RefreshToken> existingTokenOpt = refreshTokenJpaRepository.findByUser_Email(dto.getEmail());
-//            if (existingTokenOpt.isPresent()) {
-//                RefreshToken existingToken = existingTokenOpt.get();
-//                existingToken.setExpiryDate(LocalDateTime.now().plusDays(7));
-//                refreshToken = existingToken.getToken();
-//                refreshTokenJpaRepository.save(existingToken);
-//            } else {
-//                refreshToken = jwtUtil.createRefreshToken(dto.getEmail());
-////                refreshToken = jwtUtil.generateRefreshToken(new HashMap<>(), userDetails);
-//                RefreshToken refreshTokenEntity = RefreshToken.builder()
-//                        .user(userJpaRepository.findByEmail(dto.getEmail()).get())
-//                        .token(refreshToken)
-//                        .ip(request.getRemoteAddr())
-//                        .deviceInfo(request.getHeader("User-Agent"))
-//                        .expiryDate(LocalDateTime.now().plusDays(7))
-//                        .build();
-//                refreshTokenJpaRepository.save(refreshTokenEntity);
-//            }
-//
-//            return LoginResponseDto.success(accessToken, refreshToken);
-//        } catch (Exception e) {
-//            log.error("로그인 중 오류 발생: {}", e.getMessage());
-//            return LoginResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-//        }
-//    }
-//
-//    @Override
-//    @Transactional
-//    public ResponseEntity<LogoutResponseDto> logout(String accessToken) {
-//        try {
-//            if (accessToken == null || !accessToken.startsWith("Bearer ")) {
-//                return LogoutResponseDto.failure(ErrorCode.INVALID_INPUT_VALUE.getCode(), ErrorCode.INVALID_INPUT_VALUE.getMessage());
-//            }
-//
-//            String token = accessToken.substring(7);
-//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//            if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-//                return LogoutResponseDto.failure(ErrorCode.ACCESS_DENIED.getCode(), ErrorCode.ACCESS_DENIED.getMessage());
-//            }
-//
-//            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//
-//            try {
-//                jwtUtil.getEmailFromToken(token); // 만료된 토큰일 경우 예외 발생
-//                if (!jwtUtil.validateToken(token)) {
-//                    return LogoutResponseDto.failure(ErrorCode.INVALID_TYPE_VALUE.getCode(), ErrorCode.INVALID_TYPE_VALUE.getMessage());
-//                }
-//            } catch (ExpiredJwtException e) {
-//                log.warn("Expired token received during logout: {}", e.getMessage());
-//                return LogoutResponseDto.failure(ErrorCode.ACCESS_DENIED.getCode(), ErrorCode.ACCESS_DENIED.getMessage());
-//            }
-//
-//            SecurityContextHolder.clearContext();
-//            refreshTokenJpaRepository.deleteByUser_Email(userDetails.getUsername());
-//
-//            return LogoutResponseDto.success();
-//        } catch (Exception e) {
-//            log.error("로그아웃 중 오류 발생: {}", e.getMessage());
-//            return LogoutResponseDto.failure(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-//        }
-//    }
-//
-//
+    public LoginResponseDto login(LoginRequestDto dto) {
+        try {
+            Users user = userRepository.findUserByEmail(dto.email())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + dto.email()));
+
+            if (!bCryptPasswordEncoder.matches(dto.password(), user.getPassword())) {
+                throw new CustomException(ErrorCode.LOGIN_FAILED, null, Level.INFO);
+            }
+
+            if (!user.getEmailVerified()) {
+                throw new CustomException(ErrorCode.UNVERIFED_ACCOUNT, null, Level.INFO);
+            }
+
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserId(), user.getRole().name());
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserId(), user.getRole().name());
+
+
+            // Redis에 리프레시 토큰 저장 (7일 동안)
+            String redisKey = "RT:" + user.getEmail();
+            redisUtils.setData(
+                    redisKey,
+                    refreshToken,
+                    7
+            );
+            if (!redisUtils.getCode(redisKey).equals(refreshToken))
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, null, Level.ERROR);
+
+            return new LoginResponseDto(
+                    user.getUserId(),
+                    user.getEmail(),
+                    user.getName(),
+                    user.getRole().name(),
+                    accessToken,
+                    refreshToken
+            );
+        } catch (Exception e) {
+            log.error("Login error: ", e);
+            throw new CustomException(ErrorCode.LOGIN_FAILED, null, Level.INFO);
+        }
+    }
+
+
+    //    // mysql database에 등록된 PK가 userId, role이 userRole에 해당한다.
+//    // 현재 logout 코드는 대대적인 수정이 필요하다. 회원가입과 로그인 코드 처럼 일관성있는 예외처리와 반환값 처리 redis를 이용한 데이터 삭제도 필요하다.
+    @Transactional
+    public void logout(String userId, String blacklistToken, String remainingTimeInMillis) {
+        Users user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+
+
+        redisUtils.deleteKey("RT:" + user.getEmail());
+        redisUtils.addToBlacklist(blacklistToken, Long.parseLong(remainingTimeInMillis));
+    }
+
+//    // 아래 코드는 수정이 필요하다.
+//    // 메서드의 시그니처만 유효하며 scope영역은 대부분 수정해야 한다.
+//    // accessToken을 새로 발행하고, 기존 redis에 저장된 refreshToken을 삭제하거나 정보를 업데이트 해준다.
 //    @Override
 //    @Transactional
-//    public ResponseEntity<? super RefreshResponseDto> refresh(String rawToken, HttpServletRequest request) {
+//    public RefreshTokenResponseDto refresh(String userId, String userRole) {
 //        try {
 //            if (rawToken == null || !rawToken.startsWith("Bearer "))
 //                return RefreshResponseDto.failure(ErrorCode.BAD_REQUEST);

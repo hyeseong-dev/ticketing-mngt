@@ -1,1 +1,21 @@
-dependencies {}
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+dependencies {
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-x86_64'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // 시큐리티
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // 레디스
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
+    implementation "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
+    implementation "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
+
+}

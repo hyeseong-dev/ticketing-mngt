@@ -103,18 +103,6 @@ project(":eureka-service") {
 }
 
 project(":gateway-service") {
-    dependencies {
-        implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-x86_64'
-
-        implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
-        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-        implementation 'org.springframework.boot:spring-boot-starter-security'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-        implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
-        implementation "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
-        implementation "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
-    }
     bootJar { enabled = true }
     jar { enabled = false }
 }
