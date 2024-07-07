@@ -51,7 +51,6 @@ public class GatewayConfig {
                         .uri("lb://PAYMENT-SERVICE"))
                 .route("concert-service", r -> r
                         .path("/api/concerts/**")
-                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://CONCERT-SERVICE"))
                 .build();
     }
