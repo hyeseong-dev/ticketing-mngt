@@ -13,6 +13,6 @@ public class ReservationReader {
     private final ReservationRepository reservationRepository;
 
     public Reservation findReservation(Long reservationId) {
-        return reservationRepository.findById(reservationId);
+        return reservationRepository.findByReservationId(reservationId);
     }
 }

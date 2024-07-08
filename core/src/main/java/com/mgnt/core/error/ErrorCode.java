@@ -58,7 +58,17 @@ public enum ErrorCode implements MessageCommInterface {
 
     // Reservation
     RESERVATION_ALREADY_RESERVED(400, "R001", "이미 예약되었습니다"),
-    IS_NULL(400, "R002", "예약 정보가 없습니다.");
+    IS_NULL(400, "R002", "예약 정보가 없습니다."),
+    RESERVATION_FAILED(400, "R003", "예약 할 수 없습니다."),
+    RESERVATION_NOT_FOUND(404, "R004", "예약이 존재 하지 않습니다"),
+
+    // Payment
+    INSUFFICIENT_BALANCE(400, "P001", "잔액이 부족합니다."),
+    NOT_AVAILABLE_PAY(400, "P002", "결제 가능한 상태가 아닙니다."),
+    NOT_AVAILABLE_CANCEL(400, "P003", "취소 가능한 상태가 아닙니다."),
+
+    // Seat
+    SEAT_NOT_AVAILABLE(400, "S001", "사용 가능한 좌석이 아닙니다.");
 
     private final int status;
     private final String code;

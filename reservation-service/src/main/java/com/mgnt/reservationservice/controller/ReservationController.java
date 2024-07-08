@@ -26,7 +26,7 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService service;
-
+//
 //    @GetMapping("/me")
 //    public ApiResult<List<ReserveResponse>> getMyReservation(
 //            @RequestHeader("User-Id") @NotNull Long userId,
@@ -36,11 +36,12 @@ public class ReservationController {
 //    }
 
     @PostMapping()
-    public ApiResult<ReserveResponse> reserve(
+    public ApiResult<String> reserve(
             @RequestHeader("User-Id") @NotNull Long userId,
             @RequestHeader("User-Role") @NotNull String userRole,
             @RequestBody @Valid ReserveRequest request) {
-        return ApiResult.success(service.reserve(request));
+        service.initiateReservation(request);
+        return ApiResult.success("예약이 접수되었으며 진행중입니다.");
     }
 
 //    @DeleteMapping("/{reservationId}")

@@ -1,6 +1,8 @@
 package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.event.Event;
+import com.mgnt.core.event.PaymentCompletedEvent;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.userservice.controller.dto.request.*;
 import com.mgnt.userservice.controller.dto.response.*;
@@ -12,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserJpaRepository userJpaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final KafkaTemplate<String, Event> kafkaTemplate;
+
+    @KafkaListener(topics = "payment-completed")
+    public void handlePaymentCompleted(PaymentCompletedEvent event) {
+        if (event.isSuccess()) {
+            Users user = userRepository.findById(event.userId()).orElseThrow();
+            BigDecimal newBalance = user.getBalance().subtract(event.usedBalance());
+            user.updateBalance(newBalance);
+            userRepository.save(user);
+
+            UserBalanceUpdatedEvent balanceEvent = new UserBalanceUpdatedEvent(
+                    user.getUserId(), newBalance);
+            kafkaTemplate.send("user-balance-updated", balanceEvent);
+        }
+    }
 
     /**
      * 사용자 잔액 조회

@@ -1,7 +1,7 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
-import com.mgnt.reservationservice.domain.ReservationExceptionEnum;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +21,14 @@ public class ReservationValidator {
         // 이미 선택된 좌석
         if (reservation != null
                 && List.of(Reservation.Status.RESERVED, Reservation.Status.ING).contains(reservation.getStatus())) {
-            throw new CustomException(ReservationExceptionEnum.ALREADY_RESERVED, null, Level.INFO);
+            throw new CustomException(ErrorCode.RESERVATION_ALREADY_RESERVED, null, Level.INFO);
         }
     }
 
     public void isNull(Reservation reservation) {
         // 예약 정보 없음
         if (reservation == null) {
-            throw new CustomException(ReservationExceptionEnum.IS_NULL, null, Level.INFO);
+            throw new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO);
         }
     }
 }

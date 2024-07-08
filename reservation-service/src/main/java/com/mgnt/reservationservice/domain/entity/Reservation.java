@@ -67,6 +67,10 @@ public class Reservation extends BaseDateTimeEntity {
         this.reservedAt = reservedAt;
     }
 
+    public void updateStatus(Status status) {
+        this.status = status;
+    }
+
     /**
      * 객체 동등성 비교
      *

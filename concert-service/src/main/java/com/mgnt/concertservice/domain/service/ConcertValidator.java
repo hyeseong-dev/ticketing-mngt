@@ -1,6 +1,7 @@
 package com.mgnt.concertservice.domain.service;
 
 import com.mgnt.concertservice.domain.entity.ConcertDate;
+import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ConcertValidator {
 
-    /**
-     * 콘서트 날짜 리스트가 비어있는지 확인
-     *
-     * @param concertDateList 콘서트 날짜 리스트
-     * @throws CustomException 날짜 리스트가 비어있는 경우 예외 발생
-     */
+    public void checkSeatAvailability(Seat seat) {
+        if (seat == null) {
+            throw new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN);
+        }
+        if (seat.getStatus() != Seat.Status.AVAILABLE) {
+            throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, null, Level.WARN);
+        }
+    }
+
     public void dateIsNull(List<ConcertDate> concertDateList) {
         if (concertDateList.isEmpty()) {
             throw new CustomException(ErrorCode.DATE_IS_NULL, null, Level.ERROR);
         }
     }
+
 }
