@@ -21,10 +21,13 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    
+
     implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
     implementation "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
     implementation "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 
     implementation project(':core')
 }

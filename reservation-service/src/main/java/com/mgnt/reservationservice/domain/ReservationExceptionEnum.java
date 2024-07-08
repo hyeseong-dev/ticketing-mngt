@@ -1,6 +1,6 @@
 package com.mgnt.reservationservice.domain;
 
-import com.mgnt.ticketing.base.enums.MessageCommInterface;
+import com.mgnt.core.enums.MessageCommInterface;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

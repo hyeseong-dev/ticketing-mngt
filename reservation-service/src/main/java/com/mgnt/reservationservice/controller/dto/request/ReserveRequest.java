@@ -1,8 +1,6 @@
 package com.mgnt.reservationservice.controller.dto.request;
 
-import com.mgnt.ticketing.domain.concert.service.ConcertReader;
-import com.mgnt.ticketing.domain.reservation.entity.Reservation;
-import com.mgnt.ticketing.domain.user.service.UserReader;
+import com.mgnt.reservationservice.domain.entity.Reservation;
 import jakarta.validation.constraints.NotNull;
 
 public record ReserveRequest(
@@ -12,9 +10,9 @@ public record ReserveRequest(
         @NotNull Long userId
 ) {
 
-    public Reservation toEntity() {
+    public Reservation toEntity() { // 예약 엔티티를 만들기 위해서는 concertId, concertDateId, userId가 필요하다.
         return Reservation.builder()
-                .concertId(concertId)
+                .concertId(concertId)  //
                 .concertDateId(concertDateId)
                 .seatNum(seatNum)
                 .userId(userId)

@@ -1,7 +1,7 @@
 package com.mgnt.reservationservice.domain.service;
 
-import com.mgnt.ticketing.domain.reservation.entity.Reservation;
-import com.mgnt.ticketing.domain.reservation.repository.ReservationRepository;
+import com.mgnt.reservationservice.domain.entity.Reservation;
+import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

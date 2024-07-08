@@ -1,13 +1,13 @@
 package com.mgnt.reservationservice.controller.dto.response;
 
 import com.mgnt.reservationservice.domain.entity.Reservation;
+import com.mgnt.reservationservice.domain.service.dto.ConcertDateDTO;
+import com.mgnt.reservationservice.domain.service.dto.ConcertInfoDTO;
+import com.mgnt.reservationservice.domain.service.dto.SeatDTO;
 import lombok.Builder;
 
 import java.time.ZonedDateTime;
 
-/**
- * 예약 응답 DTO
- */
 public record ReserveResponse(
         Long reservationId,
         Reservation.Status status,
@@ -18,17 +18,17 @@ public record ReserveResponse(
     public ReserveResponse {
     }
 
-    public static ReserveResponse from(Reservation reservation, Concert concert, ConcertDate concertDate, Seat seat) {
+    public static ReserveResponse from(Reservation reservation, ConcertInfoDTO concert, ConcertDateDTO concertDate, SeatDTO seat) {
         return ReserveResponse.builder()
                 .reservationId(reservation.getReservationId())
                 .status(reservation.getStatus())
                 .concertInfo(ConcertInfo.builder()
-                        .concertId(concert.getConcertId())
-                        .concertDateId(concertDate.getConcertDateId())
-                        .name(concert.getName())
-                        .date(concertDate.getConcertDate())
-                        .seatId(seat.getSeatId())
-                        .seatNum(seat.getSeatNum())
+                        .concertId(concert.concertId())
+                        .concertDateId(concertDate.concertDateId())
+                        .name(concert.name())
+                        .date(concertDate.concertDate())
+                        .seatId(seat.seatId())
+                        .seatNum(seat.seatNum())
                         .build())
                 .build();
     }

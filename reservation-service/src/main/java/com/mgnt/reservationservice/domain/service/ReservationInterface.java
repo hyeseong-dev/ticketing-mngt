@@ -1,9 +1,8 @@
 package com.mgnt.reservationservice.domain.service;
 
-import com.mgnt.ticketing.controller.reservation.dto.request.CancelRequest;
-import com.mgnt.ticketing.controller.reservation.dto.request.ReserveRequest;
-import com.mgnt.ticketing.controller.reservation.dto.response.ReserveResponse;
-import com.mgnt.ticketing.controller.user.dto.response.GetMyReservationsResponse;
+import com.mgnt.reservationservice.controller.dto.request.CancelRequest;
+import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
+import com.mgnt.reservationservice.controller.dto.response.ReserveResponse;
 
 import java.util.List;
 
@@ -15,26 +14,27 @@ import java.util.List;
 public interface ReservationInterface {
 
     /**
-     * 콘서트 좌석 예매
-     *
-     * @param request 예매 요청 DTO
-     * @return 예매 응답 DTO
-     */
-    ReserveResponse reserve(ReserveRequest request);
-
-    /**
-     * 좌석 예매 취소
-     *
-     * @param reservationId 예약 ID
-     * @param request       예매 취소 요청 DTO
-     */
-    void cancel(Long reservationId, CancelRequest request);
-
-    /**
      * 나의 예약 내역 조회
      *
      * @param userId 사용자 ID
      * @return 예약 내역 응답 DTO 리스트
      */
-    List<GetMyReservationsResponse> getMyReservations(Long userId);
+    List<ReserveResponse> getMyReservations(Long userId, String userRole);
+
+//    /**
+//     * 콘서트 좌석 예매
+//     *
+//     * @param request 예매 요청 DTO
+//     * @return 예매 응답 DTO
+//     */
+//    ReserveResponse reserve(ReserveRequest request);
+//
+//    /**
+//     * 좌석 예매 취소
+//     *
+//     * @param reservationId 예약 ID
+//     * @param request       예매 취소 요청 DTO
+//     */
+//    void cancel(Long reservationId, CancelRequest request);
+
 }
