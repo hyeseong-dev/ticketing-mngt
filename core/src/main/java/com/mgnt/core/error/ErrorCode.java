@@ -53,7 +53,8 @@ public enum ErrorCode implements MessageCommInterface {
     // Concert
     DATE_IS_NULL(400, "C018", "예정된 콘서트 날짜가 없습니다."),
     CONCERT_NOT_FOUND(400, "C019", "해당 콘서트가 없습니다"),
-    SEAT_NOT_FOUND(404, "C020", "좌석이 없습니다"),
+    CONCERT_DATE_NOT_FOUND(400, "C020", "해당 콘서트 일정이 없습니다"),
+    SEAT_NOT_FOUND(404, "C021", "좌석이 없습니다"),
 
     // Reservation
     RESERVATION_ALREADY_RESERVED(400, "R001", "이미 예약되었습니다"),

@@ -17,8 +17,7 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
     @Override
     List<Concert> findAll();
 
-    @Override
-    Optional<Concert> findById(Long concertId);
+    Optional<Concert> findByConcertId(Long concertId);
 
     @Query("SELECT cd FROM ConcertDate cd WHERE cd.concertDateId = :concertDateId")
     Optional<ConcertDate> findConcertDateById(@Param("concertDateId") Long concertDateId);

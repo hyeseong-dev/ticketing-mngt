@@ -4,7 +4,10 @@ import com.mgnt.concertservice.domain.entity.Concert;
 import com.mgnt.concertservice.domain.entity.ConcertDate;
 import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.concertservice.domain.repository.ConcertRepository;
+import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.Level;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,14 +23,18 @@ public class ConcertReader {
     private final ConcertRepository concertRepository;
 
     public Concert findConcert(Long concertId) {
-        return concertRepository.findById(concertId);
+        return concertRepository.findByConcertId(concertId).orElseThrow(() ->
+                new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.INFO));
+
     }
 
     public ConcertDate findConcertDate(Long concertDateId) {
-        return concertRepository.findConcertDateById(concertDateId);
+        return concertRepository.findConcertDateById(concertDateId).orElseThrow(() ->
+                new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.INFO));
     }
 
     public Seat findSeat(Long concertDateId, int seatNum) {
-        return concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum);
+        return concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum).orElseThrow(() ->
+                new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.INFO));
     }
 }

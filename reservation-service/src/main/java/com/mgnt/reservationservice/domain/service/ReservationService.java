@@ -8,6 +8,8 @@ import com.mgnt.reservationservice.controller.dto.response.ReserveResponse;
 import com.mgnt.reservationservice.domain.ReservationExceptionEnum;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import com.mgnt.reservationservice.domain.event.ReservationOccupiedEvent;
+import com.mgnt.reservationservice.domain.event.SeatStatus;
+import com.mgnt.reservationservice.domain.event.dto.request.UpdateSeatStatusRequest;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import com.mgnt.reservationservice.domain.service.dto.GetReservationAndPaymentResDto;
 import jakarta.annotation.PostConstruct;
@@ -15,6 +17,7 @@ import jakarta.persistence.PessimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
     private final ReservationMonitor reservationMonitor;
+    private final KafkaTemplate kafkaTemplate;
     //private final ConcertReader concertReader; // TODO 콘서트 서비스에 트랜잭션 요청
     //private final ConcertService concertService; // TODO 콘서트 서비스에 트랜잭션 요청
     // private final PaymentService paymentService; // TODO 결제 서비스에 트랜잭션 요청
@@ -51,31 +55,38 @@ public class ReservationService {
                 별도의 토픽을 만들어서 통신해야 하는 것인가? 아니면 단일 토픽에서의 하위 세분화된 무엇으로 통신해야 하는 것인가?
                 잘 모르겠다.
              */
-            // concertService.patchSeatStatus(request.concertDateId(), request.seatNum(), Seat.Status.DISABLE);
+            // 좌석 상태 업데이트 요청
+            UpdateSeatStatusRequest updateSeatStatusRequest = new UpdateSeatStatusRequest(
+                    request.concertDateId(),
+                    request.seatNum(),
+                    SeatStatus.DISABLED
+            );
+            kafkaTemplate.send("seat-status-update", updateSeatStatusRequest);
 
-            // validator 현재 서비스(reservation-service)에서 직접적으로 reservation_db와 JPA혹은 queryDSL로 통신하여 처리 가능.
+
+//            // validator 현재 서비스(reservation-service)에서 직접적으로 reservation_db와 JPA혹은 queryDSL로 통신하여 처리 가능.
             reservationValidator.checkReserved(request.concertDateId(), request.seatNum());
-
-            // 현재 서비스(reservation-service)에서 직접적으로 reservation_db를 통해 객체 저장
-            Reservation reservation = reservationRepository.save(request.toEntity());
-
-            /*
-            TODO :
-                아래 기존 모놀리식에서 사용했던 코드는 추후 conert-service와 통신하여 콘서트의 좌석 정보 상태를 업데이트 해야 한다.
-                별도의 토픽을 만들어서 통신해야 하는 것인가? 아니면 단일 토픽에서의 하위 세분화된 무엇으로 통신해야 하는 것인가?
-                잘 모르겠다.
-             */
-            Concert concert = concertReader.findConcert(reservation.getConcertId());
-            ConcertDate concertDate = concertReader.findConcertDate(reservation.getConcertDateId());
-            Seat seat = concertReader.findSeat(reservation.getConcertDateId(), reservation.getSeatNum());
-
-            /*
-                TODO: 예약 임시 점유 event 발행
-
-             */
-            eventPublisher.publishEvent(new ReservationOccupiedEvent(this, reservation.getReservationId()));
-
-            return ReserveResponse.from(reservation, concert, concertDate, seat);
+//
+//            // 현재 서비스(reservation-service)에서 직접적으로 reservation_db를 통해 객체 저장
+//            Reservation reservation = reservationRepository.save(request.toEntity());
+//
+//            /*
+//            TODO :
+//                아래 기존 모놀리식에서 사용했던 코드는 추후 conert-service와 통신하여 콘서트의 좌석 정보 상태를 업데이트 해야 한다.
+//                별도의 토픽을 만들어서 통신해야 하는 것인가? 아니면 단일 토픽에서의 하위 세분화된 무엇으로 통신해야 하는 것인가?
+//                잘 모르겠다.
+//             */
+//            Concert concert = concertReader.findConcert(reservation.getConcertId());
+//            ConcertDate concertDate = concertReader.findConcertDate(reservation.getConcertDateId());
+//            Seat seat = concertReader.findSeat(reservation.getConcertDateId(), reservation.getSeatNum());
+//
+//            /*
+//                TODO: 예약 임시 점유 event 발행
+//
+//             */
+//            eventPublisher.publishEvent(new ReservationOccupiedEvent(this, reservation.getReservationId()));
+//
+//            return ReserveResponse.from(reservation, concert, concertDate, seat);
 
         } catch (ObjectOptimisticLockingFailureException e) {
             // 락 획득 실패 시

@@ -1,19 +1,9 @@
 debug: false
-management:
-  endpoint:
-    show-details: always
-  endpoints:
-    web:
-    exposure:
-      include: health
-
 
 logging:
   level:
-    org:
-      springframework:
-        security: DEBUG
-    com.mgnt.ticketing: DEBUG
+    org.springframework.security: INFO
+    com.mgnt.userservice: INFO
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 server:
@@ -32,8 +22,8 @@ spring:
     name: user-service
   config:
     import:
-      - classpath:/application-local.yml
       - classpath:/application-prod.yml
+      - classpath:/application-local.yml
       - classpath:/application-secrets.yml
 
   datasource:
@@ -78,12 +68,4 @@ spring:
         format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
         show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
-        default_batch_fetch_size: 500 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
-
-eureka:
-  client:
-    register-with-eureka: true #유레카 서버에 등록할지 여부
-    fetch-registry: true #유레카 서버의 정보를 가져올지 여부
-    service-url.defaultZone: http://admin:1234@localhost:8761/eureka #유레카 서버 주소
-  instance:
-    prefer-ip-address: true
+        default_batch_fetch_size: 50 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.

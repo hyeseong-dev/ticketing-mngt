@@ -110,7 +110,7 @@ public class AuthService {
     @Transactional
     public void logout(String userId, String accessToken) {
         Users user = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.INFO));
 
         redisUtils.deleteKey("RT:" + user.getEmail());
         Long remainingTimeInMillis = jwtUtil.getRemainingTime(accessToken);
@@ -126,7 +126,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN, null, Level.INFO);
         }
         Users user = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.INFO));
 
         String newAccessToken = jwtUtil.createAccessToken(user.getEmail(), user.getUserId(), user.getRole().name());
         String newRefreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getUserId(), user.getRole().name());

@@ -23,6 +23,7 @@ public class Place extends BaseDateTimeEntity {
     @Id
     @Setter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "place_id")
     private Long placeId;
 
     @Column(nullable = false)

@@ -1,4 +1,9 @@
 
+
+**/application-local.yml
+**/application-prod.yml
+**/application-secrets.yml
+
 # queryDSL 제외
 **/generated/**
 
