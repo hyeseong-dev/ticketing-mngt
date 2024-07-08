@@ -46,28 +46,28 @@ public class UserController {
         return ResponseEntity.ok("Message sent to Kafka topic 'hello'");
     }
 
-//    /**
-//     * 사용자 충전
-//     *
-//     * @param userId  사용자 ID
-//     * @param request 충전 요청 정보
-//     */
-//    @PatchMapping("/{userId}/charge")
-//    public ApiResult<GetBalanceResponse> charge(@PathVariable(value = "userId") @NotNull Long userId,
-//                                                @RequestBody @Valid ChargeRequest request) {
-//        return ApiResult.success(service.charge(userId, request));
-//    }
-//
-//    /**
-//     * 사용자 잔액 조회
-//     *
-//     * @param userId 사용자 ID
-//     * @return 잔액 정보
-//     */
-//    @GetMapping("/{userId}/balance")
-//    public ApiResult<GetBalanceResponse> getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
-//        return ApiResult.success(service.getBalance(userId));
-//    }
+    /**
+     * 사용자 충전
+     *
+     * @param userId  사용자 ID
+     * @param request 충전 요청 정보
+     */
+    @PatchMapping("/{userId}/charge")
+    public ApiResult<GetBalanceResponse> charge(@PathVariable(value = "userId") @NotNull Long userId,
+                                                @RequestBody @Valid ChargeRequest request) {
+        return ApiResult.success(service.charge(userId, request));
+    }
+
+    /**
+     * 사용자 잔액 조회
+     *
+     * @param userId 사용자 ID
+     * @return 잔액 정보
+     */
+    @GetMapping("/{userId}/balance")
+    public ApiResult<GetBalanceResponse> getBalance(@PathVariable(value = "userId") @NotNull Long userId) {
+        return ApiResult.success(service.getBalance(userId));
+    }
 
     /**
      * 사용자 상세 정보 조회
@@ -128,16 +128,17 @@ public class UserController {
 //        return userInterface.modifyUserPassword(id, requestBody);
 //    }
 //
-//    /**
-//     * 사용자 삭제
-//     *
-//     * @param id 사용자 ID
-//     * @return 삭제된 사용자 정보 응답
-//     */
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<DeleteUserResponse> deleteUser(
-//            @PathVariable Long id
-//    ) {
-//        return userInterface.deleteUser(id);
-//    }
+
+    /**
+     * 사용자 삭제
+     *
+     * @return 삭제된 사용자 정보 응답
+     * @requestHeader userId 사용자 ID
+     */
+    @DeleteMapping("/{id}")
+    public ApiResult<Void> deleteUser(
+            @RequestHeader("User-Id") @NotNull Long userId
+    ) {
+        return ApiResult.success(service.deleteUser(userId));
+    }
 }

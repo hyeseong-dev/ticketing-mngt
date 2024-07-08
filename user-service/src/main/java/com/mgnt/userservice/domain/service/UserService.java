@@ -1,6 +1,7 @@
 package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.exception.CustomException;
 import com.mgnt.userservice.controller.dto.request.*;
 import com.mgnt.userservice.controller.dto.response.*;
 import com.mgnt.userservice.domain.entity.Users;
@@ -9,6 +10,7 @@ import com.mgnt.userservice.domain.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.Level;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,30 +35,31 @@ public class UserService {
     private final UserJpaRepository userJpaRepository;
     private final PasswordEncoder passwordEncoder;
 
-//    /**
-//     * 사용자 잔액 조회
-//     *
-//     * @param userId 사용자 ID
-//     * @return 잔액 응답 DTO
-//     */
-//    public GetBalanceResponse getBalance(Long userId) {
-//        Users user = userRepository.findById(userId);
-//        return GetBalanceResponse.from(user);
-//    }
-//
-//    /**
-//     * 사용자 잔액 충전
-//     *
-//     * @param userId  사용자 ID
-//     * @param request 잔액 충전 요청 DTO
-//     * @return 잔액 응답 DTO
-//     */
-//    @Override
-//    public GetBalanceResponse charge(Long userId, ChargeRequest request) {
-//        Users user = userRepository.findById(userId);
-//        user = user.chargeBalance(BigDecimal.valueOf(request.amount()));
-//        return GetBalanceResponse.from(user);
-//    }
+    /**
+     * 사용자 잔액 조회
+     *
+     * @param userId 사용자 ID
+     * @return 잔액 응답 DTO
+     */
+    public GetBalanceResponse getBalance(Long userId) {
+        Users user = userRepository.findById(userId).orElseThrow(() ->
+                new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.WARN));
+        return GetBalanceResponse.from(user);
+    }
+
+    /**
+     * 사용자 잔액 충전
+     *
+     * @param userId  사용자 ID
+     * @param request 잔액 충전 요청 DTO
+     * @return 잔액 응답 DTO
+     */
+    public GetBalanceResponse charge(Long userId, ChargeRequest request) {
+        Users user = userRepository.findById(userId).orElseThrow(() ->
+                new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.WARN));
+        user = user.chargeBalance(BigDecimal.valueOf(request.amount()));
+        return GetBalanceResponse.from(user);
+    }
 //
 //    /**
 //     * 사용자 비밀번호 수정
@@ -178,24 +181,24 @@ public class UserService {
 //        return UpdateAllUserResponse.success(UserResponseDto.from(user));
 //    }
 //
-//    /**
-//     * 사용자 삭제
-//     *
-//     * @param id 사용자 ID
-//     * @return 사용자 삭제 응답 엔티티
-//     */
-//    @Override
-//    @Transactional
-//    public ResponseEntity<DeleteUserResponse> deleteUser(Long id) {
-//        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
-//                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-//
-//        user.setEmailVerified(false);
-//        user.updateDeletedAt(ZonedDateTime.now());
-//
-//        userJpaRepository.save(user);
-//        return DeleteUserResponse.success(UserResponseDto.from(user));
-//    }
+
+    /**
+     * 사용자 삭제
+     *
+     * @param id 사용자 ID
+     * @return 사용자 삭제 응답 엔티티
+     */
+    @Transactional
+    public Void deleteUser(Long id) {
+        Users user = userJpaRepository.findByUserIdAndDeletedAtNull(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        user.setEmailVerified(false);
+        user.updateDeletedAt(ZonedDateTime.now());
+
+        userJpaRepository.save(user);
+        return null;
+    }
 //
 //    /**
 //     * 이메일로 사용자 조회
