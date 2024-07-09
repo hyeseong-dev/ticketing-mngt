@@ -12,6 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 
 
+@Entity
 @Table(name = "reservation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
