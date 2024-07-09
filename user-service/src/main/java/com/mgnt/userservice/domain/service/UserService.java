@@ -34,7 +34,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserJpaRepository userJpaRepository;
     private final PasswordEncoder passwordEncoder;
-    private final KafkaTemplate<String, Event> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @KafkaListener(topics = "user-balance-check-requests")
     public void handleUserBalanceCheckRequest(UserBalanceCheckRequestEvent event) {

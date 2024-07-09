@@ -25,7 +25,6 @@ spring:
       - classpath:/application-prod.yml
       - classpath:/application-local.yml
       - classpath:/application-secrets.yml
-
   datasource:
     hikari:
       maximum-pool-size: 10
@@ -33,7 +32,6 @@ spring:
       idle-timeout: 600000  # 10분 (밀리초 단위)
       connection-timeout: 30000 # 30초 (밀리초 단위)
       validation-timeout: 5000  # 5초 (밀리초 단위)
-
     url: jdbc:mysql://localhost:3307/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
     username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
     password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
@@ -46,12 +44,9 @@ spring:
   web:
     resources:
       add-mappings: false
-
   mail:
     host: smtp.gmail.com
     port: 587
-
-
     properties:
       mail:
         smtp:
@@ -69,3 +64,7 @@ spring:
         show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 50 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+  kafka:
+    bootstrap-servers: localhost:9092,kafka:9092
+    consumer:
+      group-id: user-service-group

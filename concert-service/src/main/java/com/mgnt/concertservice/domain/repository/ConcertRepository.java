@@ -22,12 +22,12 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
     @Query("SELECT cd FROM ConcertDate cd WHERE cd.concertDateId = :concertDateId")
     Optional<ConcertDate> findConcertDateById(@Param("concertDateId") Long concertDateId);
 
-    @Query("SELECT s FROM Seat s WHERE s.concertDate.concertDateId = :concertDateId AND s.status = :status")
+    @Query("SELECT s FROM Seat s WHERE s.concertDateId = :concertDateId AND s.status = :status")
     List<Seat> findSeatsByConcertDateIdAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") Seat.Status status);
 
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Seat s WHERE s.concertDate.concertDateId = :concertDateId AND s.status = :status")
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Seat s WHERE s.concertDateId = :concertDateId AND s.status = :status")
     boolean existsByConcertDateAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") Seat.Status status);
 
-    @Query("SELECT s FROM Seat s WHERE s.concertDate.concertDateId = :concertDateId AND s.seatNum = :seatNum")
-    Optional<Seat> findSeatByConcertDateIdAndSeatNum(@Param("concertDateId") Long concertDateId, @Param("seatNum") int seatNum);
+    @Query("SELECT s FROM Seat s WHERE s.concertDateId = :concertDateId AND s.seatNum = :seatId")
+    Optional<Seat> findSeatByConcertDateIdAndSeatNum(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId);
 }

@@ -22,7 +22,7 @@ public class Seat extends BaseDateTimeEntity {
 
 
     @Column(name = "concert_date_id", nullable = false)
-    private Long concertDate;
+    private Long concertDateId;
 
     @Column(nullable = false)
     private int seatNum;
@@ -35,9 +35,9 @@ public class Seat extends BaseDateTimeEntity {
     private Status status = Status.AVAILABLE;
 
     @Builder
-    public Seat(Long seatId, Long concertDate, int seatNum, BigDecimal price, Status status) {
+    public Seat(Long seatId, Long concertDateId, int seatNum, BigDecimal price, Status status) {
         this.seatId = seatId;
-        this.concertDate = concertDate;
+        this.concertDateId = concertDateId;
         this.seatNum = seatNum;
         this.price = price;
         this.status = status;

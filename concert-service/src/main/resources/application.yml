@@ -33,32 +33,25 @@ spring:
       idle-timeout: 600000  # 10분 (밀리초 단위)
       connection-timeout: 30000 # 30초 (밀리초 단위)
       validation-timeout: 5000  # 5초 (밀리초 단위)
-
     url: jdbc:mysql://localhost:3309/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
     username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
     password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
-
   jackson:
     time-zone: Asia/Seoul
     property-naming-strategy: SNAKE_CASE
-
   web:
     resources:
       add-mappings: false
-
   mail:
     host: smtp.gmail.com
     port: 587
-
-
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-
   jpa:
     defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
     hibernate.ddl-auto: none
@@ -69,3 +62,7 @@ spring:
         show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 50 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+  kafka:
+    bootstrap-servers: localhost:9092,kafka:9092
+    consumer:
+      group-id: concert-service-group

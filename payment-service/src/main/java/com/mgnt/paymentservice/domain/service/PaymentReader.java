@@ -24,6 +24,6 @@ public class PaymentReader {
      * @return 결제 정보
      */
     public Payment findPaymentByReservation(Long reservationId) {
-        return paymentRepository.findByReservation(reservationId);
+        return paymentRepository.findByReservationId(reservationId);
     }
 }

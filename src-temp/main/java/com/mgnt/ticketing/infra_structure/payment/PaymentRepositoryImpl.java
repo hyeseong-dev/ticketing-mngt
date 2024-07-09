@@ -8,27 +8,27 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class PaymentRepositoryImpl implements PaymentRepository {
+public class PaymentRepositoryImpl {
 
-    private final PaymentJpaRepository paymentJpaRepository;
+    private final PaymentRepository paymentRepository;
 
-    public PaymentRepositoryImpl(PaymentJpaRepository paymentJpaRepository) {
-        this.paymentJpaRepository = paymentJpaRepository;
+    public PaymentRepositoryImpl(PaymentRepository paymentRepository) {
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
     public Payment save(Payment payment) {
-        return paymentJpaRepository.save(payment);
+        return paymentRepository.save(payment);
     }
 
     @Override
     public Payment findByReservation(Reservation reservation) {
-        return paymentJpaRepository.findByReservation(reservation);
+        return paymentRepository.findByReservation(reservation);
     }
 
     @Override
     public Payment findById(Long paymentId) {
-        return paymentJpaRepository.findById(paymentId).orElseThrow(EntityNotFoundException::new);
+        return paymentRepository.findById(paymentId).orElseThrow(EntityNotFoundException::new);
     }
-    
+
 }

@@ -33,8 +33,8 @@ public class ConcertReader {
                 new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.INFO));
     }
 
-    public Seat findSeat(Long concertDateId, int seatNum) {
-        return concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum).orElseThrow(() ->
+    public Seat findSeat(Long concertDateId, Long seatId) {
+        return concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatId).orElseThrow(() ->
                 new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.INFO));
     }
 }

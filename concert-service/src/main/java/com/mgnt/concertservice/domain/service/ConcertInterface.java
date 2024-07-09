@@ -23,6 +23,6 @@ public interface ConcertInterface {
     GetSeatsResponse getAvailableSeats(Long concertDateId);
 
     /* 좌석 상태 변경 */
-    void patchSeatStatus(Long concertDateId, int seatNum, Seat.Status status);
+    void patchSeatStatus(Long concertDateId, Long seatId, Seat.Status status);
 }
 

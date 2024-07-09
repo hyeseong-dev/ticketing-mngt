@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final KafkaTemplate<String, Event> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PaymentValidator paymentValidator;
 //    private final UserReader userReader;
 //    private final ReservationReader reservationReader;

@@ -1,18 +1,6 @@
-debug: false
-management:
-  endpoint:
-    show-details: always
-  endpoints:
-    web:
-    exposure:
-      include: health
-
-
 logging:
   level:
-    org:
-      springframework:
-        security: DEBUG
+    org.springframework.security: INFO
     com.mgnt.ticketing: DEBUG
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
@@ -32,8 +20,8 @@ spring:
     name: payment-service
   config:
     import:
-      - classpath:/application-local.yml
       - classpath:/application-prod.yml
+      - classpath:/application-local.yml
       - classpath:/application-secrets.yml
 
   jackson:
@@ -54,3 +42,7 @@ spring:
         show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 500 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+  kafka:
+    bootstrap-servers: localhost:9092,kafka:9092
+    consumer:
+      group-id: payment-service-group

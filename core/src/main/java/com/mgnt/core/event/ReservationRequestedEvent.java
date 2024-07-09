@@ -4,6 +4,6 @@ public record ReservationRequestedEvent(
         Long concertDateId,
         Long userId,
         Long concertId,
-        int seatNum
+        Long seatId
 ) implements Event {
 }

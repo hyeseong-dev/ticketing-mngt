@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 
 
-@Entity
+@Table(name = "reservation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicUpdate
@@ -20,29 +20,30 @@ public class Reservation extends BaseDateTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "reservation_id")
     private Long reservationId;
 
-    @Column(nullable = false)
-    private Long userId;
-
-    @Column(nullable = false)
-    private Long concertId;
-
-    @Column(nullable = false)
-    private Long concertDateId;
-
-    @Column(nullable = false)
-    private int seatNum;
-
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "concert_id", nullable = false)
+    private Long concertId;
+
+    @Column(name = "concert_date_id", nullable = false)
+    private Long concertDateId;
+
+    @Column(name = "seat_id", nullable = false)
+    private Long seatId;
+
+    @Column(name = "price", nullable = false)
     private BigDecimal price;
 
+    @Column(name = "reserved_at", nullable = false)
     private ZonedDateTime reservedAt;
-
 
     public enum Status {
         ING,
@@ -55,12 +56,11 @@ public class Reservation extends BaseDateTimeEntity {
     }
 
     @Builder
-    public Reservation(Long userId, Long concertId, Long concertDateId, int seatNum,
-                       Status status, ZonedDateTime reservedAt, BigDecimal price) {
+    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, Status status, ZonedDateTime reservedAt, BigDecimal price) {
         this.userId = userId;
         this.concertId = concertId;
         this.concertDateId = concertDateId;
-        this.seatNum = seatNum;
+        this.seatId = seatId;
         this.status = status;
         this.reservedAt = reservedAt;
         this.price = price;

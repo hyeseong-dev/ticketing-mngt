@@ -19,16 +19,16 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
 
 
     @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
-    @Query("select s from Seat s where s.concertDate.concertDateId = :concertDateId and s.seatNum = :seatNum")
-    Seat findSeatByConcertDate_concertDateIdAndSeatNum(@Param("concertDateId") Long concertDateId, @Param("seatNum") int seatNum);
+    @Query("select s from Seat s where s.concertDateId = :concertDateId and s.seatId = :seatId")
+    Seat findSeatByConcertDate_concertDateIdAndSeatId(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId);
 
     @Modifying
-    @Query("UPDATE Seat s SET s.status = :status WHERE s.concertDate.concertDateId = :concertDateId AND s.seatNum = :seatNum AND s.status = com.mgnt.concertservice.domain.entity.Seat.Status.AVAILABLE")
+    @Query("UPDATE Seat s SET s.status = :status WHERE s.concertDateId = :concertDateId AND s.seatId = :seatId AND s.status = Seat.Status.AVAILABLE")
     @Transactional
-    int updateSeatStatus(@Param("concertDateId") Long concertDateId, @Param("seatNum") int seatNum, @Param("status") Seat.Status status);
+    int updateSeatStatus(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId, @Param("status") Seat.Status status);
 
-    default boolean checkAndUpdateSeatStatus(Long concertDateId, int seatNum, Seat.Status status) {
-        return updateSeatStatus(concertDateId, seatNum, status) > 0;
+    default boolean checkAndUpdateSeatStatus(Long concertDateId, Long seatId, Seat.Status status) {
+        return updateSeatStatus(concertDateId, seatId, status) > 0;
     }
 }
 

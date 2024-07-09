@@ -28,15 +28,15 @@ public class ConcertDate extends BaseDateTimeEntity {
     private ZonedDateTime concertDate;
 
     @Column(name = "concert_id", nullable = false)
-    private Concert concert;
+    private Long concertId;
 
-    @OneToMany(mappedBy = "concertDate", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "concertDateId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Seat> seats = new ArrayList<>();
 
     @Builder
-    public ConcertDate(Long concertDateId, Concert concert, ZonedDateTime concertDate) {
+    public ConcertDate(Long concertDateId, Long concertId, ZonedDateTime concertDate) {
         this.concertDateId = concertDateId;
-        this.concert = concert;
+        this.concertId = concertId;
         this.concertDate = concertDate;
     }
 

@@ -37,18 +37,18 @@ public class ConcertService implements ConcertInterface {
 
     @KafkaListener(topics = "reservation-requests")
     public void handleReservationRequest(ReservationRequestedEvent event) {
-        Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatNum(event.concertDateId(), event.seatNum());
+        Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatId(event.concertDateId(), event.seatId());
         concertValidator.checkSeatAvailability(seat);
 
         boolean isAvailable = seatRepository.checkAndUpdateSeatStatus(
-                event.concertDateId(), event.seatNum(), Seat.Status.DISABLE);
+                event.concertDateId(), event.seatId(), Seat.Status.DISABLE);
 
         SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
                 null, // 이 시점까지 예약처리 요청이 마무리 된 것이 아니므로
                 event.userId(),
                 event.concertId(),
                 event.concertDateId(),
-                event.seatNum(),
+                event.seatId(),
                 isAvailable
         );
         kafkaTemplate.send("seat-status-updates", updateEvent);
@@ -56,8 +56,8 @@ public class ConcertService implements ConcertInterface {
 
     @KafkaListener(topics = "reservation-failed")
     public void handleReservationFailed(ReservationFailedEvent event) {
-        seatRepository.checkAndUpdateSeatStatus(event.concertDateId(), event.seatNum(), Seat.Status.AVAILABLE);
-        log.info("Seat status reverted to AVAILABLE: concertDateId={}, seatNum={}", event.concertDateId(), event.seatNum());
+        seatRepository.checkAndUpdateSeatStatus(event.concertDateId(), event.seatId(), Seat.Status.AVAILABLE);
+        log.info("Seat status reverted to AVAILABLE: concertDateId={}, seatId={}", event.concertDateId(), event.seatId());
     }
 
     @KafkaListener(topics = "concert-info-requests")
@@ -66,7 +66,7 @@ public class ConcertService implements ConcertInterface {
         ConcertDate concertDate = concert.getConcertDateList().stream()
                 .filter(cd -> cd.getConcertDateId().equals(event.concertDateId()))
                 .findFirst().orElseThrow();
-        Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatNum(event.concertDateId(), event.seatNum());
+        Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatId(event.concertDateId(), event.seatId());
 
         ConcertInfoResponseEvent responseEvent = new ConcertInfoResponseEvent(
                 event.reservationId(),
@@ -112,8 +112,8 @@ public class ConcertService implements ConcertInterface {
     }
 
     @Override
-    public void patchSeatStatus(Long concertDateId, int seatNum, Seat.Status status) {
-        Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatNum)
+    public void patchSeatStatus(Long concertDateId, Long seatId, Seat.Status status) {
+        Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
         seat.patchStatus(status);
     }

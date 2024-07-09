@@ -28,34 +28,21 @@ public class Concert extends BaseDateTimeEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @OneToOne
     @JoinColumn(name = "place_id")
-    private Place place;
+    private Long placeId;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "concert_id")
+    @JoinColumn(name = "concert_date_id")
     private List<ConcertDate> concertDateList = new ArrayList<>();
 
-    /**
-     * 생성자
-     *
-     * @param name            콘서트 이름
-     * @param place           장소 객체
-     * @param concertDateList 콘서트 날짜 목록
-     */
+
     @Builder
-    public Concert(String name, Place place, List<ConcertDate> concertDateList) {
+    public Concert(String name, Long placeId, List<ConcertDate> concertDateList) {
         this.name = name;
-        this.place = place;
+        this.placeId = placeId;
         this.concertDateList = concertDateList == null ? new ArrayList<>() : concertDateList;
     }
 
-    /**
-     * 객체 동등성 비교
-     *
-     * @param o 비교할 객체
-     * @return 객체가 같으면 true, 그렇지 않으면 false
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -64,11 +51,6 @@ public class Concert extends BaseDateTimeEntity {
         return Objects.equals(concertId, concert.concertId);
     }
 
-    /**
-     * 객체 해시 코드 반환
-     *
-     * @return 해시 코드
-     */
     @Override
     public int hashCode() {
         return Objects.hash(concertId);

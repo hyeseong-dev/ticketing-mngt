@@ -5,7 +5,7 @@ public record SeatStatusUpdatedEvent(
         Long userId,
         Long concertId,
         Long concertDateId,
-        int seatNum,
+        Long seatId,
         boolean isAvailable
 ) implements Event {
 }

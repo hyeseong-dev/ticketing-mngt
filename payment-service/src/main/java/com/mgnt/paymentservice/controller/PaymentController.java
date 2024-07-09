@@ -20,15 +20,15 @@ public class PaymentController {
     private final PaymentService service;
 
 
-    @PostMapping("")
-    public ApiResult<CreateResponse> create(@RequestBody @Valid CreateRequest request) {
-        return ApiResult.success(service.create(request));
-    }
-
-
-    @PostMapping("/{paymentId}")
-    public ApiResult<PayResponse> pay(@PathVariable(value = "paymentId") @NotNull Long paymentId,
-                                      @RequestBody @Valid PayRequest request) {
-        return ApiResult.success(service.pay(paymentId, request));
-    }
+//    @PostMapping("")
+//    public ApiResult<CreateResponse> create(@RequestBody @Valid CreateRequest request) {
+//        return ApiResult.success(service.create(request));
+//    }
+//
+//
+//    @PostMapping("/{paymentId}")
+//    public ApiResult<PayResponse> pay(@PathVariable(value = "paymentId") @NotNull Long paymentId,
+//                                      @RequestBody @Valid PayRequest request) {
+//        return ApiResult.success(service.pay(paymentId, request));
+//    }
 }

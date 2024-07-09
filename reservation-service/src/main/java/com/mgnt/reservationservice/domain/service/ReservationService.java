@@ -24,7 +24,7 @@ import java.time.ZonedDateTime;
 @RequiredArgsConstructor
 public class ReservationService {
 
-    private final KafkaTemplate<String, Event> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
 
@@ -36,7 +36,7 @@ public class ReservationService {
                 request.concertDateId(),
                 request.userId(),
                 request.concertId(),
-                request.seatNum()
+                request.seatId()
         );
         kafkaTemplate.send("reservation-requests", event);
         log.info("Reservation request initiated for user: {}, concert: {}", request.userId(), request.concertId());
@@ -49,7 +49,7 @@ public class ReservationService {
                     .userId(event.userId())
                     .concertId(event.concertId())
                     .concertDateId(event.concertDateId())
-                    .seatNum(event.seatNum())
+                    .seatId(event.seatId())
                     .status(Reservation.Status.ING)
                     .price(FIXED_PRICE)
                     .reservedAt(ZonedDateTime.now())
@@ -60,7 +60,7 @@ public class ReservationService {
             kafkaTemplate.send("reservations-created", createdEvent);
         } else {
             kafkaTemplate.send("reservation-failed",
-                    new ReservationFailedEvent(event.reservationId(), event.concertId(), event.seatNum()));
+                    new ReservationFailedEvent(event.reservationId(), event.concertId(), event.seatId()));
         }
     }
 
@@ -78,7 +78,7 @@ public class ReservationService {
             reservation.updateStatus(Reservation.Status.CANCEL);
             reservationRepository.save(reservation);
             kafkaTemplate.send("reservation-failed",
-                    new ReservationFailedEvent(event.reservationId(), reservation.getConcertDateId(), reservation.getSeatNum()));
+                    new ReservationFailedEvent(event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId()));
             log.warn("Reservation failed due to payment failure: {}", reservation.getReservationId());
         }
     }
