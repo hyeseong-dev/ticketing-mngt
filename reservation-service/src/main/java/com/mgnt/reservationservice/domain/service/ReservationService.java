@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Level;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -43,6 +44,7 @@ public class ReservationService {
     }
 
     @KafkaListener(topics = "seat-status-updates")
+    @Transactional
     public void handleSeatStatusUpdate(SeatStatusUpdatedEvent event) {
         if (event.isAvailable()) {
             Reservation reservation = reservationRepository.save(Reservation.builder()

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.apache.logging.log4j.Level;
 
@@ -36,6 +37,7 @@ public class ConcertService implements ConcertInterface {
     private final SeatRepository seatRepository;
 
     @KafkaListener(topics = "reservation-requests")
+    @Transactional
     public void handleReservationRequest(ReservationRequestedEvent event) {
         Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatId(event.concertDateId(), event.seatId());
         concertValidator.checkSeatAvailability(seat);

@@ -37,6 +37,7 @@ public class UserService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @KafkaListener(topics = "user-balance-check-requests")
+    @Transactional
     public void handleUserBalanceCheckRequest(UserBalanceCheckRequestEvent event) {
         Users user = userRepository.findById(event.userId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));

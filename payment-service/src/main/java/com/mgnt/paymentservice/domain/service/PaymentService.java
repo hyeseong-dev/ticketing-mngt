@@ -31,6 +31,7 @@ public class PaymentService {
 //    private final ReservationReader reservationReader;
 
     @KafkaListener(topics = "payments-created")
+    @Transactional
     public void handlePaymentCreated(PaymentCreatedEvent event) {
         processPayment(event.paymentId());
     }
@@ -83,6 +84,7 @@ public class PaymentService {
     }
 
     @KafkaListener(topics = "reservations-created")
+    @Transactional
     public void handleReservationCreated(ReservationCreatedEvent event) {
         Payment payment = Payment.builder()
                 .reservationId(event.reservationId())
