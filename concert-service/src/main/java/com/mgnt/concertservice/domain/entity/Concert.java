@@ -47,7 +47,7 @@ public class Concert extends BaseDateTimeEntity {
     public Concert(String name, Place place, List<ConcertDate> concertDateList) {
         this.name = name;
         this.place = place;
-        this.concertDateList = concertDateList;
+        this.concertDateList = concertDateList == null ? new ArrayList<>() : concertDateList;
     }
 
     /**

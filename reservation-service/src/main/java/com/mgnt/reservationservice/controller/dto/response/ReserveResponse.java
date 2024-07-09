@@ -1,9 +1,9 @@
 package com.mgnt.reservationservice.controller.dto.response;
 
+import com.mgnt.core.event.SeatDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import com.mgnt.reservationservice.domain.service.dto.ConcertDateDTO;
 import com.mgnt.reservationservice.domain.service.dto.ConcertInfoDTO;
-import com.mgnt.reservationservice.domain.service.dto.SeatDTO;
 import lombok.Builder;
 
 import java.time.ZonedDateTime;

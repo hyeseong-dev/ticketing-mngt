@@ -66,9 +66,12 @@ public enum ErrorCode implements MessageCommInterface {
     INSUFFICIENT_BALANCE(400, "P001", "잔액이 부족합니다."),
     NOT_AVAILABLE_PAY(400, "P002", "결제 가능한 상태가 아닙니다."),
     NOT_AVAILABLE_CANCEL(400, "P003", "취소 가능한 상태가 아닙니다."),
-
+    PAYMENT_NOT_FOUND(404, "P004", "Payment not found."),
     // Seat
     SEAT_NOT_AVAILABLE(400, "S001", "사용 가능한 좌석이 아닙니다.");
+
+    // Payment
+
 
     private final int status;
     private final String code;

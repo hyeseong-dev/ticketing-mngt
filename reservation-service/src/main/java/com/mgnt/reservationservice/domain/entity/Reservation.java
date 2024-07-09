@@ -11,11 +11,7 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
-/**
- * 예약 엔티티 클래스
- * <p>
- * 이 클래스는 예약 정보를 나타내며, 데이터베이스의 'reservation' 테이블과 매핑됩니다.
- */
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -58,9 +54,6 @@ public class Reservation extends BaseDateTimeEntity {
         this.status = Status.RESERVED;
     }
 
-//    @OneToOne(mappedBy = "reservation", cascade = CascadeType.REMOVE)
-//    private Payment payment;
-
     @Builder
     public Reservation(Long userId, Long concertId, Long concertDateId, int seatNum,
                        Status status, ZonedDateTime reservedAt, BigDecimal price) {
@@ -77,12 +70,6 @@ public class Reservation extends BaseDateTimeEntity {
         this.status = status;
     }
 
-    /**
-     * 객체 동등성 비교
-     *
-     * @param o 비교할 객체
-     * @return 객체가 같으면 true, 그렇지 않으면 false
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -91,11 +78,6 @@ public class Reservation extends BaseDateTimeEntity {
         return Objects.equals(reservationId, that.reservationId);
     }
 
-    /**
-     * 객체 해시 코드 반환
-     *
-     * @return 해시 코드
-     */
     @Override
     public int hashCode() {
         return Objects.hash(reservationId);

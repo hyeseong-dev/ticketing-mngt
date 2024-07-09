@@ -26,8 +26,11 @@ public class Payment extends BaseDateTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
-    
-    @JoinColumn(name = "reservation_id")
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(name = "reservation_id")
     private Long reservationId;
 
     @Column(nullable = false)
@@ -43,25 +46,25 @@ public class Payment extends BaseDateTimeEntity {
         READY,
         COMPLETE,
         CANCEL,
+        FAILED,
         REFUND
     }
 
     @Builder
-    public Payment(Long paymentId, Long reservationId, Status status, BigDecimal price) {
+    public Payment(Long paymentId, Long userId, Long reservationId, Status status, BigDecimal price) {
         this.paymentId = paymentId;
+        this.userId = userId;
         this.reservationId = reservationId;
         this.status = status;
         this.price = price;
     }
 
 
-    public Payment updateStatus(Status status) {
-        if (status == null) {
-            return null;
-        }
-
+    public void setStatus(Status status) {
         this.status = status;
-        return this;
+        if (status == Status.COMPLETE) {
+            this.paidAt = ZonedDateTime.now();
+        }
     }
 
     public Payment toPaid() {
@@ -70,12 +73,6 @@ public class Payment extends BaseDateTimeEntity {
         return this;
     }
 
-    /**
-     * 객체 동등성 비교
-     *
-     * @param o 비교할 객체
-     * @return 객체가 같으면 true, 그렇지 않으면 false
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,12 +80,7 @@ public class Payment extends BaseDateTimeEntity {
         Payment that = (Payment) o;
         return Objects.equals(paymentId, that.paymentId);
     }
-
-    /**
-     * 객체 해시 코드 반환
-     *
-     * @return 해시 코드
-     */
+    
     @Override
     public int hashCode() {
         return Objects.hash(paymentId);

@@ -27,8 +27,7 @@ public class ConcertDate extends BaseDateTimeEntity {
     @Column(nullable = false)
     private ZonedDateTime concertDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "concert_id", nullable = false)
+    @Column(name = "concert_id", nullable = false)
     private Concert concert;
 
     @OneToMany(mappedBy = "concertDate", cascade = CascadeType.ALL, orphanRemoval = true)

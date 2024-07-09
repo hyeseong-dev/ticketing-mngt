@@ -1,8 +1,7 @@
 package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.error.ErrorCode;
-import com.mgnt.core.event.Event;
-import com.mgnt.core.event.PaymentCompletedEvent;
+import com.mgnt.core.event.*;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.userservice.controller.dto.request.*;
 import com.mgnt.userservice.controller.dto.response.*;
@@ -12,6 +11,7 @@ import com.mgnt.userservice.domain.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,11 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * 사용자 서비스 클래스
- * <p>
- * 이 클래스는 사용자와 관련된 비즈니스 로직을 처리합니다.
- */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -39,6 +35,39 @@ public class UserService {
     private final UserJpaRepository userJpaRepository;
     private final PasswordEncoder passwordEncoder;
     private final KafkaTemplate<String, Event> kafkaTemplate;
+
+    @KafkaListener(topics = "user-balance-check-requests")
+    public void handleUserBalanceCheckRequest(UserBalanceCheckRequestEvent event) {
+        Users user = userRepository.findById(event.userId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+
+        kafkaTemplate.send("user-balance-check-responses", new UserBalanceCheckResponseEvent(
+                event.userId(),
+                event.paymentId(),
+                user.getBalance()
+        ));
+    }
+
+    @KafkaListener(topics = "user-balance-update-requests")
+    public void handleUserBalanceUpdateRequest(UserBalanceUpdateEvent event) {
+        Users user = userRepository.findById(event.userId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
+
+        boolean success = false;
+        try {
+            user.useBalance(event.amount());
+            userRepository.save(user);
+            success = true;
+        } catch (Exception e) {
+            log.error("Failed to update user balance", e);
+        }
+
+        kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
+                event.userId(),
+                event.paymentId(),
+                success
+        ));
+    }
 
     @KafkaListener(topics = "payment-completed")
     public void handlePaymentCompleted(PaymentCompletedEvent event) {

@@ -15,6 +15,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 
 @Slf4j
@@ -26,11 +28,14 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
 
+    // 모든 좌석에 대한 고정 가격
+    private static final BigDecimal FIXED_PRICE = new BigDecimal("50000.00");
+
     public void initiateReservation(ReserveRequest request) {
         ReservationRequestedEvent event = new ReservationRequestedEvent(
+                request.concertDateId(),
                 request.userId(),
                 request.concertId(),
-                request.concertDateId(),
                 request.seatNum()
         );
         kafkaTemplate.send("reservation-requests", event);
@@ -46,12 +51,12 @@ public class ReservationService {
                     .concertDateId(event.concertDateId())
                     .seatNum(event.seatNum())
                     .status(Reservation.Status.ING)
+                    .price(FIXED_PRICE)
                     .reservedAt(ZonedDateTime.now())
                     .build());
 
             ReservationCreatedEvent createdEvent = new ReservationCreatedEvent(
-                    reservation.getReservationId(), reservation.getUserId(), reservation.getConcertId(),
-                    reservation.getConcertDateId(), reservation.getSeatNum());
+                    reservation.getReservationId(), reservation.getUserId(), reservation.getPrice());
             kafkaTemplate.send("reservations-created", createdEvent);
         } else {
             kafkaTemplate.send("reservation-failed",

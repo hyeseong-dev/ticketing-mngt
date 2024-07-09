@@ -5,8 +5,7 @@ import java.math.BigDecimal;
 public record PaymentCompletedEvent(
         Long paymentId,
         Long reservationId,
-        Long concertDateId,
-        int seatNum,
-        boolean isSuccess,
-        BigDecimal usedBalance) implements Event {
+        Long userId,
+        BigDecimal price
+) implements Event {
 }

@@ -13,6 +13,7 @@ import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
 import com.mgnt.core.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,8 @@ import org.apache.logging.log4j.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 콘서트 서비스 클래스
- * <p>
- * 이 클래스는 콘서트와 관련된 비즈니스 로직을 처리합니다.
- */
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ConcertService implements ConcertInterface {
@@ -43,10 +41,10 @@ public class ConcertService implements ConcertInterface {
         concertValidator.checkSeatAvailability(seat);
 
         boolean isAvailable = seatRepository.checkAndUpdateSeatStatus(
-                event.concertDateId(), event.seatNum(), seat.getStatus());
+                event.concertDateId(), event.seatNum(), Seat.Status.DISABLE);
 
         SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
-                event.reservationId(),
+                null, // 이 시점까지 예약처리 요청이 마무리 된 것이 아니므로
                 event.userId(),
                 event.concertId(),
                 event.concertDateId(),
@@ -58,9 +56,8 @@ public class ConcertService implements ConcertInterface {
 
     @KafkaListener(topics = "reservation-failed")
     public void handleReservationFailed(ReservationFailedEvent event) {
-        Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatNum(event.concertDateId(), event.seatNum());
-        seat.patchStatus(Seat.Status.AVAILABLE);
-        seatRepository.save(seat);
+        seatRepository.checkAndUpdateSeatStatus(event.concertDateId(), event.seatNum(), Seat.Status.AVAILABLE);
+        log.info("Seat status reverted to AVAILABLE: concertDateId={}, seatNum={}", event.concertDateId(), event.seatNum());
     }
 
     @KafkaListener(topics = "concert-info-requests")
