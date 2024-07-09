@@ -22,6 +22,7 @@ public class ConcertDate extends BaseDateTimeEntity {
     @Id
     @Setter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "concert_date_id")
     private Long concertDateId;
 
     @Column(nullable = false)

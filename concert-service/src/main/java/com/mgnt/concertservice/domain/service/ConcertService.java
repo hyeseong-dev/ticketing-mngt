@@ -1,7 +1,7 @@
 package com.mgnt.concertservice.domain.service;
 
 import com.mgnt.concertservice.controller.response.GetConcertResponse;
-import com.mgnt.concertservice.controller.response.GetConcertsResponse;
+//import com.mgnt.concertservice.controller.response.GetConcertsResponse;
 import com.mgnt.concertservice.controller.response.GetDatesResponse;
 import com.mgnt.concertservice.controller.response.GetSeatsResponse;
 import com.mgnt.concertservice.domain.entity.Concert;
@@ -32,7 +32,7 @@ public class ConcertService implements ConcertInterface {
     private final ConcertRepository concertRepository;
     private final ConcertValidator concertValidator;
     private final TransactionTemplate transactionTemplate;
-    private final KafkaTemplate<String, Event> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final SeatRepository seatRepository;
 
     @KafkaListener(topics = "reservation-requests")
@@ -77,20 +77,19 @@ public class ConcertService implements ConcertInterface {
         kafkaTemplate.send("concert-info-responses", responseEvent);
     }
 
-    @Override
-    public List<GetConcertsResponse> getConcerts() {
-        List<Concert> concerts = concertRepository.findAll();
-        return concerts.stream().map(GetConcertsResponse::from).toList();
-    }
+//    @Override
+//    public List<GetConcertsResponse> getConcerts() {
+//        List<Concert> concerts = concertRepository.findAll();
+//        return concerts.stream().map(GetConcertsResponse::from).toList();
+//    }
 
-    @Override
-    public GetConcertResponse getConcert(Long concertId) {
-        Concert concert = concertRepository.findById(concertId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.WARN));
-        return GetConcertResponse.from(concert);
-    }
+//    @Override
+//    public GetConcertResponse getConcert(Long concertId) {
+//        Concert concert = concertRepository.findById(concertId)
+//                .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.WARN));
+//        return GetConcertResponse.from(concert);
+//    }
 
-    @Override
     public GetDatesResponse getDates(Long concertId) {
         Concert concert = concertRepository.findById(concertId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.WARN));
@@ -98,20 +97,18 @@ public class ConcertService implements ConcertInterface {
 
         List<GetDatesResponse.DateInfo> dateInfos = new ArrayList<>();
         concert.getConcertDateList().forEach(concertDate -> {
-            boolean available = concertRepository.existsByConcertDateAndStatus(concertDate.getConcertDateId(), Seat.Status.AVAILABLE);
+            boolean available = seatRepository.existsByConcertDateIdAndStatus(concertDate.getConcertDateId(), Seat.Status.AVAILABLE);
             dateInfos.add(GetDatesResponse.DateInfo.from(concertDate, available));
         });
 
         return new GetDatesResponse(dateInfos);
     }
 
-    @Override
     public GetSeatsResponse getAvailableSeats(Long concertDateId) {
         List<Seat> availableSeats = concertRepository.findSeatsByConcertDateIdAndStatus(concertDateId, Seat.Status.AVAILABLE);
         return GetSeatsResponse.from(availableSeats);
     }
 
-    @Override
     public void patchSeatStatus(Long concertDateId, Long seatId, Seat.Status status) {
         Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));

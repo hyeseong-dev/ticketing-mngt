@@ -21,15 +21,15 @@ public record GetConcertResponse(
     public GetConcertResponse {
     }
 
-    public static GetConcertResponse from(Concert concert) {
-        return GetConcertResponse.builder()
-                .concertId(concert.getConcertId())
-                .name(concert.getName())
-                .place(concert.getPlace() != null ? concert.getPlace().getName() : "-")
-                .period(getConcertDateRange(concert.getConcertDateList()))
-                .createdAt(concert.getCreatedAt())
-                .build();
-    }
+//    public static GetConcertResponse from(Concert concert) {
+//        return GetConcertResponse.builder()
+//                .concertId(concert.getConcertId())
+//                .name(concert.getName())
+//                .place(concert.getPlace() != null ? concert.getPlace().getName() : "-")
+//                .period(getConcertDateRange(concert.getConcertDateList()))
+//                .createdAt(concert.getCreatedAt())
+//                .build();
+//    }
 
     private static String getConcertDateRange(List<ConcertDate> concertDateList) {
         // 콘서트 날짜 범위 문자열로 반환
