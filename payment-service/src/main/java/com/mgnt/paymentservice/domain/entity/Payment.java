@@ -26,8 +26,7 @@ public class Payment extends BaseDateTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
-
-    @OneToOne()
+    
     @JoinColumn(name = "reservation_id")
     private Long reservationId;
 
@@ -47,13 +46,6 @@ public class Payment extends BaseDateTimeEntity {
         REFUND
     }
 
-    /**
-     * 생성자
-     *
-     * @param reservation 예약 정보
-     * @param status      결제 상태
-     * @param price       결제 금액
-     */
     @Builder
     public Payment(Long paymentId, Long reservationId, Status status, BigDecimal price) {
         this.paymentId = paymentId;
@@ -62,12 +54,7 @@ public class Payment extends BaseDateTimeEntity {
         this.price = price;
     }
 
-    /**
-     * 결제 상태 업데이트
-     *
-     * @param status 결제 상태
-     * @return 업데이트된 Payment 객체
-     */
+
     public Payment updateStatus(Status status) {
         if (status == null) {
             return null;
