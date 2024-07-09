@@ -6,6 +6,8 @@ public record PaymentCompletedEvent(
         Long paymentId,
         Long reservationId,
         Long userId,
-        BigDecimal price
+        BigDecimal price,
+        boolean isSuccess,
+        BigDecimal usedBalance
 ) implements Event {
 }

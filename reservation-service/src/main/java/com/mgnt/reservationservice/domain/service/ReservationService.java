@@ -78,7 +78,7 @@ public class ReservationService {
             reservation.updateStatus(Reservation.Status.CANCEL);
             reservationRepository.save(reservation);
             kafkaTemplate.send("reservation-failed",
-                    new ReservationFailedEvent(event.reservationId(), event.concertDateId(), event.seatNum()));
+                    new ReservationFailedEvent(event.reservationId(), reservation.getConcertDateId(), reservation.getSeatNum()));
             log.warn("Reservation failed due to payment failure: {}", reservation.getReservationId());
         }
     }

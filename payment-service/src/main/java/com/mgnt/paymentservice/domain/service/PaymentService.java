@@ -35,7 +35,8 @@ public class PaymentService {
         processPayment(event.paymentId());
     }
 
-    private void processPayment(Long paymentId) {
+    @Transactional
+    void processPayment(Long paymentId) {
         Payment payment = paymentRepository.findByPaymentId(paymentId).orElseThrow(
                 () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
 
@@ -49,7 +50,7 @@ public class PaymentService {
                 () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
 
         if (event.balance().compareTo(payment.getPrice()) >= 0) {
-            // 잔액이 부족한 경우
+            // 잔액이 충분한 경우
             kafkaTemplate.send("user-balance-update-requests",
                     new UserBalanceUpdateEvent(payment.getUserId(), event.paymentId(), payment.getPrice()));
         } else {
@@ -75,7 +76,8 @@ public class PaymentService {
                 payment.getReservationId(),
                 payment.getUserId(),
                 payment.getPrice(),
-                success
+                success,
+                payment.getPrice()
         ));
 
     }
