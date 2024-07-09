@@ -9,7 +9,6 @@ spring:
 eureka:
   server:
     enable-self-preservation: false
-    eviction-interval-timer-in-ms: 5000
   client:
     register-with-eureka: false
     fetch-registry: false

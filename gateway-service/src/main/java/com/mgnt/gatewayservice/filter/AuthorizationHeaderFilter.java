@@ -5,7 +5,6 @@ import com.mgnt.gatewayservice.exception.ErrorCode;
 import com.mgnt.gatewayservice.exception.Response;
 import com.mgnt.gatewayservice.utils.JwtUtil;
 import com.mgnt.gatewayservice.utils.RefreshTokenResponseDto;
-import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -136,11 +135,16 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         Long userId = jwtUtil.getClaimFromToken(token, "id", Long.class);
         String userRole = jwtUtil.getClaimFromToken(token, "role", String.class);
 
-        ServerHttpRequest request = exchange.getRequest().mutate()
-                .header("User-Id", userId.toString())
-                .header("User-Role", userRole)
+        ServerHttpRequest originalRequest = exchange.getRequest();
+        HttpHeaders headers = new HttpHeaders();
+        headers.putAll(originalRequest.getHeaders()); // 기존 헤더 복사
+        headers.set("User-Id", userId.toString()); // 새로운 헤더 추가
+        headers.set("User-Role", userRole); // 새로운 헤더 추가
+
+        ServerHttpRequest newRequest = originalRequest.mutate()
+                .headers(httpHeaders -> httpHeaders.addAll(headers))
                 .build();
-        exchange.mutate().request(request).build();
+        exchange.mutate().request(newRequest).build();
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, ErrorCode errorCode) {
