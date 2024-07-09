@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -41,6 +42,9 @@ public class Reservation extends BaseDateTimeEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(nullable = false)
+    private BigDecimal price;
+
     private ZonedDateTime reservedAt;
 
 
@@ -58,13 +62,15 @@ public class Reservation extends BaseDateTimeEntity {
 //    private Payment payment;
 
     @Builder
-    public Reservation(Long userId, Long concertId, Long concertDateId, int seatNum, Status status, ZonedDateTime reservedAt) {
+    public Reservation(Long userId, Long concertId, Long concertDateId, int seatNum,
+                       Status status, ZonedDateTime reservedAt, BigDecimal price) {
         this.userId = userId;
         this.concertId = concertId;
         this.concertDateId = concertDateId;
         this.seatNum = seatNum;
         this.status = status;
         this.reservedAt = reservedAt;
+        this.price = price;
     }
 
     public void updateStatus(Status status) {
