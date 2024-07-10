@@ -3,6 +3,7 @@ package com.mgnt.concertservice.domain.repository;
 import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.event.ReservationConfirmedEvent;
+import io.lettuce.core.ScanIterator;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -26,6 +27,8 @@ public interface SeatRepository extends JpaRepository<Seat, Long>, SeatRepositor
     Optional<Seat> findSeatByConcertDate_concertDateIdAndSeatId(
             @Param("concertDateId") Long concertDateId,
             @Param("seatId") Long seatId);
+
+    List<Seat> findAllByConcertDateId(Long concertDateId);
 
 //    @Modifying
 //    @Query("UPDATE Seat s SET s.status = :status WHERE s.concertDateId = :concertDateId AND s.seatId = :seatId")

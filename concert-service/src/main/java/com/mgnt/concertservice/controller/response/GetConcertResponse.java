@@ -11,8 +11,8 @@ import java.util.List;
 
 public record GetConcertResponse(
         Long concertId,
-        String name,
-        String place,
+        String concertName,
+        String placeName,
         String period,
         String price,
         ZonedDateTime createdAt
@@ -21,18 +21,19 @@ public record GetConcertResponse(
     public GetConcertResponse {
     }
 
-//    public static GetConcertResponse from(Concert concert) {
-//        return GetConcertResponse.builder()
-//                .concertId(concert.getConcertId())
-//                .name(concert.getName())
-//                .place(concert.getPlace() != null ? concert.getPlace().getName() : "-")
-//                .period(getConcertDateRange(concert.getConcertDateList()))
-//                .createdAt(concert.getCreatedAt())
-//                .build();
-//    }
+    public static GetConcertResponse of(Concert concert, String placeName, String price) {
+        return GetConcertResponse.builder()
+                .concertId(concert.getConcertId())
+                .concertName(concert.getName())
+                .placeName(placeName)
+                .period(getConcertDateRange(concert.getConcertDateList()))
+                .price(price)
+                .createdAt(concert.getCreatedAt())
+                .build();
+    }
 
     private static String getConcertDateRange(List<ConcertDate> concertDateList) {
-        // 콘서트 날짜 범위 문자열로 반환
+        // 기존 로직 유지
         if (concertDateList.isEmpty()) {
             return "";
         }
@@ -47,5 +48,4 @@ public record GetConcertResponse(
 
         return earliestDate + "~" + latestDate;
     }
-
 }

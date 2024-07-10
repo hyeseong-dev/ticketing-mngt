@@ -1,7 +1,7 @@
 package com.mgnt.concertservice.controller;
 
 import com.mgnt.concertservice.controller.response.GetConcertResponse;
-//import com.mgnt.concertservice.controller.response.GetConcertsResponse;
+import com.mgnt.concertservice.controller.response.GetConcertsResponse;
 import com.mgnt.concertservice.controller.response.GetDatesResponse;
 import com.mgnt.concertservice.controller.response.GetSeatsResponse;
 import com.mgnt.concertservice.domain.service.ConcertService;
@@ -22,15 +22,15 @@ public class ConcertController {
 
     private final ConcertService service;
 
-//    @GetMapping("")
-//    public ApiResult<List<GetConcertsResponse>> getConcerts() {
-//        return ApiResult.success(service.getConcerts());
-//    }
+    @GetMapping("")
+    public ApiResult<List<GetConcertsResponse>> getConcerts() {
+        return ApiResult.success(service.getConcerts());
+    }
 
-//    @GetMapping("/{concertId}")
-//    public ApiResult<GetConcertResponse> getConcert(@PathVariable(value = "concertId") @NotNull Long concertId) {
-//        return ApiResult.success(service.getConcert(concertId));
-//    }
+    @GetMapping("/{concertId}")
+    public ApiResult<GetConcertResponse> getConcert(@PathVariable(value = "concertId") @NotNull Long concertId) {
+        return ApiResult.success(service.getConcert(concertId));
+    }
 
     @GetMapping("/{concertId}/dates")
     public ApiResult<GetDatesResponse> getDates(@PathVariable(value = "concertId") @NotNull Long concertId) {

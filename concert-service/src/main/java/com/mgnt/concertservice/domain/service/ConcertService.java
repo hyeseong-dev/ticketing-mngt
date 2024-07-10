@@ -2,12 +2,15 @@ package com.mgnt.concertservice.domain.service;
 
 import com.mgnt.concertservice.controller.response.GetConcertResponse;
 //import com.mgnt.concertservice.controller.response.GetConcertsResponse;
+import com.mgnt.concertservice.controller.response.GetConcertsResponse;
 import com.mgnt.concertservice.controller.response.GetDatesResponse;
 import com.mgnt.concertservice.controller.response.GetSeatsResponse;
 import com.mgnt.concertservice.domain.entity.Concert;
 import com.mgnt.concertservice.domain.entity.ConcertDate;
+import com.mgnt.concertservice.domain.entity.Place;
 import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.concertservice.domain.repository.ConcertRepository;
+import com.mgnt.concertservice.domain.repository.PlaceRepository;
 import com.mgnt.concertservice.domain.repository.SeatRepository;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
@@ -24,8 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.apache.logging.log4j.Level;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -35,6 +41,7 @@ public class ConcertService implements ConcertInterface {
 
     private final ConcertRepository concertRepository;
     private final ConcertValidator concertValidator;
+    private final PlaceRepository placeRepository;
     private final TransactionTemplate transactionTemplate;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final SeatRepository seatRepository;
@@ -144,18 +151,52 @@ public class ConcertService implements ConcertInterface {
         seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), event.status());
     }
 
-//    @Override
-//    public List<GetConcertsResponse> getConcerts() {
-//        List<Concert> concerts = concertRepository.findAll();
-//        return concerts.stream().map(GetConcertsResponse::from).toList();
-//    }
+    @Override
+    public List<GetConcertsResponse> getConcerts() {
+        return concertRepository.findAll().stream()
+                .map(concert -> {
+                    String placeName = getPlaceName(concert.getPlaceId());
+                    return GetConcertsResponse.of(concert, placeName);
+                })
+                .collect(Collectors.toList());
+    }
 
-//    @Override
-//    public GetConcertResponse getConcert(Long concertId) {
-//        Concert concert = concertRepository.findById(concertId)
-//                .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.WARN));
-//        return GetConcertResponse.from(concert);
-//    }
+    public GetConcertResponse getConcert(Long concertId) {
+        Concert concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new EntityNotFoundException("Concert not found"));
+        String placeName = getPlaceName(concert.getPlaceId());
+        String price = calculatePrice(concert);
+        return GetConcertResponse.of(concert, placeName, price);
+    }
+
+    private String getPlaceName(Long placeId) {
+        return placeRepository.findByPlaceId(placeId)
+                .map(Place::getName)
+                .orElse("-");
+    }
+
+
+    private String calculatePrice(Concert concert) {
+        // 콘서트의 모든 날짜에 대한 좌석 가격의 범위를 계산합니다.
+        List<BigDecimal> prices = concert.getConcertDateList().stream()
+                .flatMap(date -> seatRepository.findAllByConcertDateId(date.getConcertDateId()).stream())
+                .map(Seat::getPrice)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (prices.isEmpty()) {
+            return "Price not set";
+        } else if (prices.size() == 1) {
+            return formatPrice(prices.get(0));
+        } else {
+            return formatPrice(prices.get(0)) + " - " + formatPrice(prices.get(prices.size() - 1));
+        }
+    }
+
+    private String formatPrice(BigDecimal price) {
+        return String.format("%,d원", price.setScale(0, RoundingMode.HALF_UP).intValue());
+    }
 
     public GetDatesResponse getDates(Long concertId) {
         Concert concert = concertRepository.findById(concertId)
@@ -177,7 +218,7 @@ public class ConcertService implements ConcertInterface {
     }
 
     public void patchSeatStatus(Long concertDateId, Long seatId, SeatStatus status) {
-        Seat seat = concertRepository.findSeatByConcertDateIdAndSeatNum(concertDateId, seatId)
+        Seat seat = concertRepository.findSeatByConcertDateIdAndSeatId(concertDateId, seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
         seat.patchStatus(status);
     }

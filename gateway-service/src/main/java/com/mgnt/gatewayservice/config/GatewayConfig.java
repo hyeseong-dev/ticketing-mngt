@@ -47,7 +47,6 @@ public class GatewayConfig {
                         .uri("lb://PAYMENT-SERVICE"))
                 .route("concert-service", r -> r
                         .path("/api/concerts/**")
-                        .filters(f -> f.filter(requestBodyFilter.apply(new RequestBodyFilter.Config()), Ordered.HIGHEST_PRECEDENCE))
                         .uri("lb://CONCERT-SERVICE"))
                 .build();
     }
