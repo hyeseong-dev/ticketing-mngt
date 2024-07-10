@@ -1,9 +1,8 @@
 package com.mgnt.gatewayservice.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -27,14 +27,12 @@ public class JwtUtil {
     }
 
     public Claims getAllClaimsFromToken(String token) {
-        System.out.println("현재 시간: " + new Date());
         Claims claims = Jwts
                 .parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        System.out.println("토큰 만료 시간: " + claims.getExpiration());
         return claims;
     }
 
@@ -47,13 +45,19 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token) {
-        System.out.println(isTokenExpired(token));
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.warn("Invalid JWT signature: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
         } catch (Exception e) {
-            return false;
+            log.warn("Invalidate Token: {}", e.getMessage());
         }
+        return false;
     }
 
     public String getSubjectFromToken(String token) {

@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.reservationservice.domain.entity.Reservation;
@@ -20,7 +21,7 @@ public class ReservationValidator {
         Reservation reservation = reservationRepository.findOneByConcertDateIdAndSeatId(concertDateId, seatId);
         // 이미 선택된 좌석
         if (reservation != null
-                && List.of(Reservation.Status.RESERVED, Reservation.Status.ING).contains(reservation.getStatus())) {
+                && List.of(ReservationStatus.RESERVED, ReservationStatus.ING).contains(reservation.getStatus())) {
             throw new CustomException(ErrorCode.RESERVATION_ALREADY_RESERVED, null, Level.INFO);
         }
     }

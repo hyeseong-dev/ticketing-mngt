@@ -54,19 +54,29 @@ public class UserService {
     public void handleUserBalanceUpdateRequest(UserBalanceUpdateEvent event) {
         try {
             Users user = userRepository.findById(event.userId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
 
-            boolean isSuccess = false;
-            if (user.getBalance().compareTo(event.price()) >= 0) {
-                user.useBalance(event.price());
-                userRepository.save(user);
-                isSuccess = true;
+            if (user.getBalance().compareTo(event.price()) < 0) {
+                throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE, null, Level.WARN);
             }
+
+            BigDecimal newBalance = user.getBalance().subtract(event.price());
+            user.updateBalance(newBalance);
+            userRepository.save(user);
 
             kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
                     event.userId(),
                     event.paymentId(),
-                    isSuccess
+                    true
+
+            ));
+        } catch (CustomException e) {
+            log.warn("Failed to update user balance: {}", e.getMessage());
+            kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
+                    event.userId(),
+                    event.paymentId(),
+                    false
+
             ));
         } catch (Exception e) {
             log.error("Error handling user balance update request", e);
@@ -74,22 +84,8 @@ public class UserService {
                     event.userId(),
                     event.paymentId(),
                     false
+
             ));
-        }
-    }
-
-    @KafkaListener(topics = "payment-completed")
-    @Transactional
-    public void handlePaymentCompleted(PaymentCompletedEvent event) {
-        if (event.isSuccess()) {
-            Users user = userRepository.findById(event.userId()).orElseThrow();
-            BigDecimal newBalance = user.getBalance().subtract(event.usedBalance());
-            user.updateBalance(newBalance);
-            userRepository.save(user);
-
-            UserBalanceUpdatedEvent balanceEvent = new UserBalanceUpdatedEvent(
-                    user.getUserId(), newBalance);
-            kafkaTemplate.send("user-balance-updated", balanceEvent);
         }
     }
 

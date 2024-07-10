@@ -75,12 +75,27 @@ public class PaymentService {
     public void handleUserBalanceUpdateResponse(UserBalanceUpdateResponseEvent event) {
         try {
             Payment payment = paymentRepository.findById(event.paymentId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.WARN));
-            completePayment(payment, event.success());
+                    .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
+
+            if (event.success()) {
+                payment.setStatus(PaymentStatus.COMPLETE);
+            } else {
+                payment.setStatus(PaymentStatus.FAILED);
+            }
+            payment = paymentRepository.save(payment);
+
+            kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
+                    payment.getPaymentId(),
+                    payment.getReservationId(),
+                    payment.getUserId(),
+                    payment.getPrice(),
+                    event.success(),
+                    event.success() ? payment.getPrice() : BigDecimal.ZERO
+            ));
         } catch (Exception e) {
             log.error("Error handling user balance update response", e);
-            kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
-                    event.paymentId(), null, null, null, false, BigDecimal.ZERO));
+            // 여기서 보상 트랜잭션을 시작할 수 있습니다.
+            // 예를 들어, 결제를 취소하고 예약을 취소하는 이벤트를 발행할 수 있습니다.
         }
     }
 

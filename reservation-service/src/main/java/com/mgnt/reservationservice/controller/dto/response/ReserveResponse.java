@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.controller.dto.response;
 
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.event.SeatDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import com.mgnt.reservationservice.domain.service.dto.ConcertDateDTO;
@@ -10,7 +11,7 @@ import java.time.ZonedDateTime;
 
 public record ReserveResponse(
         Long reservationId,
-        Reservation.Status status,
+        ReservationStatus status,
         ConcertInfo concertInfo
 ) {
 
