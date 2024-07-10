@@ -39,7 +39,7 @@ public class ReservationService {
                 request.seatId()
         );
         kafkaTemplate.send("reservation-requests", event);
-        log.info("Reservation request initiated for user: {}, concert: {}", request.userId(), request.concertId());
+        log.info("Reservation request initiated for user: {}, concert: {}", userId, request.concertId());
     }
 
     @KafkaListener(topics = "seat-status-updates")
