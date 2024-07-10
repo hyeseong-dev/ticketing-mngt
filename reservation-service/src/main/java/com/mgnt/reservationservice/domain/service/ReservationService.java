@@ -31,13 +31,10 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
 
-    // 모든 좌석에 대한 고정 가격
-    private static final BigDecimal FIXED_PRICE = new BigDecimal("50000.00");
-
-    public void initiateReservation(ReserveRequest request) {
+    public void initiateReservation(Long userId, ReserveRequest request) {
         ReservationRequestedEvent event = new ReservationRequestedEvent(
                 request.concertDateId(),
-                request.userId(),
+                userId,
                 request.concertId(),
                 request.seatId()
         );
@@ -97,9 +94,9 @@ public class ReservationService {
         }
     }
 
-    public Reservation addReservation(ReserveRequest request) {
-        return reservationRepository.save(request.toEntity());
-    }
+//    public Reservation addReservation(ReserveRequest request) {
+//        return reservationRepository.save(request.toEntity());
+//    }
 
 //    @Override
 //    @Transactional

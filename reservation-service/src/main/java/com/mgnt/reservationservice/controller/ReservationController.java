@@ -45,11 +45,10 @@ public class ReservationController {
     @PostMapping()
     public ApiResult<String> reserve(
             @RequestHeader("User-Id") Long userId,
-            @RequestHeader("User-Role") @NotNull String userRole,
             @RequestBody ReserveRequest request
     ) {
 
-        service.initiateReservation(request);
+        service.initiateReservation(userId, request);
         return ApiResult.success("예약이 접수되었으며 진행중입니다.");
     }
 
