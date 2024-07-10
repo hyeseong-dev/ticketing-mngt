@@ -13,7 +13,9 @@ import com.mgnt.paymentservice.controller.dto.response.CreateResponse;
 import com.mgnt.paymentservice.domain.entity.Payment;
 import com.mgnt.paymentservice.domain.repository.PaymentRepository;
 import com.mgnt.paymentservice.domain.service.dto.CancelPaymentResultResDto;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -48,26 +51,37 @@ public class PaymentService {
 //    }
 
     @KafkaListener(topics = "user-balance-check-responses")
+    @Transactional
     public void handleUserBalanceCheckResponse(UserBalanceCheckResponseEvent event) {
-        Payment payment = paymentRepository.findByPaymentId(event.paymentId()).orElseThrow(
-                () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
+        try {
+            Payment payment = paymentRepository.findById(event.paymentId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.WARN));
 
-        if (event.balance().compareTo(payment.getPrice()) >= 0) {
-            // 잔액이 충분한 경우
-            kafkaTemplate.send("user-balance-update-requests",
-                    new UserBalanceUpdateEvent(payment.getUserId(), event.paymentId(), payment.getPrice()));
-        } else {
-            // 잔액이 부족한 경우
-            completePayment(payment, false);
+            if (event.balance().compareTo(payment.getPrice()) >= 0) {
+                kafkaTemplate.send("user-balance-update-requests", new UserBalanceUpdateEvent(
+                        payment.getUserId(), event.paymentId(), payment.getPrice()));
+            } else {
+                completePayment(payment, false);
+            }
+        } catch (Exception e) {
+            log.error("Error handling user balance check response", e);
+            kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
+                    event.paymentId(), null, event.userId(), null, false, BigDecimal.ZERO));
         }
     }
 
     @KafkaListener(topics = "user-balance-update-responses")
     @Transactional
     public void handleUserBalanceUpdateResponse(UserBalanceUpdateResponseEvent event) {
-        Payment payment = paymentRepository.findByPaymentId(event.paymentId()).orElseThrow(
-                () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
-        completePayment(payment, event.success());
+        try {
+            Payment payment = paymentRepository.findById(event.paymentId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.WARN));
+            completePayment(payment, event.success());
+        } catch (Exception e) {
+            log.error("Error handling user balance update response", e);
+            kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
+                    event.paymentId(), null, null, null, false, BigDecimal.ZERO));
+        }
     }
 
 
@@ -89,15 +103,21 @@ public class PaymentService {
     @KafkaListener(topics = "reservations-created")
     @Transactional
     public void handleReservationCreated(ReservationCreatedEvent event) {
-        Payment payment = Payment.builder()
-                .reservationId(event.reservationId())
-                .userId(event.userId())
-                .status(PaymentStatus.READY)
-                .price(event.price())
-                .build();
-        payment = paymentRepository.save(payment);
-
-        kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(payment.getUserId(), payment.getPaymentId()));
+        try {
+            Payment payment = Payment.builder()
+                    .reservationId(event.reservationId())
+                    .userId(event.userId())
+                    .status(PaymentStatus.READY)
+                    .price(event.price())
+                    .build();
+            paymentRepository.save(payment);
+            kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(
+                    payment.getUserId(), payment.getPaymentId()));
+        } catch (Exception e) {
+            log.error("Error handling reservation created", e);
+            kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
+                    null, event.reservationId(), event.userId(), event.price(), false, BigDecimal.ZERO));
+        }
     }
 
 

@@ -52,23 +52,30 @@ public class UserService {
     @KafkaListener(topics = "user-balance-update-requests")
     @Transactional
     public void handleUserBalanceUpdateRequest(UserBalanceUpdateEvent event) {
-        Users user = userRepository.findById(event.userId())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
-
-        boolean success = false;
         try {
-            user.useBalance(event.amount());
-            userRepository.save(user);
-            success = true;
-        } catch (Exception e) {
-            log.error("Failed to update user balance", e);
-        }
+            Users user = userRepository.findById(event.userId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
-                event.userId(),
-                event.paymentId(),
-                success
-        ));
+            boolean isSuccess = false;
+            if (user.getBalance().compareTo(event.price()) >= 0) {
+                user.useBalance(event.price());
+                userRepository.save(user);
+                isSuccess = true;
+            }
+
+            kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
+                    event.userId(),
+                    event.paymentId(),
+                    isSuccess
+            ));
+        } catch (Exception e) {
+            log.error("Error handling user balance update request", e);
+            kafkaTemplate.send("user-balance-update-responses", new UserBalanceUpdateResponseEvent(
+                    event.userId(),
+                    event.paymentId(),
+                    false
+            ));
+        }
     }
 
     @KafkaListener(topics = "payment-completed")

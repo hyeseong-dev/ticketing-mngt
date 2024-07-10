@@ -103,19 +103,14 @@ public class ConcertService implements ConcertInterface {
     @Transactional
     @KafkaListener(topics = "reservation-failed")
     public void handleReservationFailed(ReservationFailedEvent event) {
-        int updatedRows = seatRepository.updateSeatStatus(
-                event.concertDateId(),
-                event.seatId(),
-                SeatStatus.AVAILABLE
-        );
-
-        if (updatedRows > 0) {
-            log.info("Seat status reverted to AVAILABLE: concertDateId={}, seatId={}",
-                    event.concertDateId(), event.seatId());
-        } else {
-            log.warn("Failed to revert seat status to AVAILABLE: concertDateId={}, seatId={}. " +
-                            "The seat might not be in DISABLE status.",
-                    event.concertDateId(), event.seatId());
+        try {
+            Seat seat = seatRepository.findById(event.seatId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
+            seat.patchStatus(SeatStatus.AVAILABLE);
+            seatRepository.save(seat);
+        } catch (Exception e) {
+            log.error("Error handling reservation failed", e);
+            // 추후 관리자에게 알림 보내기 설정 로직 처리
         }
     }
 

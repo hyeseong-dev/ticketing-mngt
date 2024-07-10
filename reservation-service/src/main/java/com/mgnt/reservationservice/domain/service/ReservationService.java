@@ -76,7 +76,7 @@ public class ReservationService {
     public void handlePaymentCompleted(PaymentCompletedEvent event) {
         try {
             Reservation reservation = reservationRepository.findById(event.reservationId())
-                    .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
+                    .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.WARN));
 
             if (event.isSuccess()) {
                 reservation.updateStatus(ReservationStatus.RESERVED);
