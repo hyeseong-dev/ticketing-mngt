@@ -1,5 +1,8 @@
 package com.mgnt.paymentservice.controller.dto.request;
 
+
+import com.mgnt.core.enums.PaymentStatus;
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.paymentservice.domain.entity.Payment;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,7 +16,7 @@ public record CreateRequest(
     public Payment toEntity(Long reservationId) {
         return Payment.builder()
                 .reservationId(reservationId)
-                .status(Payment.Status.READY)
+                .status(PaymentStatus.READY)
                 .price(price)
                 .build();
     }

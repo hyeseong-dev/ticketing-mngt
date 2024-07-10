@@ -1,5 +1,7 @@
 package com.mgnt.paymentservice.domain.service;
 
+import com.mgnt.core.enums.PaymentStatus;
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
 
@@ -7,7 +9,7 @@ import com.mgnt.core.exception.CustomException;
 import com.mgnt.paymentservice.controller.dto.request.CreateRequest;
 import com.mgnt.paymentservice.controller.dto.request.PayRequest;
 import com.mgnt.paymentservice.controller.dto.response.CreateResponse;
-import com.mgnt.paymentservice.controller.dto.response.PayResponse;
+//import com.mgnt.paymentservice.controller.dto.response.PayResponse;
 import com.mgnt.paymentservice.domain.entity.Payment;
 import com.mgnt.paymentservice.domain.repository.PaymentRepository;
 import com.mgnt.paymentservice.domain.service.dto.CancelPaymentResultResDto;
@@ -27,25 +29,25 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PaymentValidator paymentValidator;
-//    private final UserReader userReader;
+//    private final UserReader userReawder;
 //    private final ReservationReader reservationReader;
 
-    @KafkaListener(topics = "payments-created")
-    @Transactional
-    public void handlePaymentCreated(PaymentCreatedEvent event) {
-        processPayment(event.paymentId());
-    }
+//    @KafkaListener(topics = "payments-created")
+//    @Transactional
+//    public void handlePaymentCreated(PaymentCreatedEvent event) {
+//        processPayment(event.paymentId());
+//    }
+//
+//    @Transactional
+//    void processPayment(Long paymentId) {
+//        Payment payment = paymentRepository.findByPaymentId(paymentId).orElseThrow(
+//                () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
+//
+//        // 사용자 잔액 확인 요청
+//        kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(payment.getUserId(), paymentId));
+//    }
 
-    @Transactional
-    void processPayment(Long paymentId) {
-        Payment payment = paymentRepository.findByPaymentId(paymentId).orElseThrow(
-                () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
-
-        // 사용자 잔액 확인 요청
-        kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(payment.getUserId(), paymentId));
-    }
-
-    @KafkaListener(topics = "user-balance-check-response")
+    @KafkaListener(topics = "user-balance-check-responses")
     public void handleUserBalanceCheckResponse(UserBalanceCheckResponseEvent event) {
         Payment payment = paymentRepository.findByPaymentId(event.paymentId()).orElseThrow(
                 () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
@@ -60,7 +62,8 @@ public class PaymentService {
         }
     }
 
-    @KafkaListener(topics = "user-balance-update-response")
+    @KafkaListener(topics = "user-balance-update-responses")
+    @Transactional
     public void handleUserBalanceUpdateResponse(UserBalanceUpdateResponseEvent event) {
         Payment payment = paymentRepository.findByPaymentId(event.paymentId()).orElseThrow(
                 () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
@@ -69,7 +72,7 @@ public class PaymentService {
 
 
     private void completePayment(Payment payment, boolean success) {
-        payment.setStatus(success ? Payment.Status.COMPLETE : Payment.Status.FAILED);
+        payment.setStatus(success ? PaymentStatus.COMPLETE : PaymentStatus.FAILED);
         payment = paymentRepository.save(payment);
 
         kafkaTemplate.send("payment-completed", new PaymentCompletedEvent(
@@ -78,7 +81,7 @@ public class PaymentService {
                 payment.getUserId(),
                 payment.getPrice(),
                 success,
-                payment.getPrice()
+                success ? payment.getPrice() : BigDecimal.ZERO
         ));
 
     }
@@ -88,14 +91,13 @@ public class PaymentService {
     public void handleReservationCreated(ReservationCreatedEvent event) {
         Payment payment = Payment.builder()
                 .reservationId(event.reservationId())
-                .status(Payment.Status.READY)
+                .userId(event.userId())
+                .status(PaymentStatus.READY)
                 .price(event.price())
                 .build();
         payment = paymentRepository.save(payment);
 
-        PaymentCreatedEvent paymentCreatedEvent = new PaymentCreatedEvent(
-                payment.getPaymentId(), payment.getReservationId(), payment.getPrice());
-        kafkaTemplate.send("payments-created", paymentCreatedEvent);
+        kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(payment.getUserId(), payment.getPaymentId()));
     }
 
 
@@ -165,12 +167,12 @@ public class PaymentService {
 //        Long userId = payment.getReservation().getUserId();
 //        Users user = userReader.findUser(userId);
 //
-//        if (Payment.Status.READY.equals(payment.getStatus())) {
+//        if (ReservationStatus.READY.equals(payment.getStatus())) {
 //            // 결제 대기 상태 - 즉시 취소
-//            updatedPayment = payment.updateStatus(Payment.Status.CANCEL);
-//        } else if (Payment.Status.COMPLETE.equals(payment.getStatus())) {
+//            updatedPayment = payment.updateStatus(ReservationStatus.CANCEL);
+//        } else if (ReservationStatus.COMPLETE.equals(payment.getStatus())) {
 //            // 결제 완료 상태 - 환불
-//            updatedPayment = payment.updateStatus(Payment.Status.REFUND);
+//            updatedPayment = payment.updateStatus(ReservationStatus.REFUND);
 //            user.refundBalance(payment.getPrice());
 //        }
 //

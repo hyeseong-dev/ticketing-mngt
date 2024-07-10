@@ -1,5 +1,6 @@
 package com.mgnt.paymentservice.domain.entity;
 
+import com.mgnt.core.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -35,23 +36,17 @@ public class Payment extends BaseDateTimeEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private PaymentStatus status;
 
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(name = "paid_at")
     private ZonedDateTime paidAt;
 
-    public enum Status {
-        READY,
-        COMPLETE,
-        CANCEL,
-        FAILED,
-        REFUND
-    }
 
     @Builder
-    public Payment(Long paymentId, Long userId, Long reservationId, Status status, BigDecimal price) {
+    public Payment(Long paymentId, Long userId, Long reservationId, PaymentStatus status, BigDecimal price) {
         this.paymentId = paymentId;
         this.userId = userId;
         this.reservationId = reservationId;
@@ -60,15 +55,15 @@ public class Payment extends BaseDateTimeEntity {
     }
 
 
-    public void setStatus(Status status) {
+    public void setStatus(PaymentStatus status) {
         this.status = status;
-        if (status == Status.COMPLETE) {
+        if (status == PaymentStatus.COMPLETE) {
             this.paidAt = ZonedDateTime.now();
         }
     }
 
     public Payment toPaid() {
-        this.status = Status.COMPLETE;
+        this.status = PaymentStatus.COMPLETE;
         this.paidAt = ZonedDateTime.now();
         return this;
     }
@@ -80,7 +75,7 @@ public class Payment extends BaseDateTimeEntity {
         Payment that = (Payment) o;
         return Objects.equals(paymentId, that.paymentId);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(paymentId);

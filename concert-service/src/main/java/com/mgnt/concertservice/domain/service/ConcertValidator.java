@@ -2,6 +2,7 @@ package com.mgnt.concertservice.domain.service;
 
 import com.mgnt.concertservice.domain.entity.ConcertDate;
 import com.mgnt.concertservice.domain.entity.Seat;
+import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class ConcertValidator {
         if (seat == null) {
             throw new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN);
         }
-        if (seat.getStatus() != Seat.Status.AVAILABLE) {
+        if (seat.getStatus() != SeatStatus.AVAILABLE) {
             throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, null, Level.WARN);
         }
     }

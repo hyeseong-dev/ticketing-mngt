@@ -1,4 +1,11 @@
 package com.mgnt.core.event;
 
-public record ReservationConfirmedEvent(Long reservationId) implements Event {
+import com.mgnt.core.enums.SeatStatus;
+
+public record ReservationConfirmedEvent(
+        Long reservationId,
+        Long concertDateId,
+        Long seatId,
+        SeatStatus status
+) implements Event {
 }

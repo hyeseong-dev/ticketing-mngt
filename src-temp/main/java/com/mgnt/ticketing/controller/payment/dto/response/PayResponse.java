@@ -9,7 +9,7 @@ public record PayResponse(
         boolean isSuccess,
         Long paymentId,
         Payment.Status status,
-        BigDecimal paymentPrice,
+        BigDecimal price,
         BigDecimal balance
 ) {
     @Builder
@@ -21,7 +21,7 @@ public record PayResponse(
                 .isSuccess(isSuccess)
                 .paymentId(paymentResult.getPaymentId())
                 .status(paymentResult.getStatus())
-                .paymentPrice(paymentResult.getPrice())
+                .price(paymentResult.getPrice())
                 .balance(usedBalance)
                 .build();
     }

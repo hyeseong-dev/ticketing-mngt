@@ -25,9 +25,9 @@ public interface ConcertRepository {
 
     void deleteAllDates();
 
-    boolean existByConcertDateAndStatus(Long concertDateId, Seat.Status status);
+    boolean existByConcertDateAndStatus(Long concertDateId, SeatStatus status);
 
-    List<Seat> findSeatsByConcertDateIdAndStatus(Long concertDateId, Seat.Status status);
+    List<Seat> findSeatsByConcertDateIdAndStatus(Long concertDateId, SeatStatus status);
 
     Seat findSeatByConcertDateIdAndSeatNum(@Param("concertDateId") Long concertDateId, @Param("seatNum") int seatNum);
 

@@ -4,7 +4,7 @@ import com.mgnt.core.exception.ApiResult;
 import com.mgnt.paymentservice.controller.dto.request.CreateRequest;
 import com.mgnt.paymentservice.controller.dto.request.PayRequest;
 import com.mgnt.paymentservice.controller.dto.response.CreateResponse;
-import com.mgnt.paymentservice.controller.dto.response.PayResponse;
+//import com.mgnt.paymentservice.controller.dto.response.PayResponse;
 import com.mgnt.paymentservice.domain.service.PaymentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

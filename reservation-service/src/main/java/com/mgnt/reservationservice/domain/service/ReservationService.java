@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
 import com.mgnt.core.exception.CustomException;
@@ -53,7 +54,7 @@ public class ReservationService {
                     .concertDateId(event.concertDateId())
                     .seatId(event.seatId())
                     .status(Reservation.Status.ING)
-                    .price(FIXED_PRICE)
+                    .price(event.price().multiply(BigDecimal.valueOf(1.1))) // 부가세 10%를 더한 금액
                     .reservedAt(ZonedDateTime.now())
                     .build());
 
@@ -74,13 +75,20 @@ public class ReservationService {
         if (event.isSuccess()) {
             reservation.updateStatus(Reservation.Status.RESERVED);
             reservationRepository.save(reservation);
-            kafkaTemplate.send("reservation-confirmed", new ReservationConfirmedEvent(reservation.getReservationId()));
-            log.info("Reservation confirmed after successful payment: {}", reservation.getReservationId());
+            ReservationConfirmedEvent confirmEvent = new ReservationConfirmedEvent(
+                    reservation.getReservationId(),
+                    reservation.getConcertDateId(),
+                    reservation.getSeatId(),
+                    SeatStatus.DISABLE
+            );
+            kafkaTemplate.send("reservation-confirmed", confirmEvent);
+            log.info("Reservation confirmed after successful payment: {}", confirmEvent);
         } else {
             reservation.updateStatus(Reservation.Status.CANCEL);
             reservationRepository.save(reservation);
-            kafkaTemplate.send("reservation-failed",
-                    new ReservationFailedEvent(event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId()));
+            ReservationFailedEvent failedEvent = new ReservationFailedEvent(
+                    event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId());
+            kafkaTemplate.send("reservation-failed", failedEvent);
             log.warn("Reservation failed due to payment failure: {}", reservation.getReservationId());
         }
     }

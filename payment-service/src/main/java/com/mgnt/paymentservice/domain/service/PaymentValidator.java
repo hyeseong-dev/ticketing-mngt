@@ -1,5 +1,6 @@
 package com.mgnt.paymentservice.domain.service;
 
+import com.mgnt.core.enums.PaymentStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.paymentservice.domain.entity.Payment;
@@ -21,12 +22,12 @@ public class PaymentValidator {
     /**
      * 잔액 검증
      *
-     * @param paymentPrice 결제 금액
-     * @param balance      사용자 잔액
+     * @param price   결제 금액
+     * @param balance 사용자 잔액
      * @throws CustomException 잔액이 부족한 경우 예외 발생
      */
-    public void checkBalance(BigDecimal paymentPrice, BigDecimal balance) {
-        if (balance.compareTo(paymentPrice) < 0) {
+    public void checkBalance(BigDecimal price, BigDecimal balance) {
+        if (balance.compareTo(price) < 0) {
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE, null, Level.INFO);
         }
     }
@@ -37,8 +38,8 @@ public class PaymentValidator {
      * @param status 결제 상태
      * @throws CustomException 결제 가능한 상태가 아닌 경우 예외 발생
      */
-    public void checkPayStatus(Payment.Status status) {
-        if (!status.equals(Payment.Status.READY)) {
+    public void checkPayStatus(PaymentStatus status) {
+        if (!status.equals(PaymentStatus.READY)) {
             throw new CustomException(ErrorCode.NOT_AVAILABLE_PAY, null, Level.INFO);
         }
     }
@@ -49,8 +50,8 @@ public class PaymentValidator {
      * @param status 결제 상태
      * @throws CustomException 결제 취소 가능한 상태가 아닌 경우 예외 발생
      */
-    public void checkCancelStatus(Payment.Status status) {
-        if (!(status.equals(Payment.Status.READY) || status.equals(Payment.Status.COMPLETE))) {
+    public void checkCancelStatus(PaymentStatus status) {
+        if (!(status.equals(PaymentStatus.READY) || status.equals(PaymentStatus.COMPLETE))) {
             throw new CustomException(ErrorCode.NOT_AVAILABLE_CANCEL, null, Level.INFO);
         }
     }

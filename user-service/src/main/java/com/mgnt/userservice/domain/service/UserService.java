@@ -50,6 +50,7 @@ public class UserService {
     }
 
     @KafkaListener(topics = "user-balance-update-requests")
+    @Transactional
     public void handleUserBalanceUpdateRequest(UserBalanceUpdateEvent event) {
         Users user = userRepository.findById(event.userId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, null, Level.ERROR));
@@ -71,6 +72,7 @@ public class UserService {
     }
 
     @KafkaListener(topics = "payment-completed")
+    @Transactional
     public void handlePaymentCompleted(PaymentCompletedEvent event) {
         if (event.isSuccess()) {
             Users user = userRepository.findById(event.userId()).orElseThrow();

@@ -1,6 +1,8 @@
 package com.mgnt.concertservice.domain.repository;
 
 import com.mgnt.concertservice.domain.entity.Seat;
+import com.mgnt.core.enums.SeatStatus;
+import com.mgnt.core.event.ReservationConfirmedEvent;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -10,26 +12,29 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface SeatRepository extends JpaRepository<Seat, Long> {
+public interface SeatRepository extends JpaRepository<Seat, Long>, SeatRepositoryCustom {
 
-    boolean existsByConcertDateIdAndStatus(Long concertDateId, Seat.Status status);
+    boolean existsByConcertDateIdAndStatus(Long concertDateId, SeatStatus status);
 
-    List<Seat> findAllByConcertDateIdAndStatus(Long concertDateId, Seat.Status status);
+    List<Seat> findAllByConcertDateIdAndStatus(Long concertDateId, SeatStatus status);
 
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
-    @Query("select s from Seat s where s.concertDateId = :concertDateId and s.seatId = :seatId")
-    Seat findSeatByConcertDate_concertDateIdAndSeatId(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId);
+    @Lock(LockModeType.OPTIMISTIC)
+    @Query("SELECT s FROM Seat s WHERE s.concertDateId = :concertDateId AND s.seatId = :seatId")
+    Optional<Seat> findSeatByConcertDate_concertDateIdAndSeatId(
+            @Param("concertDateId") Long concertDateId,
+            @Param("seatId") Long seatId);
 
-    @Modifying
-    @Query("UPDATE Seat s SET s.status = :status WHERE s.concertDateId = :concertDateId AND s.seatId = :seatId AND s.status = :currentStatus")
-    @Transactional
-    int updateSeatStatus(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId, @Param("status") Seat.Status status, @Param("currentStatus") Seat.Status currentStatus);
+//    @Modifying
+//    @Query("UPDATE Seat s SET s.status = :status WHERE s.concertDateId = :concertDateId AND s.seatId = :seatId")
+//    int updateSeatStatus(
+//            @Param("concertDateId") Long concertDateId,
+//            @Param("seatId") Long seatId,
+//            @Param("status") SeatStatus status
+//    );
 
-    default boolean checkAndUpdateSeatStatus(Long concertDateId, Long seatId, Seat.Status status) {
-        return updateSeatStatus(concertDateId, seatId, status, Seat.Status.AVAILABLE) > 0;
-    }
 }
 
 

@@ -3,7 +3,7 @@ package com.mgnt.paymentservice.domain.service;
 import com.mgnt.paymentservice.controller.dto.request.CreateRequest;
 import com.mgnt.paymentservice.controller.dto.request.PayRequest;
 import com.mgnt.paymentservice.controller.dto.response.CreateResponse;
-import com.mgnt.paymentservice.controller.dto.response.PayResponse;
+//import com.mgnt.paymentservice.controller.dto.response.PayResponse;
 import com.mgnt.paymentservice.domain.service.dto.CancelPaymentResultResDto;
 
 /**
@@ -14,7 +14,7 @@ import com.mgnt.paymentservice.domain.service.dto.CancelPaymentResultResDto;
 public interface PaymentInterface {
 
     /* 결제 요청 */
-    PayResponse pay(Long paymentId, PayRequest request);
+//    PayResponse pay(Long paymentId, PayRequest request);
 
     /* 결제 정보 생성 */
     CreateResponse create(CreateRequest request);

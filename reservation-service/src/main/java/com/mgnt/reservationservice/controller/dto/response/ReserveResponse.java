@@ -28,7 +28,6 @@ public record ReserveResponse(
                         .name(concert.name())
                         .date(concertDate.concertDate())
                         .seatId(seat.seatId())
-                        .seatNum(seat.seatNum())
                         .build())
                 .build();
     }
@@ -39,8 +38,7 @@ public record ReserveResponse(
             Long concertDateId,
             String name,
             ZonedDateTime date,
-            Long seatId,
-            int seatNum
+            Long seatId
     ) {
     }
 }

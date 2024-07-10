@@ -5,6 +5,7 @@ import com.mgnt.concertservice.controller.response.GetConcertResponse;
 import com.mgnt.concertservice.controller.response.GetDatesResponse;
 import com.mgnt.concertservice.controller.response.GetSeatsResponse;
 import com.mgnt.concertservice.domain.entity.Seat;
+import com.mgnt.core.enums.SeatStatus;
 
 import java.util.List;
 
@@ -23,6 +24,6 @@ public interface ConcertInterface {
     GetSeatsResponse getAvailableSeats(Long concertDateId);
 
     /* 좌석 상태 변경 */
-    void patchSeatStatus(Long concertDateId, Long seatId, Seat.Status status);
+    void patchSeatStatus(Long concertDateId, Long seatId, SeatStatus status);
 }
 

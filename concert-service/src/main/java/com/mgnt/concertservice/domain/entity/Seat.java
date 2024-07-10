@@ -1,5 +1,6 @@
 package com.mgnt.concertservice.domain.entity;
 
+import com.mgnt.core.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
@@ -32,23 +33,18 @@ public class Seat extends BaseDateTimeEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status = Status.AVAILABLE;
+    private SeatStatus status = SeatStatus.AVAILABLE;
 
     @Builder
-    public Seat(Long seatId, Long concertDateId, int seatNum, BigDecimal price, Status status) {
+    public Seat(Long seatId, Long concertDateId, int seatNum, BigDecimal price, SeatStatus status) {
         this.seatId = seatId;
         this.concertDateId = concertDateId;
         this.seatNum = seatNum;
         this.price = price;
         this.status = status;
     }
-
-    public enum Status {
-        AVAILABLE,
-        DISABLE
-    }
-
-    public void patchStatus(Status status) {
+    
+    public void patchStatus(SeatStatus status) {
         this.status = status;
     }
 

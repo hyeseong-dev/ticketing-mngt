@@ -3,6 +3,7 @@ package com.mgnt.concertservice.domain.repository;
 import com.mgnt.concertservice.domain.entity.Concert;
 import com.mgnt.concertservice.domain.entity.ConcertDate;
 import com.mgnt.concertservice.domain.entity.Seat;
+import com.mgnt.core.enums.SeatStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,10 +24,10 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
     Optional<ConcertDate> findConcertDateById(@Param("concertDateId") Long concertDateId);
 
     @Query("SELECT s FROM Seat s WHERE s.concertDateId = :concertDateId AND s.status = :status")
-    List<Seat> findSeatsByConcertDateIdAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") Seat.Status status);
+    List<Seat> findSeatsByConcertDateIdAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") SeatStatus status);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Seat s WHERE s.concertDateId = :concertDateId AND s.status = :status")
-    boolean existsByConcertDateAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") Seat.Status status);
+    boolean existsByConcertDateAndStatus(@Param("concertDateId") Long concertDateId, @Param("status") SeatStatus status);
 
     @Query("SELECT s FROM Seat s WHERE s.concertDateId = :concertDateId AND s.seatNum = :seatId")
     Optional<Seat> findSeatByConcertDateIdAndSeatNum(@Param("concertDateId") Long concertDateId, @Param("seatId") Long seatId);
