@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.domain.entity;
 
+import com.mgnt.core.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,7 +27,7 @@ public class Reservation extends BaseDateTimeEntity {
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private ReservationStatus status;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -53,11 +54,11 @@ public class Reservation extends BaseDateTimeEntity {
     }
 
     public void toComplete() {
-        this.status = Status.RESERVED;
+        this.status = ReservationStatus.RESERVED;
     }
 
     @Builder
-    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, Status status, ZonedDateTime reservedAt, BigDecimal price) {
+    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, ReservationStatus status, ZonedDateTime reservedAt, BigDecimal price) {
         this.userId = userId;
         this.concertId = concertId;
         this.concertDateId = concertDateId;
@@ -67,7 +68,7 @@ public class Reservation extends BaseDateTimeEntity {
         this.price = price;
     }
 
-    public void updateStatus(Status status) {
+    public void updateStatus(ReservationStatus status) {
         this.status = status;
     }
 

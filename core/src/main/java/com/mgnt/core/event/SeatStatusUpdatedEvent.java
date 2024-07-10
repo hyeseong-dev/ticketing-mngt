@@ -8,7 +8,6 @@ public record SeatStatusUpdatedEvent(
         Long concertId,
         Long concertDateId,
         Long seatId,
-        BigDecimal price,
-        boolean isAvailable
+        BigDecimal price
 ) implements Event {
 }

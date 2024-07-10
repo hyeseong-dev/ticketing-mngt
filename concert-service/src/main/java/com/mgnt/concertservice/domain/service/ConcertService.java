@@ -42,41 +42,62 @@ public class ConcertService implements ConcertInterface {
     @KafkaListener(topics = "reservation-requests")
     @Transactional
     public void handleReservationRequest(ReservationRequestedEvent event) {
+        log.info("예약 요청 수신: {}", event);
         try {
-
-
-            Seat seat = seatRepository.findAvailableSeatByConcertDateIdAndSeatId(event.concertDateId(), event.seatId())
-                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SEAT_NOT_FOUND.getMessage()));
-
-            concertValidator.checkSeatAvailability(seat);
-
-            int updatedRows = seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), SeatStatus.DISABLE);
-
-            if (updatedRows == 0) {
-                throw new OptimisticLockingFailureException("Seat was updated concurrently");
-            }
-
-            SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
-                    null, // 이 시점까지 예약처리 요청이 마무리 된 것이 아니므로
-                    event.userId(),
-                    event.concertId(),
-                    event.concertDateId(),
-                    event.seatId(),
-                    seat.getPrice(),
-                    true
-            );
-            kafkaTemplate.send("seat-status-updates", updateEvent);
-        } catch (OptimisticLockingFailureException e) {
-            log.warn("Concurrent modification detected", e);
-            SeatStatusUpdatedEvent failEvent = new SeatStatusUpdatedEvent(
-                    null, event.userId(), event.concertId(), event.concertDateId(), event.seatId(), null, false
-            );
-            kafkaTemplate.send("seat-status-updates", failEvent);
+            Seat seat = findAndValidateSeat(event);
+            updateSeatStatus(seat, event);
+            sendSeatStatusUpdate(seat, event);
         } catch (Exception e) {
-            log.error("Error processing reservation request", e);
-            ErrorEvent errorEvent = new ErrorEvent(event.userId(), event.concertId(), "Error processing reservation");
-            kafkaTemplate.send("reservation-errors", errorEvent);
+            handleReservationError(e, event);
         }
+    }
+
+    private Seat findAndValidateSeat(ReservationRequestedEvent event) {
+        Seat seat = seatRepository.findAvailableSeatByConcertDateIdAndSeatId(event.concertDateId(), event.seatId())
+                .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
+        return seat;
+    }
+
+    private void updateSeatStatus(Seat seat, ReservationRequestedEvent event) {
+        int updatedRows = seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), SeatStatus.DISABLE);
+        if (updatedRows == 0) {
+            throw new OptimisticLockingFailureException("좌석이 동시에 업데이트되었습니다.");
+        }
+    }
+
+    private void sendSeatStatusUpdate(Seat seat, ReservationRequestedEvent event) {
+        SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
+                null, event.userId(), event.concertId(), event.concertDateId(),
+                event.seatId(), seat.getPrice()
+        );
+        kafkaTemplate.send("seat-status-updates", updateEvent)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("메시지 전송 성공: {}", updateEvent);
+                    } else {
+                        log.error("메시지 전송 실패: {}", ex.toString());
+                    }
+                });
+    }
+
+    private void handleReservationError(Exception e, ReservationRequestedEvent event) {
+        if (e instanceof CustomException) {
+            log.warn("예약 처리 중 예외 발생: {}", e.getMessage());
+            sendReservationFailureNotification(event);
+        } else if (e instanceof OptimisticLockingFailureException) {
+            log.warn("동시 수정 감지: {}", e.getMessage());
+            sendReservationFailureNotification(event);
+        } else {
+            log.error("예약 처리 중 예상치 못한 오류 발생", e);
+            sendReservationFailureNotification(event);
+        }
+
+    }
+
+    private void sendReservationFailureNotification(ReservationRequestedEvent event) {
+        log.warn("예약 실패에 따른 알림 메시지 발신: {}", event.toString());
+        // 예약 실패 알림 메시지 전송 로직 구현
+        // 예를 들어, Kafka 메시지 발행 등의 방식으로 처리할 수 있음
     }
 
     @Transactional
@@ -123,7 +144,7 @@ public class ConcertService implements ConcertInterface {
     @KafkaListener(topics = "reservation-confirmed")
     public void handleReservationConfirmed(ReservationConfirmedEvent event) {
         Seat seat = seatRepository.findSeatByConcertDate_concertDateIdAndSeatId(event.concertDateId(), event.seatId())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SEAT_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
 
         seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), event.status());
     }

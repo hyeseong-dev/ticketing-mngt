@@ -18,11 +18,14 @@ import java.util.UUID;
 @Configuration
 public class KafkaProducerConfig {
 
-    @Value("${spring.kafka.bootstrap-servers}")
-    private String BOOTSTRAP_SERVER;
     private final static String TRANSACTIONAL_ID = "TS_ID-";
+    private final static String BOOTSTRAP_SERVER = "localhost:9092,kafka:9092";
     private final static int RETRIES_CONFIG = 3;
     private final static String ACKS_CONFIG = "all";
+
+    @Value("${kafka.producer.idempotence:true}")
+    private boolean ENABLE_IDEMPOTENCE_CONFIG;
+
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
@@ -31,7 +34,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, ENABLE_IDEMPOTENCE_CONFIG);
         configProps.put(ProducerConfig.ACKS_CONFIG, ACKS_CONFIG);
         configProps.put(ProducerConfig.RETRIES_CONFIG, RETRIES_CONFIG);
         return new DefaultKafkaProducerFactory<>(configProps);

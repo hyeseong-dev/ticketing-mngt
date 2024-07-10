@@ -2,6 +2,7 @@ package com.mgnt.reservationservice.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -22,6 +23,10 @@ public class KafkaProducerConfig {
     private final static int RETRIES_CONFIG = 3;
     private final static String ACKS_CONFIG = "all";
 
+    @Value("${kafka.producer.idempotence:true}")
+    private boolean ENABLE_IDEMPOTENCE_CONFIG;
+
+
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -29,7 +34,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, ENABLE_IDEMPOTENCE_CONFIG);
         configProps.put(ProducerConfig.ACKS_CONFIG, ACKS_CONFIG);
         configProps.put(ProducerConfig.RETRIES_CONFIG, RETRIES_CONFIG);
         return new DefaultKafkaProducerFactory<>(configProps);

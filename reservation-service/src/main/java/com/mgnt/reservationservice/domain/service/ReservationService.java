@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
@@ -47,49 +48,52 @@ public class ReservationService {
     @KafkaListener(topics = "seat-status-updates")
     @Transactional
     public void handleSeatStatusUpdate(SeatStatusUpdatedEvent event) {
-        if (event.isAvailable()) {
-            Reservation reservation = reservationRepository.save(Reservation.builder()
+        try {
+
+            Reservation reservation = Reservation.builder()
                     .userId(event.userId())
                     .concertId(event.concertId())
                     .concertDateId(event.concertDateId())
                     .seatId(event.seatId())
-                    .status(Reservation.Status.ING)
-                    .price(event.price().multiply(BigDecimal.valueOf(1.1))) // 부가세 10%를 더한 금액
+                    .status(ReservationStatus.ING)
+                    .price(event.price())
                     .reservedAt(ZonedDateTime.now())
-                    .build());
+                    .build();
+            reservationRepository.save(reservation);
 
-            ReservationCreatedEvent createdEvent = new ReservationCreatedEvent(
-                    reservation.getReservationId(), reservation.getUserId(), reservation.getPrice());
-            kafkaTemplate.send("reservations-created", createdEvent);
-        } else {
-            kafkaTemplate.send("reservation-failed",
-                    new ReservationFailedEvent(event.reservationId(), event.concertId(), event.seatId()));
+            kafkaTemplate.send("reservations-created", new ReservationCreatedEvent(
+                    reservation.getReservationId(), reservation.getUserId(), reservation.getPrice()));
+
+        } catch (Exception e) {
+            log.error("Error handling seat status update", e);
+            kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
+                    null, event.concertDateId(), event.seatId()));
         }
     }
 
     @KafkaListener(topics = "payment-completed")
+    @Transactional
     public void handlePaymentCompleted(PaymentCompletedEvent event) {
-        Reservation reservation = reservationRepository.findById(event.reservationId())
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO));
+        try {
+            Reservation reservation = reservationRepository.findById(event.reservationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
 
-        if (event.isSuccess()) {
-            reservation.updateStatus(Reservation.Status.RESERVED);
-            reservationRepository.save(reservation);
-            ReservationConfirmedEvent confirmEvent = new ReservationConfirmedEvent(
-                    reservation.getReservationId(),
-                    reservation.getConcertDateId(),
-                    reservation.getSeatId(),
-                    SeatStatus.DISABLE
-            );
-            kafkaTemplate.send("reservation-confirmed", confirmEvent);
-            log.info("Reservation confirmed after successful payment: {}", confirmEvent);
-        } else {
-            reservation.updateStatus(Reservation.Status.CANCEL);
-            reservationRepository.save(reservation);
-            ReservationFailedEvent failedEvent = new ReservationFailedEvent(
-                    event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId());
-            kafkaTemplate.send("reservation-failed", failedEvent);
-            log.warn("Reservation failed due to payment failure: {}", reservation.getReservationId());
+            if (event.isSuccess()) {
+                reservation.updateStatus(ReservationStatus.RESERVED);
+                reservationRepository.save(reservation);
+                kafkaTemplate.send("reservation-confirmed", new ReservationConfirmedEvent(
+                        reservation.getReservationId(), reservation.getConcertDateId(),
+                        reservation.getSeatId(), SeatStatus.DISABLE));
+            } else {
+                reservation.updateStatus(ReservationStatus.CANCEL);
+                reservationRepository.save(reservation);
+                kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
+                        event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId()));
+            }
+        } catch (Exception e) {
+            log.error("Error handling payment completed", e);
+            kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
+                    event.reservationId(), null, null));
         }
     }
 

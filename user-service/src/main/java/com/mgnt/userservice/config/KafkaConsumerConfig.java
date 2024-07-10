@@ -1,15 +1,18 @@
 package com.mgnt.userservice.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.CommonErrorHandler;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -18,9 +21,11 @@ import org.springframework.util.backoff.FixedBackOff;
 import java.util.HashMap;
 import java.util.Map;
 
+
+@Slf4j
 @EnableKafka
 @Configuration
-public class KafkaConsumerConfig {
+class KafkaConsumerConfig {
 
     @Value("${spring.kafka.consumer.group-id}")
     private String GROUP_ID;
@@ -30,6 +35,15 @@ public class KafkaConsumerConfig {
 
     private final static String AUTO_OFFSET_RESET_CONFIG = "earliest";
     private final static String TRUSTED_PACKAGES = "*";
+
+    @Value("${kafka.retry.enabled:false}")
+    private boolean retryEnabled;
+
+    @Value("${kafka.retry.interval:1000}")
+    private long retryInterval;
+
+    @Value("${kafka.retry.max-attempts:3}")
+    private int maxAttempts;
 
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
@@ -44,18 +58,36 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
+
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
-        factory.setConcurrency(3);  // 동시 처리할 스레드 수 설정
-        factory.setCommonErrorHandler(errorHandler());
-        factory.setMissingTopicsFatal(false);
-        return factory;
+    public DefaultErrorHandler errorHandler() {
+        FixedBackOff fixedBackOff = new FixedBackOff(retryInterval, maxAttempts - 1);
+
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler((consumerRecord, exception) -> {
+            log.error("처리 중 오류 발생: topic = {}, partition = {}, offset = {}, exception = {}",
+                    consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(),
+                    exception.getMessage());
+        }, retryEnabled ? fixedBackOff : new FixedBackOff(0, 0));
+
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) ->
+                log.warn("재시도 중 실패한 레코드: topic = {}, partition = {}, offset = {}, 시도 횟수 = {}",
+                        record.topic(), record.partition(), record.offset(), deliveryAttempt)
+        );
+
+        errorHandler.addRetryableExceptions(TransientDataAccessException.class);
+        errorHandler.addNotRetryableExceptions(NullPointerException.class, IllegalArgumentException.class);
+
+        return errorHandler;
     }
 
     @Bean
-    public CommonErrorHandler errorHandler() {
-        return new DefaultErrorHandler(new FixedBackOff(0L, 3L));
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(errorHandler());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
+        factory.setMissingTopicsFatal(false);
+        return factory;
     }
 }

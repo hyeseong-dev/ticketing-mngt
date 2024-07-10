@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.controller.dto.request;
 
+import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import jakarta.validation.constraints.NotNull;
 
@@ -16,7 +17,7 @@ public record ReserveRequest(
                 .concertDateId(concertDateId)
                 .seatId(seatId)
                 .userId(userId)
-                .status(Reservation.Status.ING)
+                .status(ReservationStatus.ING)
                 .build();
     }
 }
