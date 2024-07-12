@@ -11,7 +11,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Payment save(Payment payment);
 
-    Payment findByReservationId(Long reservationId);
+    Optional<Payment> findByReservationId(Long reservationId);
 
     Optional<Payment> findByPaymentId(Long paymentId);
 

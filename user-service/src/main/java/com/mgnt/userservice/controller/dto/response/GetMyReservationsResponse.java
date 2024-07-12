@@ -1,10 +1,6 @@
 //package com.mgnt.userservice.controller.dto.response;
 //
-//import com.mgnt.ticketing.domain.concert.entity.Concert;
-//import com.mgnt.ticketing.domain.concert.entity.ConcertDate;
-//import com.mgnt.ticketing.domain.concert.entity.Seat;
-//import com.mgnt.ticketing.domain.reservation.entity.Reservation;
-//import com.mgnt.ticketing.domain.reservation.service.dto.GetReservationAndPaymentResDto;
+//import com.mgnt.core.enums.ReservationStatus;
 //import lombok.Builder;
 //
 //import java.time.ZonedDateTime;
@@ -12,11 +8,11 @@
 //public record GetMyReservationsResponse(
 //
 //        Long reservationId,
-//        Reservation.Status status,
+//        ReservationStatus status,
 //        ConcertInfo concertInfo
 //) {
 //    @Builder
-//    public GetMyaReservationsResponse {
+//    public GetMyReservationsResponse {
 //    }
 //
 //    public static GetMyReservationsResponse from(GetReservationAndPaymentResDto resDto) {

@@ -1,5 +1,6 @@
 package com.mgnt.concertservice.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.concertservice.controller.response.GetConcertResponse;
 //import com.mgnt.concertservice.controller.response.GetConcertsResponse;
 import com.mgnt.concertservice.controller.response.GetConcertsResponse;
@@ -9,6 +10,7 @@ import com.mgnt.concertservice.domain.entity.Concert;
 import com.mgnt.concertservice.domain.entity.ConcertDate;
 import com.mgnt.concertservice.domain.entity.Place;
 import com.mgnt.concertservice.domain.entity.Seat;
+import com.mgnt.concertservice.domain.repository.ConcertDateRepository;
 import com.mgnt.concertservice.domain.repository.ConcertRepository;
 import com.mgnt.concertservice.domain.repository.PlaceRepository;
 import com.mgnt.concertservice.domain.repository.SeatRepository;
@@ -19,6 +21,7 @@ import com.mgnt.core.exception.CustomException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -40,11 +43,49 @@ import java.util.stream.Collectors;
 public class ConcertService implements ConcertInterface {
 
     private final ConcertRepository concertRepository;
-    private final ConcertValidator concertValidator;
+    private final ConcertDateRepository concertDateRepository;
     private final PlaceRepository placeRepository;
-    private final TransactionTemplate transactionTemplate;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final SeatRepository seatRepository;
+    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ConcertValidator concertValidator;
+    private final TransactionTemplate transactionTemplate;
+
+
+    @KafkaListener(topics = "concert-info-requests")
+    public void handleConcertInfoRequest(ConcertInfoRequestEvent event) {
+        try {
+            Concert concert = concertRepository.findByConcertId(event.concertId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.WARN));
+
+            Place place = placeRepository.findByPlaceId(concert.getPlaceId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND, null, Level.WARN));
+
+            ConcertDate concertDate = concertDateRepository.findByConcertDateId(event.concertDateId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_DATE_NOT_FOUND, null, Level.WARN));
+
+            Seat seat = seatRepository.findByConsertDateIdAndSeatId(event.concertDateId(), event.seatId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
+
+            ConcertInfoDTO concertInfo = new ConcertInfoDTO(
+                    concert.getConcertId(),
+                    concert.getName(),
+                    new PlaceDTO(place.getPlaceId(), place.getName(), place.getSeatsCnt()),
+                    new ConcertDateDTO(concertDate.getConcertDateId(), concertDate.getConcertDate()),
+                    new SeatDTO(seat.getSeatId(), seat.getSeatNum(), seat.getPrice(), seat.getStatus())
+            );
+
+            ConcertInfoResponseEvent responseEvent = new ConcertInfoResponseEvent(
+                    event.reservationId(),
+                    concertInfo
+            );
+
+            kafkaTemplate.send("concert-info-responses", responseEvent);
+        } catch (Exception e) {
+            log.error("Error processing concert info request", e);
+            // 에러 처리 로직 추가
+        }
+    }
 
     @KafkaListener(topics = "reservation-requests")
     @Transactional
@@ -119,27 +160,6 @@ public class ConcertService implements ConcertInterface {
             log.error("Error handling reservation failed", e);
             // 추후 관리자에게 알림 보내기 설정 로직 처리
         }
-    }
-
-    @Transactional
-    @KafkaListener(topics = "concert-info-requests")
-    public void handleConcertInfoRequest(ConcertInfoRequestEvent event) {
-        Concert concert = concertRepository.findById(event.concertId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_NOT_FOUND, null, Level.INFO));
-        ConcertDate concertDate = concert.getConcertDateList().stream()
-                .filter(cd -> cd.getConcertDateId().equals(event.concertDateId()))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.CONCERT_DATE_NOT_FOUND, null, Level.INFO));
-        Seat seat = seatRepository.findById(event.seatId())
-                .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.INFO));
-
-        ConcertInfoResponseEvent responseEvent = new ConcertInfoResponseEvent(
-                event.reservationId(),
-                new ConcertInfoDTO(concert.getConcertId(), concert.getName()),
-                new ConcertDateDTO(concertDate.getConcertDateId(), concertDate.getConcertDate()),
-                new SeatDTO(seat.getSeatId(), seat.getSeatNum())
-        );
-        kafkaTemplate.send("concert-info-responses", responseEvent);
     }
 
     @Transactional

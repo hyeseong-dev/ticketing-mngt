@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface SeatRepositoryCustom {
 
+    Optional<Seat> findByConsertDateIdAndSeatId(Long concertDateId, Long seatId);
+
     Optional<Seat> findAvailableSeatByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
 
     int updateSeatStatus(Long concertDateId, Long seatId, SeatStatus seatStatus);

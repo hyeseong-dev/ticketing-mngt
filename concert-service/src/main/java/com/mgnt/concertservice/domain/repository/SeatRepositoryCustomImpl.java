@@ -22,6 +22,18 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
     }
 
     @Override
+    public Optional<Seat> findByConsertDateIdAndSeatId(Long concertDateId, Long seatId) {
+        QSeat seat = QSeat.seat;
+        Seat foundSeat = queryFactory
+                .selectFrom(seat)
+                .where(seat.concertDateId.eq(concertDateId)
+                        .and(seat.seatId.eq(seatId))
+                ).fetchOne();
+
+        return Optional.ofNullable(foundSeat);
+    }
+
+    @Override
     public Optional<Seat> findAvailableSeatByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
         QSeat seat = QSeat.seat;
         Seat foundSeat = queryFactory

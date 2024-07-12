@@ -1,21 +1,16 @@
 package com.mgnt.paymentservice.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.core.enums.PaymentStatus;
-import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
-
 import com.mgnt.core.exception.CustomException;
-import com.mgnt.paymentservice.controller.dto.request.CreateRequest;
-import com.mgnt.paymentservice.controller.dto.request.PayRequest;
-import com.mgnt.paymentservice.controller.dto.response.CreateResponse;
-//import com.mgnt.paymentservice.controller.dto.response.PayResponse;
 import com.mgnt.paymentservice.domain.entity.Payment;
 import com.mgnt.paymentservice.domain.repository.PaymentRepository;
-import com.mgnt.paymentservice.domain.service.dto.CancelPaymentResultResDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.Level;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,24 +26,34 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
     private final PaymentValidator paymentValidator;
-//    private final UserReader userReawder;
-//    private final ReservationReader reservationReader;
 
-//    @KafkaListener(topics = "payments-created")
-//    @Transactional
-//    public void handlePaymentCreated(PaymentCreatedEvent event) {
-//        processPayment(event.paymentId());
-//    }
-//
-//    @Transactional
-//    void processPayment(Long paymentId) {
-//        Payment payment = paymentRepository.findByPaymentId(paymentId).orElseThrow(
-//                () -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND, null, Level.ERROR));
-//
-//        // 사용자 잔액 확인 요청
-//        kafkaTemplate.send("user-balance-check-requests", new UserBalanceCheckRequestEvent(payment.getUserId(), paymentId));
-//    }
+    @KafkaListener(topics = "payment-info-requests")
+    public void handlePaymentInfoRequest(PaymentInfoRequestEvent event) {
+        try {
+
+            Payment payment = paymentRepository.findByReservationId(event.reservationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+
+            PaymentInfoDTO paymentInfo = new PaymentInfoDTO(
+                    payment.getPaymentId(),
+                    payment.getPrice(),
+                    payment.getStatus(),
+                    payment.getPaidAt()
+            );
+
+            PaymentInfoResponseEvent responseEvent = new PaymentInfoResponseEvent(
+                    event.reservationId(),
+                    paymentInfo
+            );
+
+            kafkaTemplate.send("payment-info-responses", responseEvent);
+        } catch (Exception e) {
+            log.error("Error processing payment info request", e);
+            // 에러 처리 로직 추가
+        }
+    }
 
     @KafkaListener(topics = "user-balance-check-responses")
     @Transactional

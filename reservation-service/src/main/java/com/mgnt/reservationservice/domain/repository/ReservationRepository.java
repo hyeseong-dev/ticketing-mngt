@@ -1,16 +1,17 @@
 package com.mgnt.reservationservice.domain.repository;
 
-import com.mgnt.reservationservice.controller.dto.response.ReserveResponse;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 //import com.mgnt.reservationservice.domain.service.dto.GetReservationAndPaymentResDto;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends JpaRepository<Reservation, Long>, ReservationRepositoryCustom {
+
+    List<Reservation> findAllByUserId(Long userId);
 
     List<Reservation> findAllByConcertDateId(Long concertDateId);
 
@@ -19,8 +20,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
 
     Reservation save(Reservation reservation);
-
-    Reservation findByReservationId(Long reservationId);
-
+    
     void delete(Reservation reservation);
 }

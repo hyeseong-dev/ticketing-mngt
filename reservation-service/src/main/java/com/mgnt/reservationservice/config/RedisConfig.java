@@ -1,4 +1,4 @@
-package com.mgnt.userservice.config;
+package com.mgnt.reservationservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

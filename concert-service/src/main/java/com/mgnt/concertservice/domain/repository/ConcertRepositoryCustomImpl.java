@@ -18,6 +18,16 @@ public class ConcertRepositoryCustomImpl implements ConcertRepositoryCustom {
     }
 
     @Override
+    public Optional<Concert> findByConcertId(Long concertId) {
+        QConcert concert = QConcert.concert;
+        Concert result = queryFactory
+                .selectFrom(concert)
+                .where(concert.concertId.eq(concertId))
+                .fetchOne();
+        return Optional.ofNullable(result);
+    }
+
+    @Override
     public List<Concert> findAllWithPlace() {
         QConcert concert = QConcert.concert;
         QPlace place = QPlace.place;

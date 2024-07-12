@@ -1,26 +1,35 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.*;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
+import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
+import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
-
+import com.mgnt.reservationservice.utils.SSEService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,6 +39,69 @@ public class ReservationService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
+    private final ReservationRedisRepository reservationRedisRepository;
+    private final ObjectMapper objectMapper;
+
+
+    public List<ReservationResponseDTO> getMyReservations(Long userId) {
+        // 먼저 Redis에서 캐시된 데이터 조회
+        List<ReservationResponseDTO> cachedReservations = reservationRedisRepository.getUserReservations(userId);
+
+        if (cachedReservations != null && !cachedReservations.isEmpty()) {
+            log.info("캐시에서 예약 정보 조회: userId={}, count={}", userId, cachedReservations.size());
+            return cachedReservations;
+        }
+
+        // 캐시에 데이터가 없으면 DB에서 조회
+        List<Reservation> reservations = reservationRepository.findAllByUserId(userId);
+        log.info("DB에서 예약 정보 조회: userId={}, count={}", userId, reservations.size());
+
+        List<ReservationResponseDTO> responseDTOs = reservations.stream()
+                .map(ReservationResponseDTO::from)
+                .collect(Collectors.toList());
+
+        // 조회한 데이터를 Redis에 캐시
+        reservationRedisRepository.saveUserReservations(userId, responseDTOs);
+
+        return responseDTOs;
+    }
+
+    private ReservationResponseDTO convertToDTO(Reservation reservation) {
+        return new ReservationResponseDTO(
+                reservation.getReservationId(),
+                reservation.getStatus(),
+                reservation.getUserId(),
+                reservation.getConcertId(),
+                reservation.getConcertDateId(),
+                reservation.getSeatId(),
+                reservation.getPrice(),
+                reservation.getReservedAt()
+        );
+    }
+
+    @Transactional
+    public void updateReservation(Long reservationId, ReservationStatus newStatus) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
+
+        reservation.updateStatus(newStatus);
+        reservationRepository.save(reservation);
+
+        // 캐시 업데이트
+        Long userId = reservation.getUserId();
+        List<ReservationResponseDTO> userReservations = reservationRedisRepository.getUserReservations(userId);
+
+        if (userReservations != null) {
+            List<ReservationResponseDTO> updatedReservations = userReservations.stream()
+                    .map(dto -> dto.reservationId().equals(reservationId) ? convertToDTO(reservation) : dto)
+                    .collect(Collectors.toList());
+
+            reservationRedisRepository.saveUserReservations(userId, updatedReservations);
+        }
+    }
+
+
+// ========================================================================= API 구분선
 
     public void initiateReservation(Long userId, ReserveRequest request) {
         ReservationRequestedEvent event = new ReservationRequestedEvent(
@@ -114,9 +186,5 @@ public class ReservationService {
 //        reservationRepository.delete(reservation);
 //    }
 //
-//    @Override
-//    public List<GetMyReservationsResponse> getMyReservations(Long userId) {
-//        List<GetReservationAndPaymentResDto> myReservations = reservationRepository.getMyReservations(userId);
-//        return myReservations.stream().map(GetMyReservationsResponse::from).toList();
-//    }
+
 }

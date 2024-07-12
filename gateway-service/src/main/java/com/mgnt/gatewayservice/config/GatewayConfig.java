@@ -24,26 +24,22 @@ public class GatewayConfig {
         return builder.routes()
                 .route("user-service-auth-protected", r -> r
                         .path("/api/auth/logout")
-                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config()), Ordered.HIGHEST_PRECEDENCE)
-                                .filter(requestBodyFilter.apply(new RequestBodyFilter.Config()), Ordered.HIGHEST_PRECEDENCE + 1))
+                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://USER-SERVICE"))
                 .route("user-service-auth-public", r -> r
                         .path("/api/auth/**")
                         .uri("lb://USER-SERVICE"))
                 .route("user-service", r -> r
                         .path("/api/users/**")
-                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config()), Ordered.HIGHEST_PRECEDENCE)
-                                .filter(requestBodyFilter.apply(new RequestBodyFilter.Config()), Ordered.HIGHEST_PRECEDENCE + 1))
+                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://USER-SERVICE"))
                 .route("reservation-service", r -> r
                         .path("/api/reservations/**")
-                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config()), Ordered.HIGHEST_PRECEDENCE)
-                                .filter(requestBodyFilter.apply(new RequestBodyFilter.Config()), Ordered.HIGHEST_PRECEDENCE + 1))
+                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://RESERVATION-SERVICE"))
                 .route("payment-service", r -> r
                         .path("/api/payment/**")
-                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config()), Ordered.HIGHEST_PRECEDENCE)
-                                .filter(requestBodyFilter.apply(new RequestBodyFilter.Config()), Ordered.HIGHEST_PRECEDENCE + 1))
+                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://PAYMENT-SERVICE"))
                 .route("concert-service", r -> r
                         .path("/api/concerts/**")
@@ -51,3 +47,4 @@ public class GatewayConfig {
                 .build();
     }
 }
+

@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ConcertRepositoryCustom {
+
+    Optional<Concert> findByConcertId(Long concertId);
+
     List<Concert> findAllWithPlace();
 
     Optional<Concert> findByConcertIdWithPlace(Long concertId);
