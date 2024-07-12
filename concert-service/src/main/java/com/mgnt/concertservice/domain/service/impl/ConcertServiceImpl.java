@@ -8,6 +8,7 @@ import com.mgnt.concertservice.controller.response.GetSeatsResponse;
 import com.mgnt.concertservice.domain.entity.*;
 import com.mgnt.concertservice.domain.repository.*;
 import com.mgnt.concertservice.domain.service.ConcertInterface;
+import com.mgnt.concertservice.domain.service.ConcertService;
 import com.mgnt.concertservice.domain.service.ConcertValidator;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ConcertServiceImpl implements ConcertInterface {
+public class ConcertServiceImpl implements ConcertService {
 
     private final ConcertRepository concertRepository;
     private final ConcertDateRepository concertDateRepository;
@@ -320,7 +321,7 @@ public class ConcertServiceImpl implements ConcertInterface {
             if (inventory.getRemaining() + remainingChange < 0) {
                 throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY, "Insufficient ticket inventory.", Level.WARN);
             }
-            int updatedRows = inventoryRepository.updateRemainingSeats(concertId, concertDateId, remainingChange);
+            int updatedRows = inventoryRepository.updateRemainingInventory(concertId, concertDateId, remainingChange);
             return updatedRows > 0;
         } else {
             throw new CustomException(ErrorCode.INVENTORY_NOT_FOUND, "Inventory not found.", Level.WARN);

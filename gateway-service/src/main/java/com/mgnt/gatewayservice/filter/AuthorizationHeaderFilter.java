@@ -10,15 +10,20 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.nio.charset.StandardCharsets;
 
 @Component
 @Slf4j
@@ -74,7 +79,35 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
             }
 
             addAuthorizationHeaders(exchange, accessToken);
-            return chain.filter(exchange);
+
+            // Request Body 로깅 및 복제 추가
+            return DataBufferUtils.join(exchange.getRequest().getBody())
+                    .flatMap(dataBuffer -> {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        DataBufferUtils.release(dataBuffer); // memory leak 방지
+
+                        String body = new String(bytes, StandardCharsets.UTF_8);
+                        log.info("Request Body: {}", body);
+
+                        // 기존 헤더 복사 및 요청 본문 설정
+                        ServerHttpRequest mutatedRequest = new ServerHttpRequestDecorator(exchange.getRequest()) {
+                            @Override
+                            public Flux<DataBuffer> getBody() {
+                                return Flux.just(exchange.getResponse().bufferFactory().wrap(bytes));
+                            }
+
+                            @Override
+                            public HttpHeaders getHeaders() {
+                                HttpHeaders httpHeaders = new HttpHeaders();
+                                httpHeaders.putAll(super.getHeaders());
+                                httpHeaders.setContentLength(bytes.length);
+                                return httpHeaders;
+                            }
+                        };
+
+                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                    });
         };
     }
 

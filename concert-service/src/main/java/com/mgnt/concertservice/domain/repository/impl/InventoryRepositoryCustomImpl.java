@@ -32,7 +32,7 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
 
     @Override
     @Transactional
-    public int updateRemainingSeats(Long concertId, Long concertDateId, Long remaining) {
+    public int updateRemainingInventory(Long concertId, Long concertDateId, Long remaining) {
         QInventory inventory = QInventory.inventory;
 
         long affectedRows = queryFactory

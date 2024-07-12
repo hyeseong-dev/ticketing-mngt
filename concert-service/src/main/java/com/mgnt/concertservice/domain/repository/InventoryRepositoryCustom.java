@@ -8,5 +8,5 @@ public interface InventoryRepositoryCustom {
 
     Optional<Inventory> findByConcertIdAndConcertDateId(Long concertId, Long concertDateId);
 
-    int updateRemainingSeats(Long concertId, Long concertDateId, Long remaining);
+    int updateRemainingInventory(Long concertId, Long concertDateId, Long remaining);
 }

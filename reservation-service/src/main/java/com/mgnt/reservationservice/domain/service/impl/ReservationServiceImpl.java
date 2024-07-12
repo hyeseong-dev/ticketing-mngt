@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
 import com.mgnt.core.event.concert_service.SeatReservationResponseEvent;
 import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
 import com.mgnt.core.event.payment_service.PaymentCompletedEvent;
@@ -12,6 +13,7 @@ import com.mgnt.core.event.reservation_service.ReservationCreatedEvent;
 import com.mgnt.core.event.reservation_service.ReservationFailedEvent;
 import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.exception.CustomException;
+import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
@@ -171,7 +173,7 @@ public class ReservationServiceImpl implements ReservationService {
     //---------------------------------------------------------------------------예약 테스트 락
     @Override
     @Transactional
-    public ReservationResponseDTO createReservationWithoutPayment(Long userId, ReserveRequest request) {
+    public ReservationResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
 
         // 결제 없이 예약을 생성하는 로직을 여기에 구현
         Reservation reservation = Reservation.builder()
@@ -179,6 +181,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .concertId(request.concertId())
                 .concertDateId(request.concertDateId())
                 .seatId(request.seatId())
+                .price(request.price())
                 .status(ReservationStatus.ING) // 바로 RESERVED 상태로 설정
                 .reservedAt(ZonedDateTime.now())
                 .build();
@@ -186,31 +189,24 @@ public class ReservationServiceImpl implements ReservationService {
         reservation = reservationRepository.save(reservation);
 
         // 좌석 상태 업데이트 이벤트 발행
-        kafkaTemplate.send("seat-reservation-requests", new SeatStatusUpdatedEvent(
-                reservation.getReservationId(),
-                userId,
+        kafkaTemplate.send("inventory-reservation-requests", new InventoryReservationRequestEvent(
                 request.concertId(),
-                request.concertDateId(),
-                request.seatId(),
-                reservation.getPrice()
+                request.concertDateId()
         ));
 
         // 3. 임시 응답 반환
         return ReservationResponseDTO.from(reservation);
     }
 
-    @KafkaListener(topics = "seat-reservation-responses")
+    @KafkaListener(topics = "inventory-reservation-responses")
     @Transactional
-    public void handleSeatReservationResponse(SeatReservationResponseEvent event) {
+    public void handleInventoryReservationResponse(SeatReservationResponseEvent event) {
         Reservation reservation = reservationRepository.findById(event.reservationId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO));
 
-        boolean isSuccess = false;
-        BigDecimal price = null;
-
         if (event.isSuccess()) {
             reservation.updateStatus(ReservationStatus.RESERVED);
-            reservation.updatePrice(event.price());
+            // reservation.updatePrice(getPrice(event.concertId()));
         } else {
             reservation.updateStatus(ReservationStatus.CANCEL);
         }

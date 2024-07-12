@@ -1,6 +1,7 @@
 package com.mgnt.reservationservice.controller;
 
 import com.mgnt.core.exception.ApiResult;
+import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.domain.service.ReservationService;
@@ -37,7 +38,7 @@ public class ReservationController {
     @PostMapping("/test")
     public ApiResult<ReservationResponseDTO> reserveTest(
             @RequestHeader("User-Id") Long userId,
-            @RequestBody ReserveRequest request
+            @RequestBody ReservationRequest request
     ) {
         return ApiResult.success(service.createReservationWithoutPayment(userId, request));
     }
