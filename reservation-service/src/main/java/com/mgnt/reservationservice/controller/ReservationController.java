@@ -24,7 +24,6 @@ public class ReservationController {
 
     }
 
-
     @PostMapping()
     public ApiResult<String> reserve(
             @RequestHeader("User-Id") Long userId,
@@ -33,6 +32,14 @@ public class ReservationController {
 
         service.initiateReservation(userId, request);
         return ApiResult.success("예약이 접수되었으며 진행중입니다.");
+    }
+
+    @PostMapping("/test")
+    public ApiResult<ReservationResponseDTO> reserveTest(
+            @RequestHeader("User-Id") Long userId,
+            @RequestBody ReserveRequest request
+    ) {
+        return ApiResult.success(service.createReservationWithoutPayment(userId, request));
     }
 
 //    @DeleteMapping("/{reservationId}")

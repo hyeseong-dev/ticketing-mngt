@@ -46,7 +46,7 @@ public class Reservation extends BaseDateTimeEntity {
 
     @Column(name = "reserved_at", nullable = false)
     private ZonedDateTime reservedAt;
-    
+
     public void toComplete() {
         this.status = ReservationStatus.RESERVED;
     }
@@ -64,6 +64,10 @@ public class Reservation extends BaseDateTimeEntity {
 
     public void updateStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public void updatePrice(BigDecimal price) {
+        this.price = price;
     }
 
     @Override

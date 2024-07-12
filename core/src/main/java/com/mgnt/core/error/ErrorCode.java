@@ -72,7 +72,11 @@ public enum ErrorCode implements MessageCommInterface {
     SEAT_NOT_AVAILABLE(400, "S001", "사용 가능한 좌석이 아닙니다."),
 
     // Payment
-    PLACE_NOT_FOUND(404, "P001", "해당 Place를 찾을 수 없습니다.");
+    PLACE_NOT_FOUND(404, "P001", "해당 Place를 찾을 수 없습니다."),
+
+    // Inventory
+    INVENTORY_NOT_FOUND(404, "I001", "콘서트 티켓이 존재하지 않습니다."),
+    INSUFFICIENT_INVENTORY(404, "I002", "콘서트 티켓 재고가 충분하지 않습니다.");
 
     private final int status;
     private final String code;

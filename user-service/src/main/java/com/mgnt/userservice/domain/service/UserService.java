@@ -1,7 +1,10 @@
 package com.mgnt.userservice.domain.service;
 
 import com.mgnt.core.error.ErrorCode;
-import com.mgnt.core.event.*;
+import com.mgnt.core.event.user_service.UserBalanceCheckRequestEvent;
+import com.mgnt.core.event.user_service.UserBalanceCheckResponseEvent;
+import com.mgnt.core.event.user_service.UserBalanceUpdateEvent;
+import com.mgnt.core.event.user_service.UserBalanceUpdateResponseEvent;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.userservice.controller.dto.request.*;
 import com.mgnt.userservice.controller.dto.response.*;
@@ -9,11 +12,9 @@ import com.mgnt.userservice.domain.entity.Users;
 import com.mgnt.userservice.domain.repository.UserJpaRepository;
 import com.mgnt.userservice.domain.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,9 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
