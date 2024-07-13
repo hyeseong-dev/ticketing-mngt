@@ -5,13 +5,11 @@ import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
+import com.mgnt.core.event.concert_service.InventoryReservationResponseEvent;
 import com.mgnt.core.event.concert_service.SeatReservationResponseEvent;
 import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
 import com.mgnt.core.event.payment_service.PaymentCompletedEvent;
-import com.mgnt.core.event.reservation_service.ReservationConfirmedEvent;
-import com.mgnt.core.event.reservation_service.ReservationCreatedEvent;
-import com.mgnt.core.event.reservation_service.ReservationFailedEvent;
-import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
+import com.mgnt.core.event.reservation_service.*;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
@@ -173,53 +171,69 @@ public class ReservationServiceImpl implements ReservationService {
     //---------------------------------------------------------------------------예약 테스트 락
     @Override
     @Transactional
-    public ReservationResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
+    public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
+        try {
+            Reservation reservation = Reservation.builder()
+                    .userId(userId)
+                    .concertId(request.concertId())
+                    .concertDateId(request.concertDateId())
+                    .seatId(request.seatId())
+                    .price(request.price())
+                    .status(ReservationStatus.ING)
+                    .reservedAt(ZonedDateTime.now())
+                    .build();
 
-        // 결제 없이 예약을 생성하는 로직을 여기에 구현
-        Reservation reservation = Reservation.builder()
-                .userId(userId)
-                .concertId(request.concertId())
-                .concertDateId(request.concertDateId())
-                .seatId(request.seatId())
-                .price(request.price())
-                .status(ReservationStatus.ING) // 바로 RESERVED 상태로 설정
-                .reservedAt(ZonedDateTime.now())
-                .build();
+            reservation = reservationRepository.save(reservation);
 
-        reservation = reservationRepository.save(reservation);
+            kafkaTemplate.send("inventory-reservation-requests", new InventoryReservationRequestEvent(
+                    reservation.getReservationId(),
+                    request.concertId(),
+                    request.concertDateId(),
+                    true
+            ));
 
-        // 좌석 상태 업데이트 이벤트 발행
-        kafkaTemplate.send("inventory-reservation-requests", new InventoryReservationRequestEvent(
-                request.concertId(),
-                request.concertDateId()
-        ));
-
-        // 3. 임시 응답 반환
-        return ReservationResponseDTO.from(reservation);
+            return new ReservationInventoryCreateResponseDTO(
+                    reservation.getReservationId(),
+                    reservation.getUserId(),
+                    reservation.getConcertId(),
+                    reservation.getConcertDateId(),
+                    reservation.getSeatId(),
+                    reservation.getCreatedAt()
+            );
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
+        }
     }
 
     @KafkaListener(topics = "inventory-reservation-responses")
     @Transactional
-    public void handleInventoryReservationResponse(SeatReservationResponseEvent event) {
-        Reservation reservation = reservationRepository.findById(event.reservationId())
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO));
+    public void handleInventoryReservationResponse(InventoryReservationResponseEvent event) {
+        try {
+            log.debug("[{}] 메소드 Received message from Kafka: {}", "handleInventoryReservationResponse", event);
+            Reservation reservation = reservationRepository.findByReservationId(event.reservationId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO));
 
-        if (event.isSuccess()) {
-            reservation.updateStatus(ReservationStatus.RESERVED);
-            // reservation.updatePrice(getPrice(event.concertId()));
-        } else {
-            reservation.updateStatus(ReservationStatus.CANCEL);
+            if (event.isSuccess()) {
+                reservation.updateStatus(ReservationStatus.RESERVED);
+                // reservation.updatePrice(getPrice(event.concertId()));
+            } else {
+                reservation.updateStatus(ReservationStatus.CANCEL);
+            }
+
+            reservationRepository.save(reservation);
+
+            // Redis 캐시 업데이트
+            ReservationResponseDTO updatedDto = ReservationResponseDTO.from(reservation);
+            reservationRedisRepository.saveReservation(reservation.getUserId(), reservation.getReservationId(), updatedDto);
+
+            // 클라이언트에게 결과 통지 (예: WebSocket 또는 SSE를 통해)
+            notifyClient(reservation.getUserId(), updatedDto);
+
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
         }
-
-        reservationRepository.save(reservation);
-
-        // Redis 캐시 업데이트
-        ReservationResponseDTO updatedDto = ReservationResponseDTO.from(reservation);
-        reservationRedisRepository.saveReservation(reservation.getUserId(), reservation.getReservationId(), updatedDto);
-
-        // 클라이언트에게 결과 통지 (예: WebSocket 또는 SSE를 통해)
-        notifyClient(reservation.getUserId(), updatedDto);
     }
+
 
     private void notifyClient(Long userId, ReservationResponseDTO reservationResponseDTO) {
         // WebSocket 또는 SSE를 통한 클라이언트 통지 로직

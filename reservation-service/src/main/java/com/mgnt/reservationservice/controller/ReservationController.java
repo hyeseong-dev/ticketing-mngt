@@ -1,5 +1,6 @@
 package com.mgnt.reservationservice.controller;
 
+import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
 import com.mgnt.core.exception.ApiResult;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
@@ -36,7 +37,7 @@ public class ReservationController {
     }
 
     @PostMapping("/test")
-    public ApiResult<ReservationResponseDTO> reserveTest(
+    public ApiResult<ReservationInventoryCreateResponseDTO> reserveTest(
             @RequestHeader("User-Id") Long userId,
             @RequestBody ReservationRequest request
     ) {

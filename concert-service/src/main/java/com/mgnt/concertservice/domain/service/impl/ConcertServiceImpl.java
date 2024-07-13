@@ -276,7 +276,7 @@ public class ConcertServiceImpl implements ConcertService {
         seat.patchStatus(status);
     }
 
-    //    --------------------------------------- 콘서트 티켓 재고 테스트(락)
+    //    --------------------------------------- 콘서트 티켓 재고 테스트
     @KafkaListener(topics = "inventory-reservation-requests")
     @Transactional
     public void handleInventoryReservationRequest(InventoryReservationRequestEvent event) {
@@ -284,6 +284,7 @@ public class ConcertServiceImpl implements ConcertService {
             boolean isSuccess = updateInventoryRemaining(event.concertId(), event.concertDateId(), -1L);
 
             InventoryReservationResponseEvent responseEvent = new InventoryReservationResponseEvent(
+                    event.reservationId(),
                     event.concertId(),
                     event.concertDateId(),
                     isSuccess
@@ -297,6 +298,7 @@ public class ConcertServiceImpl implements ConcertService {
             }
 
             InventoryReservationResponseEvent failureEvent = new InventoryReservationResponseEvent(
+                    event.reservationId(),
                     event.concertId(),
                     event.concertDateId(),
                     false
@@ -305,6 +307,7 @@ public class ConcertServiceImpl implements ConcertService {
         } catch (Exception e) {
             log.error("Error handling inventory reservation request", e);
             InventoryReservationResponseEvent failureEvent = new InventoryReservationResponseEvent(
+                    event.reservationId(),
                     event.concertId(),
                     event.concertDateId(),
                     false
@@ -315,16 +318,11 @@ public class ConcertServiceImpl implements ConcertService {
 
     @Transactional
     public boolean updateInventoryRemaining(Long concertId, Long concertDateId, Long remainingChange) {
-        Optional<Inventory> optionalInventory = inventoryRepository.findByConcertIdAndConcertDateId(concertId, concertDateId);
-        if (optionalInventory.isPresent()) {
-            Inventory inventory = optionalInventory.get();
-            if (inventory.getRemaining() + remainingChange < 0) {
-                throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY, "Insufficient ticket inventory.", Level.WARN);
-            }
-            int updatedRows = inventoryRepository.updateRemainingInventory(concertId, concertDateId, remainingChange);
-            return updatedRows > 0;
+        int updatedRows = inventoryRepository.updateRemainingInventory(concertId, concertDateId, remainingChange);
+        if (updatedRows > 0) {
+            return true;
         } else {
-            throw new CustomException(ErrorCode.INVENTORY_NOT_FOUND, "Inventory not found.", Level.WARN);
+            throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY, "Insufficient ticket inventory.", Level.WARN);
         }
     }
 }

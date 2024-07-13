@@ -39,7 +39,9 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
                 .update(inventory)
                 .set(inventory.remaining, inventory.remaining.add(remaining))
                 .where(inventory.concertId.eq(concertId)
-                        .and(inventory.concertDateId.eq(concertDateId)))
+                        .and(inventory.concertDateId.eq(concertDateId))
+                        .and(inventory.remaining.gt(0))  // 재고량이 0보다 큰 경우
+                        .and(inventory.remaining.add(remaining).goe(0)))  // 업데이트 후에도 재고량이 0 이상이 되는 경우
                 .execute();
 
         return (int) affectedRows;

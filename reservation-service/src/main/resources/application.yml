@@ -2,8 +2,8 @@ debug: false
 
 logging:
   level:
-    org.springframework.security: INFO
-    com.mgnt.userservice: INFO
+    org.springframework.security: DEBUG
+    com.mgnt.userservice: DEBUG
 #    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 server:
