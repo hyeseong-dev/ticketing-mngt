@@ -8,6 +8,11 @@ logging:
 
 server:
   port: 8080
+  tomcat:
+    max-threads: 800  # 동시 처리 가능한 최대 스레드 수 증가
+    max-connections: 20000  # 최대 연결 수 증가
+    accept-count: 1000  # 대기열 크기 증가
+    connection-timeout: 5000  # 연결 타임아웃 설정 (밀리초)
 
 spring:
   application:
@@ -20,14 +25,21 @@ spring:
       httpclient:
         connect-timeout: 3600000 # 1hour
         response-timeout: 3600000 # 1hour
+        pool:
+          max-connections: 10000  # 백엔드 서비스로의 최대 연결 수 증가
+          acquire-timeout: 5000  # 연결 획득 타임아웃 설정 (밀리초)
       discovery:
         locator:
           enabled: true
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY
 
   jackson:
     time-zone: Asia/Seoul
     property-naming-strategy: SNAKE_CASE
-
 
 eureka:
   client:

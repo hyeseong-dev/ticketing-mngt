@@ -3,8 +3,9 @@ debug: false
 logging:
   level:
     org.springframework.security: DEBUG
-    com.mgnt.userservice: DEBUG
-#    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    com.mgnt.concertservice: INFO
+    org.hibernate: INFO
+    com.zaxxer.hikari: INFO
 
 server:
   port: 8082
@@ -16,42 +17,30 @@ server:
     context-path: /
     context-parameters:
       throwExceptionIfNoHandlerFound: true
+  tomcat:
+    max-threads: 800
+    max-connections: 20000
+    accept-count: 1000
+    connection-timeout: 5000
 
 spring:
   application:
     name: concert-service
-  config:
-    import:
-      - classpath:/application-prod.yml
-      - classpath:/application-local.yml
-      - classpath:/application-secrets.yml
-
   datasource:
-    hikari:
-      maximum-pool-size: 10
-      max-lifetime: 150000
-      idle-timeout: 600000
-      connection-timeout: 30000
-      validation-timeout: 5000
-    url: jdbc:mysql://localhost:3309/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3309/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true&useSSL=false&rewriteBatchedStatements=true
     username: developer
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jackson:
-    time-zone: Asia/Seoul
-    property-naming-strategy: SNAKE_CASE
-  web:
-    resources:
-      add-mappings: false
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 50
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 5000
+      validation-timeout: 3000
+      pool-name: ConcertHikariPool
+      leak-detection-threshold: 60000
+
   jpa:
     defer-datasource-initialization: true
     hibernate.ddl-auto: none
@@ -61,8 +50,27 @@ spring:
         format_sql: true
         show_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-        default_batch_fetch_size: 50
+        default_batch_fetch_size: 500
+
   kafka:
     bootstrap-servers: localhost:9092,kafka:9092
     consumer:
       group-id: concert-service-group
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://admin:1234@localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+gateway:
+  ip: 172.30.1.0/24

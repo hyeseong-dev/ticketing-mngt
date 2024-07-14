@@ -3,9 +3,13 @@ package com.mgnt.concertservice.domain.repository.impl;
 import com.mgnt.concertservice.domain.entity.Inventory;
 import com.mgnt.concertservice.domain.entity.QInventory;
 import com.mgnt.concertservice.domain.repository.InventoryRepositoryCustom;
+import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.exception.CustomException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.Level;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,5 +49,41 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
                 .execute();
 
         return (int) affectedRows;
+    }
+
+    //    @Override
+//    public Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
+//        QInventory inventory = QInventory.inventory;
+//
+//        return queryFactory
+//                .update(inventory)
+//                .set(inventory.remaining, inventory.remaining.add(remainingChange))
+//                .where(inventory.concertId.eq(concertId)
+//                        .and(inventory.concertDateId.eq(concertDateId))
+//                        .and(inventory.remaining.add(remainingChange).goe(0))) // 재고가 음수가 되지 않도록 체크
+//                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+//                .execute();
+//    }
+    @Transactional
+    public Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
+        // 1. 비관적 락으로 엔티티를 먼저 조회
+        Inventory inventory = queryFactory
+                .selectFrom(QInventory.inventory)
+                .where(QInventory.inventory.concertId.eq(concertId)
+                        .and(QInventory.inventory.concertDateId.eq(concertDateId)))
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .fetchOne();
+
+        if (inventory == null) {
+            throw new CustomException(ErrorCode.INVENTORY_NOT_FOUND, "Inventory not found.", Level.WARN);
+        }
+
+        // 2. 조회된 엔티티의 재고를 업데이트
+        if (inventory.getRemaining() + remainingChange >= 0) {
+            inventory.setRemaining(inventory.getRemaining() + remainingChange);
+            return 1L; // 업데이트 성공
+        } else {
+            return 0L; // 재고 부족
+        }
     }
 }

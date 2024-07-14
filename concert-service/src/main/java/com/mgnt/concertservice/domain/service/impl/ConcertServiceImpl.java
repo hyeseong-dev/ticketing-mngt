@@ -318,7 +318,8 @@ public class ConcertServiceImpl implements ConcertService {
 
     @Transactional
     public boolean updateInventoryRemaining(Long concertId, Long concertDateId, Long remainingChange) {
-        int updatedRows = inventoryRepository.updateRemainingInventory(concertId, concertDateId, remainingChange);
+//        int updatedRows = inventoryRepository.updateRemainingInventory(concertId, concertDateId, remainingChange);
+        long updatedRows = inventoryRepository.updateRemainingInventoryWithPessimisticLock(concertId, concertDateId, remainingChange);
         if (updatedRows > 0) {
             return true;
         } else {

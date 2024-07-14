@@ -1,22 +1,5 @@
 debug: false
 
-logging:
-  level:
-    org.springframework.security: DEBUG
-    com.mgnt.userservice: DEBUG
-#    org.hibernate.type.descriptor.sql.BasicBinder: trace
-
-server:
-  port: 8083
-  error:
-    whitelabel:
-      enabled: true
-    include-message: always
-  servlet:
-    context-path: /
-    context-parameters:
-      throwExceptionIfNoHandlerFound: true
-
 spring:
   application:
     name: reservation-service
@@ -27,17 +10,19 @@ spring:
       - classpath:/application-secrets.yml
 
   datasource:
-    hikari:
-      maximum-pool-size: 10
-      max-lifetime: 150000  # 150초 (밀리초 단위)
-      idle-timeout: 600000  # 10분 (밀리초 단위)
-      connection-timeout: 30000 # 30초 (밀리초 단위)
-      validation-timeout: 5000  # 5초 (밀리초 단위)
-
-    url: jdbc:mysql://localhost:3308/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3308/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true&useSSL=false&rewriteBatchedStatements=true
     username: developer
     password: 12345
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 50
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 5000
+      validation-timeout: 3000
+      pool-name: ReservationHikariPool
+      leak-detection-threshold: 60000
 
   jackson:
     time-zone: Asia/Seoul
@@ -50,8 +35,6 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-
-
     properties:
       mail:
         smtp:
@@ -60,16 +43,58 @@ spring:
             enable: true
 
   jpa:
-    defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
-    hibernate.ddl-auto: none
-    show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
-        show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
         dialect: org.hibernate.dialect.MySQLDialect
-        default_batch_fetch_size: 50 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+        format_sql: true
+        show_sql: true
+        default_batch_fetch_size: 100
+
   kafka:
     bootstrap-servers: localhost:9092,kafka:9092
     consumer:
       group-id: reservation-service-group
+
+server:
+  port: 8083
+  error:
+    include-message: always
+    whitelabel:
+      enabled: true
+  servlet:
+    context-path: /
+    context-parameters:
+      throwExceptionIfNoHandlerFound: true
+  tomcat:
+    max-threads: 800
+    max-connections: 20000
+    accept-count: 1000
+    connection-timeout: 5000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://admin:1234@localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+gateway:
+  ip: 172.30.1.0/24
+
+logging:
+  level:
+    com.mgnt.reservationservice: INFO
+    org.hibernate: INFO
+    com.zaxxer.hikari: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
