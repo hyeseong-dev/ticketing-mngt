@@ -1,0 +1,76 @@
+debug: false
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.mgnt.userservice: INFO
+#    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+server:
+  port: 8081
+  error:
+    whitelabel:
+      enabled: true
+    include-message: always
+  servlet:
+    context-path: /
+    context-parameters:
+      throwExceptionIfNoHandlerFound: true
+
+spring:
+  application:
+    name: user-service
+  config:
+    import:
+      - classpath:/application-prod.yml
+      - classpath:/application-local.yml
+      - classpath:/application-secrets.yml
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      max-lifetime: 150000  # 150초 (밀리초 단위)
+      idle-timeout: 600000  # 10분 (밀리초 단위)
+      connection-timeout: 30000 # 30초 (밀리초 단위)
+      validation-timeout: 5000  # 5초 (밀리초 단위)
+    url: jdbc:mysql://localhost:3307/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true
+    username: developer # 데이터베이스 사용자 이름을 'developer'로 설정합니다.
+    password: 12345 # 데이터베이스 사용자 비밀번호를 '12345'로 설정합니다.
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스를 사용합니다.
+
+  jackson:
+    time-zone: Asia/Seoul
+    property-naming-strategy: SNAKE_CASE
+
+  web:
+    resources:
+      add-mappings: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jpa:
+    defer-datasource-initialization: true # 데이터 소스 초기화를 지연시킵니다.
+    hibernate.ddl-auto: none
+    show-sql: true # SQL 쿼리를 콘솔에 출력하도록 설정합니다.
+    properties:
+      hibernate:
+        format_sql: true # 출력되는 SQL 쿼리를 읽기 쉽게 포맷합니다.
+        show_sql: true # SQL 쿼리를 출력하도록 설정합니다.
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100 # Hibernate가 한 번에 가져올 배치 크기를 100으로 설정합니다.
+  kafka:
+    bootstrap-servers: localhost:9092,kafka:9092
+    consumer:
+      group-id: user-service-group
+
+jwt:
+  app:
+    jwtSecretKey: 7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg==
+  access-token-validity: 1296000000 # 1 hour 86400000
+  refresh-token-validity: 1296000000 # 15 days
