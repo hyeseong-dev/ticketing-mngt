@@ -11,4 +11,8 @@ public interface InventoryRepositoryCustom {
     int updateRemainingInventory(Long concertId, Long concertDateId, Long remaining);
 
     Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange);
+
+    Long findVersionByConcertIdAndConcertDateId(Long concertId, Long concertDateId);
+
+    Long updateRemainingInventoryWithOptimisticLock(Long concertId, Long concertDateId, Long remainingChange, Long version);
 }

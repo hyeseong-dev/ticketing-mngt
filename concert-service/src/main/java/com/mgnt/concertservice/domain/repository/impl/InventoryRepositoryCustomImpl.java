@@ -64,6 +64,7 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
 //                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
 //                .execute();
 //    }
+    
     @Transactional
     public Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
         // 1. 비관적 락으로 엔티티를 먼저 조회
@@ -86,4 +87,33 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
             return 0L; // 재고 부족
         }
     }
+
+    @Override
+    @Transactional
+    public Long updateRemainingInventoryWithOptimisticLock(Long concertId, Long concertDateId, Long remainingChange, Long version) {
+        QInventory inventory = QInventory.inventory;
+
+        long updatedRows = queryFactory.update(inventory)
+                .set(inventory.remaining, inventory.remaining.add(remainingChange))
+                .set(inventory.version, inventory.version.add(1))
+                .where(inventory.concertId.eq(concertId)
+                        .and(inventory.concertDateId.eq(concertDateId))
+                        .and(inventory.version.eq(version)))
+                .execute();
+
+        return updatedRows;
+    }
+
+    @Override
+    public Long findVersionByConcertIdAndConcertDateId(Long concertId, Long concertDateId) {
+        QInventory inventory = QInventory.inventory;
+
+        return queryFactory.select(inventory.version)
+                .from(inventory)
+                .where(inventory.concertId.eq(concertId)
+                        .and(inventory.concertDateId.eq(concertDateId)))
+                .setLockMode(LockModeType.OPTIMISTIC)
+                .fetchOne();
+    }
+
 }
