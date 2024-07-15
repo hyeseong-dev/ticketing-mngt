@@ -25,6 +25,7 @@ public enum ErrorCode implements MessageCommInterface {
     ENDPOINT_NOT_FOUND(404, "C014", "Endpoint not found."),
     HTTP_METHOD_NOT_FOUND(405, "C015", "HTTP method not found."),
     PHONE_NUMBER_DUPLICATED(409, "C017", "Phone number duplicated."),
+    CONCURRENT_MODIFICATION(400, "C018", "Concurrent Modification."),
 
     // User Errors
     USER_NOT_FOUND(404, "U001", "This user does not exist."),
