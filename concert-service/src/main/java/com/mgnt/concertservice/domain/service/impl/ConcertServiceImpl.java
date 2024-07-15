@@ -18,6 +18,7 @@ import com.mgnt.core.event.reservation_service.ReservationFailedEvent;
 import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.exception.CustomException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
@@ -281,8 +282,8 @@ public class ConcertServiceImpl implements ConcertService {
     @Transactional
     public void handleInventoryReservationRequest(InventoryReservationRequestEvent event) {
         try {
-            boolean isSuccess = updateInventoryRemaining(event.concertId(), event.concertDateId(), -1L);
-
+//            boolean isSuccess = updateInventoryRemaining(event.concertId(), event.concertDateId(), -1L);
+            boolean isSuccess = updateInventoryRemainingOptimisticLock(event.concertId(), event.concertDateId(), -1L);
             InventoryReservationResponseEvent responseEvent = new InventoryReservationResponseEvent(
                     event.reservationId(),
                     event.concertId(),
@@ -325,5 +326,31 @@ public class ConcertServiceImpl implements ConcertService {
         } else {
             throw new CustomException(ErrorCode.INSUFFICIENT_INVENTORY, "Insufficient ticket inventory.", Level.WARN);
         }
+    }
+
+    public boolean updateInventoryRemainingOptimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
+        int maxRetries = 3;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                Inventory inventory = inventoryRepository.findByConcertIdAndConcertDateId(concertId, concertDateId).orElseThrow(
+                        () -> new CustomException(ErrorCode.INVENTORY_NOT_FOUND, "Inventory not found.", Level.WARN)
+                );
+
+                Long updatedRows = inventoryRepository.updateRemainingInventoryWithOptimisticLock(concertId, concertDateId, remainingChange, inventory.getVersion());
+                if (updatedRows > 0) {
+                    return true;
+                } else {
+                    log.warn("Update failed due to concurrent modification. Retrying... (Attempt {})", attempt + 1);
+                }
+            } catch (OptimisticLockException e) {
+                log.warn("Optimistic lock exception occurred. Retrying... (Attempt {})", attempt + 1);
+                if (attempt == maxRetries - 1) {
+                    log.error("Failed to update inventory after {} attempts", maxRetries);
+                    throw new CustomException(ErrorCode.CONCURRENT_MODIFICATION, "Too many concurrent modifications", Level.ERROR);
+                }
+            }
+        }
+        return false;
     }
 }
