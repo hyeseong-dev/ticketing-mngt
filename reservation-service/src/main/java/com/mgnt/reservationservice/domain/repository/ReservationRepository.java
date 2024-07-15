@@ -20,6 +20,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     Reservation findOneByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
 
     Reservation save(Reservation reservation);
-    
+
     void delete(Reservation reservation);
 }

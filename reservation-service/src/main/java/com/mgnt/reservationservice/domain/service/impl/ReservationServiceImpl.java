@@ -15,6 +15,7 @@ import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
+import com.mgnt.reservationservice.domain.repository.QueueRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import com.mgnt.reservationservice.domain.service.ReservationService;
@@ -25,12 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,8 +44,33 @@ public class ReservationServiceImpl implements ReservationService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
+    private final QueueRedisRepository queueRedisRepository;
     private final ReservationRedisRepository reservationRedisRepository;
     private final ObjectMapper objectMapper;
+    private final String WAITING_QUEUE_KEY = "queue:%d:%d";
+
+    public QueueEntryResponse enterQueue(Long userId, QueueEntryRequest request) {
+        String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
+        Long position = queueRedisRepository.addToQueue(queueKey, userId.toString());
+
+        if (position == null) {
+            throw new CustomException(ErrorCode.QUEUE_ENTRY_FAILED, null, Level.ERROR);
+        }
+
+        return new QueueEntryResponse(userId, position, request.concertId(), request.concertDateId());
+    }
+
+    public QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request) {
+        String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
+        Long position = queueRedisRepository.getQueuePosition(queueKey, userId.toString());
+        String status = (position != null) ? "WAITING" : "NOT_IN_QUEUE";
+        return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(), status, position);
+    }
+
+
+    private String generateQueueKey(Long concertId, Long concertDateId) {
+        return String.format(WAITING_QUEUE_KEY, concertId, concertDateId);
+    }
 
 
     public List<ReservationResponseDTO> getMyReservations(Long userId) {
@@ -67,6 +95,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         return responseDTOs;
     }
+
 
     private ReservationResponseDTO convertToDTO(Reservation reservation) {
         return new ReservationResponseDTO(

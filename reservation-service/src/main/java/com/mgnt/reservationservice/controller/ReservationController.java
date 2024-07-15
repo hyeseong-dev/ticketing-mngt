@@ -1,5 +1,8 @@
 package com.mgnt.reservationservice.controller;
 
+import com.mgnt.core.event.reservation_service.QueueEntryRequest;
+import com.mgnt.core.event.reservation_service.QueueEntryResponse;
+import com.mgnt.core.event.reservation_service.QueueStatusResponse;
 import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
 import com.mgnt.core.exception.ApiResult;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
@@ -44,13 +47,22 @@ public class ReservationController {
         return ApiResult.success(service.createReservationWithoutPayment(userId, request));
     }
 
-//    @DeleteMapping("/{reservationId}")
-//    public ApiResult<Void> cancel(@PathVariable(value = "reservationId") Long reservationId,
-//                                  @RequestBody @Valid CancelRequest request) {
-//        service.cancel(reservationId, request);
-//        return ApiResult.successNoContent();
-//
-//    }
+    @PostMapping("/queue")
+    public ApiResult<QueueEntryResponse> reserveQueue(
+            @RequestHeader("User-Id") Long userId,
+            @RequestBody QueueEntryRequest request
+    ) {
+        return ApiResult.success(service.enterQueue(userId, request));
+    }
+
+    @GetMapping("/queue/status")
+    public ApiResult<QueueStatusResponse> getQueueStatus(
+            @RequestHeader("User-Id") Long userId,
+            @RequestBody QueueEntryRequest request
+    ) {
+        
+        return ApiResult.success(service.getQueueStatus(userId, request));
+    }
 
 }
 

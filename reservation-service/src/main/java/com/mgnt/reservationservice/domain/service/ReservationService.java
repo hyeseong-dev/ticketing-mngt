@@ -1,5 +1,8 @@
 package com.mgnt.reservationservice.domain.service;
 
+import com.mgnt.core.event.reservation_service.QueueEntryRequest;
+import com.mgnt.core.event.reservation_service.QueueEntryResponse;
+import com.mgnt.core.event.reservation_service.QueueStatusResponse;
 import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
@@ -22,4 +25,8 @@ public interface ReservationService {
     void handlePaymentCompleted(PaymentCompletedEvent event);
 
     ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
+
+    QueueEntryResponse enterQueue(Long userId, QueueEntryRequest request);
+
+    QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request);
 }

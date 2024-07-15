@@ -77,7 +77,10 @@ public enum ErrorCode implements MessageCommInterface {
 
     // Inventory
     INVENTORY_NOT_FOUND(404, "I001", "콘서트 티켓이 존재하지 않습니다."),
-    INSUFFICIENT_INVENTORY(404, "I002", "콘서트 티켓 재고가 충분하지 않습니다.");
+    INSUFFICIENT_INVENTORY(404, "I002", "콘서트 티켓 재고가 충분하지 않습니다."),
+
+    // Queue
+    QUEUE_ENTRY_FAILED(400, "Q001", "대기열 진입에 실패했습니다.");
 
     private final int status;
     private final String code;
