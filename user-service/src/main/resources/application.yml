@@ -68,3 +68,9 @@ spring:
     bootstrap-servers: localhost:9092,kafka:9092
     consumer:
       group-id: user-service-group
+
+jwt:
+  app:
+    jwtSecretKey: 7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg==
+  access-token-validity: 1296000000 # 1 hour 86400000
+  refresh-token-validity: 1296000000 # 15 days
