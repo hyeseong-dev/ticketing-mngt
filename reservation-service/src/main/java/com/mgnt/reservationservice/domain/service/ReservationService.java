@@ -25,8 +25,5 @@ public interface ReservationService {
     void handlePaymentCompleted(PaymentCompletedEvent event);
 
     ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
-
-    QueueEntryResponse enterQueue(Long userId, QueueEntryRequest request);
-
-    QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request);
+    
 }

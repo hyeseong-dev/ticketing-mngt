@@ -44,34 +44,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
-    private final QueueRedisRepository queueRedisRepository;
     private final ReservationRedisRepository reservationRedisRepository;
-    private final ObjectMapper objectMapper;
-    private final String WAITING_QUEUE_KEY = "queue:%d:%d";
-
-    public QueueEntryResponse enterQueue(Long userId, QueueEntryRequest request) {
-        String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
-        Long position = queueRedisRepository.addToQueue(queueKey, userId.toString());
-
-        if (position == null) {
-            throw new CustomException(ErrorCode.QUEUE_ENTRY_FAILED, null, Level.ERROR);
-        }
-
-        return new QueueEntryResponse(userId, position, request.concertId(), request.concertDateId());
-    }
-
-    public QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request) {
-        String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
-        Long position = queueRedisRepository.getQueuePosition(queueKey, userId.toString());
-        String status = (position != null) ? "WAITING" : "NOT_IN_QUEUE";
-        return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(), status, position);
-    }
-
-
-    private String generateQueueKey(Long concertId, Long concertDateId) {
-        return String.format(WAITING_QUEUE_KEY, concertId, concertDateId);
-    }
-
 
     public List<ReservationResponseDTO> getMyReservations(Long userId) {
         // 먼저 Redis에서 캐시된 데이터 조회

@@ -46,23 +46,6 @@ public class ReservationController {
     ) {
         return ApiResult.success(service.createReservationWithoutPayment(userId, request));
     }
-
-    @PostMapping("/queue")
-    public ApiResult<QueueEntryResponse> reserveQueue(
-            @RequestHeader("User-Id") Long userId,
-            @RequestBody QueueEntryRequest request
-    ) {
-        return ApiResult.success(service.enterQueue(userId, request));
-    }
-
-    @GetMapping("/queue/status")
-    public ApiResult<QueueStatusResponse> getQueueStatus(
-            @RequestHeader("User-Id") Long userId,
-            @RequestBody QueueEntryRequest request
-    ) {
-        
-        return ApiResult.success(service.getQueueStatus(userId, request));
-    }
-
+    
 }
 
