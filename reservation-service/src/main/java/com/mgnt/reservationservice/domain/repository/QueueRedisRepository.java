@@ -9,4 +9,10 @@ public interface QueueRedisRepository {
     void removeFromQueue(String queueKey, String userId);
 
     Long popUserFromQueue(String queueKey);
+
+    boolean setAccessToken(String userId, String accessToken, int expirationMinutes);
+
+    boolean setAttemptCount(String userId, int initialCount, int expirationHours);
+
+    String getAccessToken(String tokenKey);
 }

@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
@@ -42,5 +43,20 @@ public class QueueRedisRepositoryImpl implements QueueRedisRepository {
         String userId = userIds.iterator().next();
         redisTemplate.opsForZSet().remove(queueKey, userId);
         return Long.valueOf(userId);
+    }
+
+    @Override
+    public boolean setAccessToken(String tokenKey, String accessToken, int expirationMinutes) {
+        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(tokenKey, accessToken, expirationMinutes, TimeUnit.MINUTES));
+    }
+
+    @Override
+    public boolean setAttemptCount(String countKey, int initialCount, int expirationHours) {
+        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(countKey, String.valueOf(initialCount), expirationHours, TimeUnit.HOURS));
+    }
+
+    @Override
+    public String getAccessToken(String tokenKey) {
+        return redisTemplate.opsForValue().get(tokenKey);
     }
 }
