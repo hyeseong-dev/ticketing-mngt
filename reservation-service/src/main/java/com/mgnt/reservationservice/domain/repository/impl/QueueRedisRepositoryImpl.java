@@ -25,4 +25,9 @@ public class QueueRedisRepositoryImpl implements QueueRedisRepository {
         Long rank = redisTemplate.opsForZSet().rank(queueKey, userId);
         return (rank != null) ? rank + 1 : null;
     }
+
+    @Override
+    public void removeFromQueue(String queueKey, String userId) {
+        redisTemplate.opsForZSet().remove(queueKey, userId);
+    }
 }

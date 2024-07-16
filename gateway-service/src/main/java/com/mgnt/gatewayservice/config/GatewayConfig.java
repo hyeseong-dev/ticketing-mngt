@@ -12,11 +12,9 @@ import org.springframework.core.Ordered;
 public class GatewayConfig {
 
     private final AuthorizationHeaderFilter authFilter;
-    private final RequestBodyFilter requestBodyFilter;
 
-    public GatewayConfig(AuthorizationHeaderFilter authFilter, RequestBodyFilter requestBodyFilter) {
+    public GatewayConfig(AuthorizationHeaderFilter authFilter) {
         this.authFilter = authFilter;
-        this.requestBodyFilter = requestBodyFilter;
     }
 
     @Bean
@@ -33,8 +31,12 @@ public class GatewayConfig {
                         .path("/api/users/**")
                         .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://USER-SERVICE"))
-                .route("reservation-service", r -> r
+                .route("reservation-service-protected", r -> r
                         .path("/api/reservations/**")
+                        .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
+                        .uri("lb://RESERVATION-SERVICE"))
+                .route("reservation-service-queue", r -> r
+                        .path("/api/queue/**")
                         .filters(f -> f.filter(authFilter.apply(new AuthorizationHeaderFilter.Config())))
                         .uri("lb://RESERVATION-SERVICE"))
                 .route("payment-service", r -> r

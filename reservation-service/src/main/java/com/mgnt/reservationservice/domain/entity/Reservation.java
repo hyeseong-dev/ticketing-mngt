@@ -47,6 +47,9 @@ public class Reservation extends BaseDateTimeEntity {
     @Column(name = "reserved_at", nullable = false)
     private ZonedDateTime reservedAt;
 
+    @Column(name = "expires_at")
+    private ZonedDateTime expiresAt;
+
     public void toComplete() {
         this.status = ReservationStatus.RESERVED;
     }

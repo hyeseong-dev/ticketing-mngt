@@ -49,7 +49,8 @@ public class Seat extends BaseDateTimeEntity {
 
     public enum Status {
         AVAILABLE,
-        DISABLE
+        RESERVED,
+        SOLD
     }
 
     public void patchStatus(Status status) {
