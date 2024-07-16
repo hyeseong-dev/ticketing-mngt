@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Set;
+
 @Repository
 @RequiredArgsConstructor
 public class QueueRedisRepositoryImpl implements QueueRedisRepository {
@@ -29,5 +31,16 @@ public class QueueRedisRepositoryImpl implements QueueRedisRepository {
     @Override
     public void removeFromQueue(String queueKey, String userId) {
         redisTemplate.opsForZSet().remove(queueKey, userId);
+    }
+
+    @Override
+    public Long popUserFromQueue(String queueKey) {
+        Set<String> userIds = redisTemplate.opsForZSet().range(queueKey, 0, 0);
+        if (userIds == null || userIds.isEmpty()) {
+            return null;
+        }
+        String userId = userIds.iterator().next();
+        redisTemplate.opsForZSet().remove(queueKey, userId);
+        return Long.valueOf(userId);
     }
 }

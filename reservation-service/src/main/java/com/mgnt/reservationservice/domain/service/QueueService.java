@@ -10,4 +10,6 @@ public interface QueueService {
     QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request);
 
     void removeFromQueue(Long userId, QueueEntryRequest request);
+
+    void processQueue(Long concertId, Long concertDateId);
 }

@@ -4,7 +4,7 @@ public record QueueStatusResponse(
         Long userId,
         Long concertId,
         Long concertDateId,
-        String Status,
+        QueueEventStatus status,
         Long position
 ) {
 }
