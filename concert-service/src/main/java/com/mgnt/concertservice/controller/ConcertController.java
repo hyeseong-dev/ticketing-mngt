@@ -8,10 +8,7 @@ import com.mgnt.concertservice.domain.service.ConcertService;
 import com.mgnt.core.exception.ApiResult;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,7 +35,13 @@ public class ConcertController {
     }
 
     @GetMapping("/dates/{concertDateId}/seats")
-    public ApiResult<GetSeatsResponse> getAvailableSeats(@PathVariable(value = "concertDateId") @NotNull Long concertDateId) {
+    public ApiResult<GetSeatsResponse> getAvailableSeats(
+            @RequestHeader(value = "X-Concert-Id") Long concertId,
+            @RequestHeader(value = "X-Concert-Date-Id") Long xConcertDateId,
+            @RequestHeader(value = "X-User-Id") Long xUserId,
+            @RequestHeader(value = "User-Id") Long userId,
+            @PathVariable(value = "concertDateId") @NotNull Long concertDateId
+    ) {
         return ApiResult.success(service.getAvailableSeats(concertDateId));
     }
 }

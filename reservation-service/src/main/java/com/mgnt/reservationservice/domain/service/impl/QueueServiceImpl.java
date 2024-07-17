@@ -5,6 +5,7 @@ import com.mgnt.core.event.reservation_service.*;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.reservationservice.domain.repository.QueueRedisRepository;
 import com.mgnt.reservationservice.domain.service.QueueService;
+import com.mgnt.reservationservice.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
@@ -23,6 +24,7 @@ import static com.mgnt.reservationservice.utils.Constants.*;
 @RequiredArgsConstructor
 public class QueueServiceImpl implements QueueService {
 
+    private final JwtUtil jwtUtil;
     private final QueueRedisRepository queueRedisRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -61,10 +63,19 @@ public class QueueServiceImpl implements QueueService {
 
         if (position != null) {
             return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
-                    QueueEventStatus.WAITING, position, null);
+                    QueueEventStatus.WAITING, position);
         } else {
-            return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
-                    QueueEventStatus.NOT_IN_QUEUE, null, null);
+            // 대기열에 없는 경우, 토큰의 존재 여부를 확인하여 READY 상태인지 확인
+            String tokenKey = String.format(ACCESS_TOKEN_KEY, userId, request.concertId(), request.concertDateId());
+            String token = queueRedisRepository.getAccessToken(tokenKey);
+
+            if (token != null) {
+                return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
+                        QueueEventStatus.READY, null);
+            } else {
+                return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
+                        QueueEventStatus.NOT_IN_QUEUE, null);
+            }
         }
     }
 
@@ -110,7 +121,7 @@ public class QueueServiceImpl implements QueueService {
                 userId, concertId, concertDateId);
 
         try {
-            String accessToken = generateAccessToken();
+            String accessToken = jwtUtil.createToken(userId, concertId, concertDateId);
             String tokenKey = String.format(ACCESS_TOKEN_KEY, userId, concertId, concertDateId);
             String countKey = String.format(ATTEMPT_COUNT_KEY, userId, concertId, concertDateId);
 

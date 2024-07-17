@@ -26,6 +26,12 @@ server:
 spring:
   application:
     name: concert-service
+  config:
+    import:
+      - classpath:/application-prod.yml
+      - classpath:/application-local.yml
+      - classpath:/application-secrets.yml
+
   datasource:
     url: jdbc:mysql://localhost:3309/ticketing_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&autoReconnect=true&createDatabaseIfNotExist=true&useSSL=false&rewriteBatchedStatements=true
     username: developer
