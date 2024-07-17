@@ -118,7 +118,7 @@ public class QueueServiceImpl implements QueueService {
             String existingToken = queueRedisRepository.getAccessToken(tokenKey);
             if (existingToken != null) {
                 log.info("Access token already exists for user: {}. Token: {}", userId, existingToken);
-                throw new CustomException(ErrorCode.RESERVATION_TOKEN_ALREADY_EXIST, null, Level.WARN, false);
+                throw new CustomException(ErrorCode.RESERVATION_TOKEN_ALREADY_EXIST, null, Level.WARN);
             }
 
             boolean tokenSet = queueRedisRepository.setAccessToken(tokenKey, accessToken, ACCESS_TOKEN_EXPIRATION);

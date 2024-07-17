@@ -1,6 +1,5 @@
 package com.mgnt.reservationservice.config;
 
-import com.mgnt.reservationservice.exception.CustomKafkaErrorHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
