@@ -2,12 +2,14 @@ package com.mgnt.reservationservice.domain.repository.impl;
 
 import com.mgnt.reservationservice.domain.repository.QueueRedisRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class QueueRedisRepositoryImpl implements QueueRedisRepository {
@@ -47,16 +49,32 @@ public class QueueRedisRepositoryImpl implements QueueRedisRepository {
 
     @Override
     public boolean setAccessToken(String tokenKey, String accessToken, int expirationMinutes) {
-        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(tokenKey, accessToken, expirationMinutes, TimeUnit.MINUTES));
+        log.debug("Attempting to set access token. Key: {}, Token: {}, Expiration: {} minutes", tokenKey, accessToken, expirationMinutes);
+        boolean result = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(tokenKey, accessToken, expirationMinutes, TimeUnit.MINUTES));
+        log.debug("Result of setting access token. Key: {}, Result: {}", tokenKey, result);
+        return result;
     }
 
     @Override
     public boolean setAttemptCount(String countKey, int initialCount, int expirationHours) {
-        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(countKey, String.valueOf(initialCount), expirationHours, TimeUnit.HOURS));
+        log.debug("Attempting to set attempt count. Key: {}, Initial Count: {}, Expiration: {} hours", countKey, initialCount, expirationHours);
+        boolean result = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(countKey, String.valueOf(initialCount), expirationHours, TimeUnit.HOURS));
+        log.debug("Result of setting attempt count. Key: {}, Result: {}", countKey, result);
+        return result;
     }
 
     @Override
     public String getAccessToken(String tokenKey) {
         return redisTemplate.opsForValue().get(tokenKey);
+    }
+
+    @Override
+    public Set<String> getTopUsers(String queueKey, int count) {
+        return redisTemplate.opsForZSet().range(queueKey, 0, count - 1);
+    }
+
+    @Override
+    public Long getAccessTokenTTL(String tokenKey) {
+        return redisTemplate.getExpire(tokenKey, TimeUnit.SECONDS);
     }
 }

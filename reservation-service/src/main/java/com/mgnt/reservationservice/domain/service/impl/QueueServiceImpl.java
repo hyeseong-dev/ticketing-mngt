@@ -13,7 +13,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
+
+import static com.mgnt.reservationservice.utils.Constants.*;
 
 @Slf4j
 @Service
@@ -22,13 +25,6 @@ public class QueueServiceImpl implements QueueService {
 
     private final QueueRedisRepository queueRedisRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final String WAITING_QUEUE_KEY = "queue:%d:%d";
-    private final int BATCH_SIZE = 10;
-    private static final int ACCESS_TOKEN_EXPIRATION = 10; // 10 minutes
-    private static final int ATTEMPT_COUNT_EXPIRATION = 24; // 24 hours
-    private static final String ACCESS_TOKEN_KEY = "reservation:access:%d:%d:%d"; // userId:concertId:concertDateId
-    private static final String ATTEMPT_COUNT_KEY = "reservation:attempts:%d:%d:%d";
-
 
     @Override
     public void removeFromQueue(Long userId, QueueEntryRequest request) {
@@ -41,52 +37,37 @@ public class QueueServiceImpl implements QueueService {
         String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
         Long position = queueRedisRepository.addToQueue(queueKey, userId.toString());
 
+        log.info("User {} entered queue for concert {} on date {}. Position: {}",
+                userId, request.concertId(), request.concertDateId(), position);
+
         if (position == null) {
+            log.error("Failed to add user {} to queue", userId);
             throw new CustomException(ErrorCode.QUEUE_ENTRY_FAILED, null, Level.ERROR);
         }
 
-        QueueEvent event = new QueueEvent(userId,
-                request.concertId(),
-                request.concertDateId(),
-                QueueEventType.QUEUE_ENTRY,
-                QueueEventStatus.WAITING,
-                position);
+        QueueEvent event = new QueueEvent(userId, request.concertId(), request.concertDateId(),
+                QueueEventType.QUEUE_ENTRY, QueueEventStatus.WAITING, position);
         kafkaTemplate.send("queue-events", event);
-
-        // queue-process 토픽에 이벤트 발행
         kafkaTemplate.send("queue-process", event);
 
+        log.info("Queue entry event sent for user {}", userId);
 
         return new QueueEntryResponse(userId, position, request.concertId(), request.concertDateId());
     }
 
-    @Override
     public QueueStatusResponse getQueueStatus(Long userId, QueueEntryRequest request) {
         String queueKey = generateQueueKey(request.concertId(), request.concertDateId());
         Long position = queueRedisRepository.getQueuePosition(queueKey, userId.toString());
 
         if (position != null) {
-            if (position == 0) {
-                String tokenKey = String.format(ACCESS_TOKEN_KEY, userId, request.concertId(), request.concertDateId());
-                String token = queueRedisRepository.getAccessToken(tokenKey);
-                return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(), QueueEventStatus.READY, 0L, token);
-            } else {
-                return new QueueStatusResponse(userId,
-                        request.concertId(),
-                        request.concertDateId(),
-                        QueueEventStatus.WAITING,
-                        position,
-                        null);
-            }
+            return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
+                    QueueEventStatus.WAITING, position, null);
         } else {
-            return new QueueStatusResponse(userId,
-                    request.concertId(),
-                    request.concertDateId(),
-                    QueueEventStatus.NOT_IN_QUEUE,
-                    null,
-                    null);
+            return new QueueStatusResponse(userId, request.concertId(), request.concertDateId(),
+                    QueueEventStatus.NOT_IN_QUEUE, null, null);
         }
     }
+
 
     private String generateQueueKey(Long concertId, Long concertDateId) {
         return String.format(WAITING_QUEUE_KEY, concertId, concertDateId);
@@ -101,27 +82,49 @@ public class QueueServiceImpl implements QueueService {
     @Transactional
     public void processQueue(Long concertId, Long concertDateId) {
         String queueKey = generateQueueKey(concertId, concertDateId);
+        log.info("Processing queue for concert {} on date {}", concertId, concertDateId);
+
         for (int i = 0; i < BATCH_SIZE; i++) {
-            Long userId = queueRedisRepository.popUserFromQueue(queueKey);
-            if (userId == null) {
-                break; // 대기열이 비어있으면 처리 중단
+            Set<String> userIds = queueRedisRepository.getTopUsers(queueKey, 1);
+            if (userIds.isEmpty()) {
+                log.info("Queue is empty. Stopping process.");
+                break;
             }
-            // 예매 페이지 접속 허용 로직
-            allowAccessToReservationPage(userId, concertId, concertDateId);
+            Long userId = Long.valueOf(userIds.iterator().next());
+            log.info("Processing user {} from queue", userId);
+
+            try {
+                allowAccessToReservationPage(userId, concertId, concertDateId);
+                queueRedisRepository.removeFromQueue(queueKey, userId.toString());
+                log.info("User {} processed and removed from queue", userId);
+            } catch (CustomException e) {
+                log.error("Error processing user {}: {}", userId, e.getMessage());
+                queueRedisRepository.removeFromQueue(queueKey, userId.toString());
+            }
         }
     }
 
     @Transactional
     public void allowAccessToReservationPage(Long userId, Long concertId, Long concertDateId) {
-        log.info("Allowing access to reservation page for user: {}, concert: {}, date: {}", userId, concertId, concertDateId);
+        log.info("Allowing access to reservation page for user: {}, concert: {}, date: {}",
+                userId, concertId, concertDateId);
 
         try {
             String accessToken = generateAccessToken();
             String tokenKey = String.format(ACCESS_TOKEN_KEY, userId, concertId, concertDateId);
             String countKey = String.format(ATTEMPT_COUNT_KEY, userId, concertId, concertDateId);
 
+            // 이미 존재하는 토큰 확인
+            String existingToken = queueRedisRepository.getAccessToken(tokenKey);
+            if (existingToken != null) {
+                log.info("Access token already exists for user: {}. Token: {}", userId, existingToken);
+                throw new CustomException(ErrorCode.RESERVATION_TOKEN_ALREADY_EXIST, null, Level.WARN, false);
+            }
+
             boolean tokenSet = queueRedisRepository.setAccessToken(tokenKey, accessToken, ACCESS_TOKEN_EXPIRATION);
             boolean countSet = queueRedisRepository.setAttemptCount(countKey, 0, ATTEMPT_COUNT_EXPIRATION);
+
+            log.info("Access token set: {}, Attempt count set: {} for user {}", tokenSet, countSet, userId);
 
             if (tokenSet && countSet) {
                 log.info("Access granted for user: {}. Access token: {}", userId, accessToken);
@@ -129,7 +132,7 @@ public class QueueServiceImpl implements QueueService {
                 ReservationAccessGrantedEvent event = new ReservationAccessGrantedEvent(userId, concertId, concertDateId, accessToken);
                 kafkaTemplate.send("reservation-access-granted", event);
 
-                log.info("Notification sent to user: {}. Access token: {}", userId, accessToken);
+                log.info("Reservation access granted event sent for user: {}", userId);
             } else {
                 String errorMessage = "Failed to set access token or attempt count";
                 log.warn("{} for user: {}", errorMessage, userId);
@@ -141,6 +144,7 @@ public class QueueServiceImpl implements QueueService {
             throw new CustomException(ErrorCode.RESERVATION_ACCESS_FAILED, errorMessage, Level.ERROR);
         }
     }
+
 
     private String generateAccessToken() {
         return UUID.randomUUID().toString();

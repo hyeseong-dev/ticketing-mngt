@@ -1,6 +1,5 @@
 package com.mgnt.reservationservice.domain.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
@@ -13,7 +12,9 @@ import com.mgnt.core.event.reservation_service.*;
 import com.mgnt.core.exception.CustomException;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
+import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
+import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
 import com.mgnt.reservationservice.domain.entity.Reservation;
 import com.mgnt.reservationservice.domain.repository.QueueRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
@@ -32,9 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.mgnt.reservationservice.utils.Constants.ACCESS_TOKEN_KEY;
 
 @Slf4j
 @Service
@@ -45,6 +49,28 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
     private final ReservationRedisRepository reservationRedisRepository;
+    private final QueueRedisRepository queueRedisRepository;
+
+    @Override
+    public TokenResponseDTO getTokenStatus(Long userId, TokenRequestDTO request) {
+        String tokenKey = String.format(ACCESS_TOKEN_KEY, userId, request.concertId(), request.concertDateId());
+        String token = queueRedisRepository.getAccessToken(tokenKey);
+        Long ttlSeconds = queueRedisRepository.getAccessTokenTTL(tokenKey);
+
+        log.info("Checking token status for user {}. Token: {}, TTL: {}", userId, token, ttlSeconds);
+        ZonedDateTime expiryTime = null;
+        if (ttlSeconds != null && ttlSeconds > 0) {
+            expiryTime = ZonedDateTime.now().plus(ttlSeconds, ChronoUnit.SECONDS);
+        }
+
+        if (token != null) {
+            return new TokenResponseDTO(userId, request.concertId(), request.concertDateId(),
+                    QueueEventStatus.READY, null, token, expiryTime);
+        } else {
+            return new TokenResponseDTO(userId, request.concertId(), request.concertDateId(),
+                    QueueEventStatus.WAITING, null, null, null);
+        }
+    }
 
     public List<ReservationResponseDTO> getMyReservations(Long userId) {
         // 먼저 Redis에서 캐시된 데이터 조회
@@ -206,6 +232,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
         }
     }
+
 
     @KafkaListener(topics = "inventory-reservation-responses")
     @Transactional

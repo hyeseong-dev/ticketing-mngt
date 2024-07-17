@@ -7,7 +7,9 @@ import com.mgnt.core.event.reservation_service.ReservationInventoryCreateRespons
 import com.mgnt.core.exception.ApiResult;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
+import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
+import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
 import com.mgnt.reservationservice.domain.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,15 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService service;
+
+    @PostMapping("/token")
+    public ApiResult<TokenResponseDTO> getTokenStatus(
+            @RequestHeader("User-Id") Long userId,
+            @RequestBody TokenRequestDTO request
+    ) {
+        TokenResponseDTO response = service.getTokenStatus(userId, request);
+        return ApiResult.success(response);
+    }
 
     @GetMapping("/me")
     public ApiResult<List<ReservationResponseDTO>> getMyReservations(@RequestHeader("User-Id") Long userId) {
@@ -46,6 +57,6 @@ public class ReservationController {
     ) {
         return ApiResult.success(service.createReservationWithoutPayment(userId, request));
     }
-    
+
 }
 

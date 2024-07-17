@@ -63,6 +63,7 @@ public enum ErrorCode implements MessageCommInterface {
     RESERVATION_FAILED(400, "R003", "예약 할 수 없습니다."),
     RESERVATION_NOT_FOUND(404, "R004", "예약이 존재 하지 않습니다"),
     RESERVATION_ACCESS_FAILED(400, "R005", "예매가 허용되지 않습니다."),
+    RESERVATION_TOKEN_ALREADY_EXIST(400, "R006", "예약 토큰이 존재합니다."),
 
     // Payment
     INSUFFICIENT_BALANCE(400, "P001", "잔액이 부족합니다."),

@@ -1,5 +1,7 @@
 package com.mgnt.reservationservice.domain.repository;
 
+import java.util.Set;
+
 public interface QueueRedisRepository {
 
     Long addToQueue(String queueKey, String userId);
@@ -15,4 +17,8 @@ public interface QueueRedisRepository {
     boolean setAttemptCount(String userId, int initialCount, int expirationHours);
 
     String getAccessToken(String tokenKey);
+
+    Set<String> getTopUsers(String queueKey, int count);
+
+    Long getAccessTokenTTL(String tokenKey);
 }
