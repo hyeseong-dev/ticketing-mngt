@@ -81,33 +81,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
             addAuthorizationHeaders(exchange, accessToken);
 
             // Request Body 로깅 및 복제 추가
-            return DataBufferUtils.join(exchange.getRequest().getBody())
-                    .flatMap(dataBuffer -> {
-                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                        dataBuffer.read(bytes);
-                        DataBufferUtils.release(dataBuffer); // memory leak 방지
-
-                        String body = new String(bytes, StandardCharsets.UTF_8);
-                        log.info("Request Body: {}", body);
-
-                        // 기존 헤더 복사 및 요청 본문 설정
-                        ServerHttpRequest mutatedRequest = new ServerHttpRequestDecorator(exchange.getRequest()) {
-                            @Override
-                            public Flux<DataBuffer> getBody() {
-                                return Flux.just(exchange.getResponse().bufferFactory().wrap(bytes));
-                            }
-
-                            @Override
-                            public HttpHeaders getHeaders() {
-                                HttpHeaders httpHeaders = new HttpHeaders();
-                                httpHeaders.putAll(super.getHeaders());
-                                httpHeaders.setContentLength(bytes.length);
-                                return httpHeaders;
-                            }
-                        };
-
-                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
-                    });
+            return chain.filter(exchange);
         };
     }
 
@@ -168,16 +142,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         Long userId = jwtUtil.getClaimFromToken(token, "id", Long.class);
         String userRole = jwtUtil.getClaimFromToken(token, "role", String.class);
 
-        ServerHttpRequest originalRequest = exchange.getRequest();
-        HttpHeaders headers = new HttpHeaders();
-        headers.putAll(originalRequest.getHeaders()); // 기존 헤더 복사
-        headers.set("User-Id", userId.toString()); // 새로운 헤더 추가
-        headers.set("User-Role", userRole); // 새로운 헤더 추가
-
-        ServerHttpRequest newRequest = originalRequest.mutate()
-                .headers(httpHeaders -> httpHeaders.addAll(headers))
+        ServerHttpRequest request = exchange.getRequest().mutate()
+                .header("User-Id", userId.toString())
+                .header("User-Role", userRole)
                 .build();
-        exchange.mutate().request(newRequest).build();
+        exchange.mutate().request(request).build();
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, ErrorCode errorCode) {
