@@ -40,12 +40,13 @@ public class ReservationTokenFilter extends OncePerRequestFilter {
                     if (concertId != null && concertDateId != null && userId != null) {
                         wrappedRequest.addHeader("X-Concert-Id", concertId.toString());
                         wrappedRequest.addHeader("X-Concert-Date-Id", concertDateId.toString());
+                        wrappedRequest.addHeader("X-User-Id", userId.toString());
                         // Only add X-User-Id if it's not already present from API Gateway
                         if (userIdHeader == null) {
                             wrappedRequest.addHeader("X-User-Id", userId.toString());
                         }
-                        log.info("Added reservation info to headers: UserId={}, ConcertId={}, ConcertDateId={}",
-                                userId, concertId, concertDateId);
+                        log.info("Added reservation info to headers: UserId={}, ConcertId={}, ConcertDateId={} X-User-Id={}", userId, concertId, concertDateId, userId,
+                                userIdHeader, concertId, concertDateId, userId);
                     }
                 } else {
                     log.warn("Invalid reservation token");

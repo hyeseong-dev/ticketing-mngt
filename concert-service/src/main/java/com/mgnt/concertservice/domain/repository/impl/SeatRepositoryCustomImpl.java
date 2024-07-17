@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -20,6 +21,16 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final EntityManager entityManager;
+
+    @Override
+    public List<Seat> findSeatsByConcertDateId(Long concertDateId) {
+        QSeat seat = QSeat.seat;
+        List<Seat> foundSeats = queryFactory
+                .selectFrom(seat)
+                .where(seat.concertDateId.eq(concertDateId))
+                .fetch();
+        return foundSeats;
+    }
 
     @Override
     public Optional<Seat> findAndLockByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
@@ -101,4 +112,47 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 
         return Optional.ofNullable(foundSeat);
     }
+
+    @Override
+    public boolean existsByConcertDateIdAndStatus(Long concertDateId, SeatStatus status) {
+        QSeat seat = QSeat.seat;
+        return queryFactory
+                .selectOne()
+                .from(seat)
+                .where(seat.concertDateId.eq(concertDateId)
+                        .and(seat.status.eq(status)))
+                .fetchFirst() != null;
+    }
+
+    @Override
+    public List<Seat> findAllByConcertDateIdAndStatus(Long concertDateId, SeatStatus status) {
+        QSeat seat = QSeat.seat;
+        return queryFactory
+                .selectFrom(seat)
+                .where(seat.concertDateId.eq(concertDateId)
+                        .and(seat.status.eq(status)))
+                .fetch();
+    }
+
+    @Override
+    public List<Seat> findAllByConcertDateId(Long concertDateId) {
+        QSeat seat = QSeat.seat;
+        return queryFactory
+                .selectFrom(seat)
+                .where(seat.concertDateId.eq(concertDateId))
+                .fetch();
+    }
+
+    @Override
+    public List<Seat> findAllAvailableSeatsByConcertDateIdAndStatus(Long concertDateId, SeatStatus status) {
+        QSeat seat = QSeat.seat;
+
+        return queryFactory
+                .selectFrom(seat)
+                .where(seat.concertDateId.eq(concertDateId).and(seat.status.eq(status)))
+                .orderBy(seat.seatNum.asc())
+                .fetch();
+    }
+
+
 }

@@ -63,7 +63,7 @@ public class ConcertServiceImpl implements ConcertService {
             BigDecimal price = null;
 
             if (seat.getStatus() == SeatStatus.AVAILABLE) {
-                seat.patchStatus(SeatStatus.DISABLE);
+                seat.patchStatus(SeatStatus.RESERVED);
                 seatRepository.save(seat);
                 success = true;
                 price = seat.getPrice();
@@ -141,7 +141,7 @@ public class ConcertServiceImpl implements ConcertService {
     }
 
     private void updateSeatStatus(Seat seat, ReservationRequestedEvent event) {
-        int updatedRows = seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), SeatStatus.DISABLE);
+        int updatedRows = seatRepository.updateSeatStatus(event.concertDateId(), event.seatId(), SeatStatus.RESERVED);
         if (updatedRows == 0) {
             throw new OptimisticLockingFailureException("좌석이 동시에 업데이트되었습니다.");
         }
@@ -266,9 +266,9 @@ public class ConcertServiceImpl implements ConcertService {
         return new GetDatesResponse(dateInfos);
     }
 
-    public GetSeatsResponse getAvailableSeats(Long concertDateId) {
+    public List<Seat> getAvailableSeats(Long concertDateId) {
         List<Seat> availableSeats = concertRepository.findSeatsByConcertDateIdAndStatus(concertDateId, SeatStatus.AVAILABLE);
-        return GetSeatsResponse.from(availableSeats);
+        return availableSeats;
     }
 
     public void patchSeatStatus(Long concertDateId, Long seatId, SeatStatus status) {

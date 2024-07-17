@@ -182,7 +182,7 @@ public class ReservationServiceImpl implements ReservationService {
                 reservationRepository.save(reservation);
                 kafkaTemplate.send("reservation-confirmed", new ReservationConfirmedEvent(
                         reservation.getReservationId(), reservation.getConcertDateId(),
-                        reservation.getSeatId(), SeatStatus.DISABLE));
+                        reservation.getSeatId(), SeatStatus.RESERVED));
             } else {
                 reservation.updateStatus(ReservationStatus.CANCEL);
                 reservationRepository.save(reservation);

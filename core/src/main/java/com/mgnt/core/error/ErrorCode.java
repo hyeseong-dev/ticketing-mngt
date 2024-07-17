@@ -73,7 +73,7 @@ public enum ErrorCode implements MessageCommInterface {
 
     // Seat
     SEAT_NOT_AVAILABLE(400, "S001", "사용 가능한 좌석이 아닙니다."),
-
+    SEAT_UPDATE_FAILED(400, "S002", "좌석 상태 변경에 실패했습니다."),
     // Payment
     PLACE_NOT_FOUND(404, "P001", "해당 Place를 찾을 수 없습니다."),
 

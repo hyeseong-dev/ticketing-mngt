@@ -4,6 +4,7 @@ import com.mgnt.concertservice.controller.response.GetConcertResponse;
 import com.mgnt.concertservice.controller.response.GetConcertsResponse;
 import com.mgnt.concertservice.controller.response.GetDatesResponse;
 import com.mgnt.concertservice.controller.response.GetSeatsResponse;
+import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.event.concert_service.ConcertInfoRequestEvent;
 import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
@@ -21,7 +22,7 @@ public interface ConcertService {
 
     GetDatesResponse getDates(Long concertId);
 
-    GetSeatsResponse getAvailableSeats(Long concertDateId);
+    List<Seat> getAvailableSeats(Long concertDateId);
 
     void patchSeatStatus(Long concertDateId, Long seatId, SeatStatus status);
 
