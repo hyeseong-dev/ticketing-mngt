@@ -13,7 +13,7 @@ public interface SeatRepositoryCustom {
     Optional<Seat> findAvailableSeatByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
 
     int updateSeatStatus(Long concertDateId, Long seatId, SeatStatus seatStatus);
-
+    
     List<Seat> findSeatsByConcertDateId(Long concertDateId);
 
     Optional<Seat> findAndLockByConcertDateIdAndSeatId(Long concertDateId, Long seatId);
@@ -27,4 +27,6 @@ public interface SeatRepositoryCustom {
     List<Seat> findAllByConcertDateId(Long concertDateId);
 
     List<Seat> findAllAvailableSeatsByConcertDateIdAndStatus(Long concertDateId, SeatStatus status);
+
+    List<Seat> findAll();
 }

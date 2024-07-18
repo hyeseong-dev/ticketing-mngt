@@ -13,4 +13,13 @@ public interface ReservationRedisRepository {
     void removeUserReservations(Long userId);
 
     void saveReservation(Long UserId, Long reservationId, ReservationResponseDTO reservationInfo);
+
+    void setex(String reservationKey, String value, Long seconds);
+
+    boolean setTempSeat(String key, String value, Long expirationMinutes);
+
+    String get(String key);
+
+    void delete(String key);
+
 }

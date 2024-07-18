@@ -1,17 +1,10 @@
 package com.mgnt.reservationservice.domain.service.impl;
 
 import com.mgnt.core.enums.ReservationStatus;
-import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
-import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
-import com.mgnt.core.event.concert_service.InventoryReservationResponseEvent;
-import com.mgnt.core.event.concert_service.SeatReservationResponseEvent;
-import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
-import com.mgnt.core.event.payment_service.PaymentCompletedEvent;
-import com.mgnt.core.event.reservation_service.*;
+import com.mgnt.core.event.reservation_service.QueueEventStatus;
+import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.exception.CustomException;
-import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
-import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
 import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
@@ -25,17 +18,14 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 import static com.mgnt.reservationservice.utils.Constants.ACCESS_TOKEN_KEY;
@@ -50,6 +40,9 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationValidator reservationValidator;
     private final ReservationRedisRepository reservationRedisRepository;
     private final QueueRedisRepository queueRedisRepository;
+    private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
+    private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
+
 
     @Override
     public TokenResponseDTO getTokenStatus(Long userId, TokenRequestDTO request) {
@@ -130,163 +123,51 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-
-// ========================================================================= API 구분선
-
-    public void initiateReservation(Long userId, ReserveRequest request) {
-        ReservationRequestedEvent event = new ReservationRequestedEvent(
-                request.concertDateId(),
-                userId,
-                request.concertId(),
-                request.seatId()
-        );
-        kafkaTemplate.send("reservation-requests", event);
-        log.info("Reservation request initiated for user: {}, concert: {}", userId, request.concertId());
-    }
-
-    @KafkaListener(topics = "seat-status-updates")
-    @Transactional
-    public void handleSeatStatusUpdate(SeatStatusUpdatedEvent event) {
-        try {
-
-            Reservation reservation = Reservation.builder()
-                    .userId(event.userId())
-                    .concertId(event.concertId())
-                    .concertDateId(event.concertDateId())
-                    .seatId(event.seatId())
-                    .status(ReservationStatus.ING)
-                    .price(event.price())
-                    .reservedAt(ZonedDateTime.now())
-                    .build();
-            reservationRepository.save(reservation);
-
-            kafkaTemplate.send("reservations-created", new ReservationCreatedEvent(
-                    reservation.getReservationId(), reservation.getUserId(), reservation.getPrice()));
-
-        } catch (Exception e) {
-            log.error("Error handling seat status update", e);
-            kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
-                    null, event.concertDateId(), event.seatId()));
-        }
-    }
-
-    @KafkaListener(topics = "payment-completed")
-    @Transactional
-    public void handlePaymentCompleted(PaymentCompletedEvent event) {
-        try {
-            Reservation reservation = reservationRepository.findById(event.reservationId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.WARN));
-
-            if (event.isSuccess()) {
-                reservation.updateStatus(ReservationStatus.RESERVED);
-                reservationRepository.save(reservation);
-                kafkaTemplate.send("reservation-confirmed", new ReservationConfirmedEvent(
-                        reservation.getReservationId(), reservation.getConcertDateId(),
-                        reservation.getSeatId(), SeatStatus.RESERVED));
-            } else {
-                reservation.updateStatus(ReservationStatus.CANCEL);
-                reservationRepository.save(reservation);
-                kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
-                        event.reservationId(), reservation.getConcertDateId(), reservation.getSeatId()));
-            }
-        } catch (Exception e) {
-            log.error("Error handling payment completed", e);
-            kafkaTemplate.send("reservation-failed", new ReservationFailedEvent(
-                    event.reservationId(), null, null));
-        }
-    }
-
-    //---------------------------------------------------------------------------예약 테스트 락
+    // ========================================================================= API 구분선
     @Override
-    @Transactional
-    public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
+    public void initiateReservation(Long userId, String reservationToken, Long xUserId, Long concertId, Long concertDateId, Long seatId) {
+
+        String seatKey = String.format("seat:%d:%d", seatId, concertDateId);
+        log.info("Initiating reservation for user {} for seat {}", userId, seatKey);
+
         try {
-            Reservation reservation = Reservation.builder()
-                    .userId(userId)
-                    .concertId(request.concertId())
-                    .concertDateId(request.concertDateId())
-                    .seatId(request.seatId())
-                    .price(request.price())
-                    .status(ReservationStatus.ING)
-                    .reservedAt(ZonedDateTime.now())
-                    .build();
+            // Redis에서 현재 좌석 상태 확인
+            String currentStatus = reservationRedisRepository.get(seatKey);
 
-            reservation = reservationRepository.save(reservation);
-
-            kafkaTemplate.send("inventory-reservation-requests", new InventoryReservationRequestEvent(
-                    reservation.getReservationId(),
-                    request.concertId(),
-                    request.concertDateId(),
-                    true
-            ));
-
-            return new ReservationInventoryCreateResponseDTO(
-                    reservation.getReservationId(),
-                    reservation.getUserId(),
-                    reservation.getConcertId(),
-                    reservation.getConcertDateId(),
-                    reservation.getSeatId(),
-                    reservation.getCreatedAt()
-            );
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
-        }
-    }
-
-
-    @KafkaListener(topics = "inventory-reservation-responses")
-    @Transactional
-    public void handleInventoryReservationResponse(InventoryReservationResponseEvent event) {
-        try {
-            log.debug("[{}] 메소드 Received message from Kafka: {}", "handleInventoryReservationResponse", event);
-            Reservation reservation = reservationRepository.findByReservationId(event.reservationId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND, null, Level.INFO));
-
-            if (event.isSuccess()) {
-                reservation.updateStatus(ReservationStatus.RESERVED);
-                // reservation.updatePrice(getPrice(event.concertId()));
-            } else {
-                reservation.updateStatus(ReservationStatus.CANCEL);
+            if (currentStatus == null) {
+                log.warn("Seat {} not found in Redis", seatKey);
+                throw new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN);
             }
 
-            reservationRepository.save(reservation);
+            if (!currentStatus.equals("AVAILABLE")) {
+                log.warn("Seat {} is not available. Current status: {}", seatKey, currentStatus);
+                throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, null, Level.WARN);
+            }
 
-            // Redis 캐시 업데이트
-            ReservationResponseDTO updatedDto = ReservationResponseDTO.from(reservation);
-            reservationRedisRepository.saveReservation(reservation.getUserId(), reservation.getReservationId(), updatedDto);
+            // Redis에 임시로 좌석 상태 및 사용자 정보 저장
+            String pendingValue = String.format("PENDING:%d", userId);
+            boolean setSuccess = reservationRedisRepository.setTempSeat(seatKey, pendingValue, TEMP_RESERVATION_MINUTES);
 
-            // 클라이언트에게 결과 통지 (예: WebSocket 또는 SSE를 통해)
-            notifyClient(reservation.getUserId(), updatedDto);
+            if (!setSuccess) {
+                log.warn("Failed to set temporary reservation for seat {}", seatKey);
+                throw new CustomException(ErrorCode.RESERVATION_ALREADY_RESERVED, null, Level.WARN);
+            }
 
+            // Kafka를 통해 ConcertService에 좌석 상태 업데이트 요청
+            ReservationRequestedEvent event = new ReservationRequestedEvent(concertDateId, userId, concertId, seatId);
+            kafkaTemplate.send("reservation-requests", event)
+                    .thenAccept(result -> log.info("Successfully sent reservation request event for seat {}", seatKey))
+                    .exceptionally(ex -> {
+                        log.error("Failed to send reservation request event for seat {}", seatKey, ex);
+                        // 여기서 Redis에 저장된 임시 예약 정보를 롤백해야 할 수 있습니다.
+                        reservationRedisRepository.delete(seatKey);
+                        throw new CompletionException(new CustomException(ErrorCode.SEAT_RESERVATION_REQUEST_FAILED, null, Level.ERROR));
+                    });
+
+            log.info("Reservation initiated successfully for user {} for seat {}", userId, seatKey);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
+            log.error("Error during reservation initiation for user {} for seat {}", userId, seatKey, e);
+            throw e;
         }
     }
-
-
-    private void notifyClient(Long userId, ReservationResponseDTO reservationResponseDTO) {
-        // WebSocket 또는 SSE를 통한 클라이언트 통지 로직
-    }
-
-//    public Reservation addReservation(ReserveRequest request) {
-//        return reservationRepository.save(request.toEntity());
-//    }
-
-//    @Override
-//    @Transactional
-//    public void cancel(Long reservationId, CancelRequest request) {
-//        Reservation reservation = reservationRepository.findByIdAndUserId(reservationId, request.userId());
-//
-//        // validator
-//        reservationValidator.isNull(reservation);
-//
-//        Payment payment = paymentReader.findPaymentByReservation(reservation);
-//        if (payment != null) {
-//            // 결제 내역 존재하면 환불 처리
-//            paymentService.cancel(payment.getPaymentId());
-//        }
-//        reservationRepository.delete(reservation);
-//    }
-//
-
 }

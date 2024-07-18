@@ -1,6 +1,6 @@
-package com.mgnt.concertservice.filter;
+package com.mgnt.reservationservice.filter;
 
-import com.mgnt.concertservice.utils.JwtUtil;
+import com.mgnt.reservationservice.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +41,8 @@ public class ReservationTokenFilter extends OncePerRequestFilter {
                         wrappedRequest.addHeader("X-Concert-Id", concertId.toString());
                         wrappedRequest.addHeader("X-Concert-Date-Id", concertDateId.toString());
                         wrappedRequest.addHeader("X-User-Id", userId.toString());
+                        wrappedRequest.addHeader("X-Reservation-Token", token);
+
                         // Only add X-User-Id if it's not already present from API Gateway
                         if (userIdHeader == null) {
                             wrappedRequest.addHeader("X-User-Id", userId.toString());

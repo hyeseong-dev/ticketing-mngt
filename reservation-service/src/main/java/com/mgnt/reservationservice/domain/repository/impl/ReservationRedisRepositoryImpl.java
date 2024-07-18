@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Repository
@@ -22,6 +23,26 @@ public class ReservationRedisRepositoryImpl implements ReservationRedisRepositor
     private final ObjectMapper objectMapper;
 
     private static final String USER_RESERVATIONS_KEY = "user:%d:reservations";
+
+    @Override
+    public void delete(String key) {
+        redisTemplate.opsForValue().getAndDelete(key);
+    }
+
+    @Override
+    public void setex(String key, String value, Long seconds) {
+        redisTemplate.opsForValue().set(key, value, seconds, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public boolean setTempSeat(String key, String value, Long expirationMinutes) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, expirationMinutes, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public String get(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
 
     @Override
     public List<ReservationResponseDTO> getUserReservations(Long userId) {

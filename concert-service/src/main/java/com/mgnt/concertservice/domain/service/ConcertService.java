@@ -25,14 +25,4 @@ public interface ConcertService {
     List<Seat> getAvailableSeats(Long concertDateId);
 
     void patchSeatStatus(Long concertDateId, Long seatId, SeatStatus status);
-
-    // Kafka 리스너 메서드들
-    void handleConcertInfoRequest(ConcertInfoRequestEvent event);
-
-    void handleReservationRequest(ReservationRequestedEvent event);
-
-    void handleReservationConfirmed(ReservationConfirmedEvent event);
-
-    // 새로운 메서드 (결제 없는 예약을 위한)
-    void handleSeatReservationRequest(SeatStatusUpdatedEvent event);
 }

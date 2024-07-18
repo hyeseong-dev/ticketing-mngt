@@ -64,6 +64,7 @@ public enum ErrorCode implements MessageCommInterface {
     RESERVATION_NOT_FOUND(404, "R004", "예약이 존재 하지 않습니다"),
     RESERVATION_ACCESS_FAILED(400, "R005", "예매가 허용되지 않습니다."),
     RESERVATION_TOKEN_ALREADY_EXIST(400, "R006", "예약 토큰이 존재합니다."),
+    RESERVATION_INVALID_TOKEN(400, "R007", "예약 토큰이 유효하지 않습니다."),
 
     // Payment
     INSUFFICIENT_BALANCE(400, "P001", "잔액이 부족합니다."),
@@ -74,6 +75,8 @@ public enum ErrorCode implements MessageCommInterface {
     // Seat
     SEAT_NOT_AVAILABLE(400, "S001", "사용 가능한 좌석이 아닙니다."),
     SEAT_UPDATE_FAILED(400, "S002", "좌석 상태 변경에 실패했습니다."),
+    SEAT_RESERVATION_REQUEST_FAILED(400, "S003", "좌석 선택 요청 이벤트가 실패했습니다."),
+
     // Payment
     PLACE_NOT_FOUND(404, "P001", "해당 Place를 찾을 수 없습니다."),
 

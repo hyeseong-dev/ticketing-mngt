@@ -18,16 +18,10 @@ import java.util.List;
 public interface ReservationService {
     List<ReservationResponseDTO> getMyReservations(Long userId);
 
-    void updateReservation(Long reservationId, ReservationStatus newStatus);
-
-    void initiateReservation(Long userId, ReserveRequest request);
-
-    void handleSeatStatusUpdate(SeatStatusUpdatedEvent event);
-
-    void handlePaymentCompleted(PaymentCompletedEvent event);
-
-    ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
 
     TokenResponseDTO getTokenStatus(Long userId, TokenRequestDTO request);
 
+    void initiateReservation(Long userId, String reservationToken, Long xUserId, Long concertId, Long concertDateId, Long seatId);
+
+//    ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
 }

@@ -23,6 +23,12 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
     private final EntityManager entityManager;
 
     @Override
+    public List<Seat> findAll() {
+        QSeat qSeat = QSeat.seat;
+        return queryFactory.select(qSeat).from(qSeat).fetch();
+    }
+
+    @Override
     public List<Seat> findSeatsByConcertDateId(Long concertDateId) {
         QSeat seat = QSeat.seat;
         List<Seat> foundSeats = queryFactory
@@ -100,7 +106,7 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
             throw new RuntimeException("Failed to update seat status", e);
         }
     }
-
+    
     @Override
     public Optional<Seat> findSeatByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
         QSeat seat = QSeat.seat;
