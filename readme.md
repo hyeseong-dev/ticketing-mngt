@@ -100,17 +100,6 @@ erDiagram
         DATETIME updated_at "수정 일시"
     }
 
-    inventory {
-        BIGINT inventory_id PK "기본 키 (자동 증가)"
-        BIGINT concert_id FK "관련된 콘서트 ID"
-        BIGINT concert_date_id FK "관련된 콘서트 날짜 ID"
-        BIGINT total "총 좌석 수 (기본값: 0)"
-        BIGINT remaining "남은 좌석 수 (기본값: 0)"
-        BIGINT version "버전 관리 (기본값: 0)"
-        DATETIME created_at "생성 일시 (기본값: 현재 시간)"
-        DATETIME updated_at "수정 일시 (업데이트 시 현재 시간)"
-    }
-
     payment {
         BIGINT payment_id PK "결제 ID (기본 키)"
         BIGINT user_id FK "유저 ID (외래키)"
@@ -121,6 +110,17 @@ erDiagram
         DATETIME created_at "생성 일시"
         DATETIME updated_at "수정 일시"
     }
+
+    users ||--o{ reservation : "has many"
+    reservation ||--o| concert : "includes"
+    reservation ||--o| concert_date : "includes"
+    reservation ||--o| seat : "includes"
+    place ||--o{ concert : "has many"
+    concert ||--o{ concert_date : "has many"
+    concert_date ||--o{ seat : "has many"
+    payment ||--o{ users : "has many"
+    payment ||--o| reservation : "includes"
+
 
 
 ```
