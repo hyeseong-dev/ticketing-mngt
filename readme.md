@@ -122,26 +122,6 @@ erDiagram
         DATETIME updated_at "수정 일시"
     }
 
-    users ||--o{ reservation : "has many"
-    reservation ||--o| users : "belongs to"
-    reservation ||--o| concert : "belongs to"
-    reservation ||--o| concert_date : "belongs to"
-    reservation ||--o| seat : "belongs to"
-    reservation ||--o| payment : "includes"
-
-    place ||--o{ concert : "has many"
-    concert ||--o| place : "belongs to"
-    concert ||--o{ concert_date : "has many"
-    concert_date ||--o| concert : "belongs to"
-    concert_date ||--o{ seat : "has many"
-    seat ||--o| concert_date : "belongs to"
-    seat ||--o| place : "belongs to"
-    concert_date ||--o{ inventory : "has many"
-    concert ||--o{ inventory : "has many"
-    inventory ||--o| concert_date : "belongs to"
-    inventory ||--o| concert : "belongs to"
-    payment ||--o| users : "belongs to"
-    payment ||--o| reservation : "belongs to"
 
 ```
 
