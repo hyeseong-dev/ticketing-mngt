@@ -28,74 +28,68 @@
 ### 시스템 아키텍처
 
 ```mermaid
-graph TD
-    subgraph API_Gateway
-        A[API Gateway Container]
-    end
+C4Container
+    title 이벤트 기반 아키텍처 - 마이크로서비스 티켓팅 시스템
 
-    subgraph Broker
-        B[Kafka Broker Container]
-    end
+    Container_Boundary(gateway, "API 계층") {
+        Container(api_gateway, "API 게이트웨이", "Spring Cloud Gateway", "요청 라우팅 및 인증")
+    }
 
-    subgraph Discovery_Server
-        C[Eureka Discovery Server Container]
-    end
+    Container_Boundary(discovery, "서비스 디스커버리") {
+        Container(eureka, "유레카 서버", "Spring Cloud Netflix", "서비스 등록 및 발견")
+    }
 
-    subgraph Inmemory_Database
-        D[Redis Container]
-    end
+    Container_Boundary(message_broker, "메시지 브로커") {
+        Container(kafka, "카프카", "Apache Kafka", "이벤트 스트리밍 플랫폼")
+    }
 
-    subgraph User_Service
-        S1[User Service Container]
-        DB1[MySQL Database Container]
-        S1 --> DB1
-    end
+    Container_Boundary(cache, "캐싱 계층") {
+        Container(redis, "레디스", "인메모리 데이터 저장소", "캐싱 및 세션 관리")
+    }
 
-    subgraph Reservation_Service
-        S2[Reservation Service Container]
-        DB2[MySQL Database Container]
-        S2 --> DB2
-    end
+    Container_Boundary(services, "마이크로서비스 계층") {
+        Container(service1, "사용자 서비스", "Spring Boot", "사용자 관리")
+        Container(service2, "예약 서비스", "Spring Boot", "티켓 예약")
+        Container(service3, "콘서트 서비스", "Spring Boot", "콘서트 정보")
+        Container(service4, "결제 서비스", "Spring Boot", "결제 처리")
+    }
 
-    subgraph Concert_Service
-        S3[Consert Service Container]
-        DB3[MySQL Database Container]
-        S3 --> DB3
-    end
+    Container_Boundary(databases, "데이터베이스 계층") {
+        ContainerDb(db1, "사용자 DB", "MySQL", "사용자 데이터")
+        ContainerDb(db2, "예약 DB", "MySQL", "예약 데이터")
+        ContainerDb(db3, "콘서트 DB", "MySQL", "콘서트 데이터")
+        ContainerDb(db4, "결제 DB", "MySQL", "결제 데이터")
+    }
 
-    subgraph Payment_Service
-        S4[Payment Service Container]
-        DB4[MySQL Database Container]
-        S4 --> DB4
-    end
+    Rel(api_gateway, service1, "요청 라우팅", "HTTP/REST")
+    Rel(api_gateway, service2, "요청 라우팅", "HTTP/REST")
+    Rel(api_gateway, service3, "요청 라우팅", "HTTP/REST")
+    Rel(api_gateway, service4, "요청 라우팅", "HTTP/REST")
 
-    A -->|API Requests| S1
-    A -->|API Requests| S2
-    A -->|API Requests| S3
-    A -->|API Requests| S4
+    Rel(service1, eureka, "서비스 등록", "HTTP")
+    Rel(service2, eureka, "서비스 등록", "HTTP")
+    Rel(service3, eureka, "서비스 등록", "HTTP")
+    Rel(service4, eureka, "서비스 등록", "HTTP")
 
-    C -->|Service Registration| S1
-    C -->|Service Registration| S2
-    C -->|Service Registration| S3
-    C -->|Service Registration| S4
+    Rel(service1, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
+    Rel(service2, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
+    Rel(service3, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
+    Rel(service4, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
 
-    S1 -->|Event Producer| B
-    S2 -->|Event Producer| B
-    S3 -->|Event Producer| B
-    S4 -->|Event Producer| B
+    Rel(api_gateway, redis, "캐싱", "Redis 프로토콜")
+    Rel(service1, redis, "캐싱", "Redis 프로토콜")
+    Rel(service2, redis, "캐싱", "Redis 프로토콜")
+    Rel(service3, redis, "캐싱", "Redis 프로토콜")
+    Rel(service4, redis, "캐싱", "Redis 프로토콜")
 
-    B -->|Event Consumer| S1
-    B -->|Event Consumer| S2
-    B -->|Event Consumer| S3
-    B -->|Event Consumer| S4
+    Rel(service1, db1, "읽기/쓰기", "JDBC")
+    Rel(service2, db2, "읽기/쓰기", "JDBC")
+    Rel(service3, db3, "읽기/쓰기", "JDBC")
+    Rel(service4, db4, "읽기/쓰기", "JDBC")
 
-    S1 -->|Cache| D
-    S2 -->|Cache| D
-    S3 -->|Cache| D
-    S4 -->|Cache| D
+    Rel(eureka, api_gateway, "서비스 레지스트리 제공", "HTTP")
 
-    C -->|Status Check| A
-    A -->|Service Status| C
+    UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")
 ```
 
 ### UML 다이어그램
