@@ -173,46 +173,45 @@ sequenceDiagram
 sequenceDiagram
     actor 사용자
     participant API as API 게이트웨이
-    participant QueueController as 대기열 컨트롤러
-    participant QueueService as 대기열 서비스
+    participant QC as 대기열 컨트롤러
+    participant QS as 대기열 서비스
     participant Redis as 레디스
     participant Kafka as 카프카
-    participant ReservationController as 예약 컨트롤러
-    participant ReservationService as 예약 서비스
+    participant RC as 예약 컨트롤러
+    participant RS as 예약 서비스
 
     사용자->>API: POST /api/queue (QueueEntryRequest)
-    API->>대기열 컨트롤러: 대기열 예약(사용자ID, 요청)
-    대기열 컨트롤러->>대기열 서비스: 대기열 진입(사용자ID, 요청)
-    대기열 서비스->>레디스: 대기열에 추가(대기열키, 사용자ID)
-    레디스-->>대기열 서비스: 위치 반환
-    대기열 서비스->>카프카: 대기열 이벤트 전송 (QUEUE_ENTRY)
-    대기열 서비스-->>대기열 컨트롤러: 대기열 진입 응답
-    대기열 컨트롤러-->>API: API 결과<대기열 진입 응답>
+    API->>QC: 대기열 예약(사용자ID, 요청)
+    QC->>QS: 대기열 진입(사용자ID, 요청)
+    QS->>Redis: 대기열에 추가(대기열키, 사용자ID)
+    Redis-->>QS: 위치 반환
+    QS->>Kafka: 대기열 이벤트 전송 (QUEUE_ENTRY)
+    QS-->>QC: 대기열 진입 응답
+    QC-->>API: API 결과<대기열 진입 응답>
     API-->>사용자: 대기열 진입 응답
 
     loop 대기열 처리
-        카프카->>대기열 서비스: 대기열 처리(콘서트ID, 콘서트날짜ID)
-        대기열 서비스->>레디스: 상위 사용자 조회(대기열키, 처리 batch 크기)
-        레디스-->>대기열 서비스: 상위 사용자 목록
+        Kafka->>QS: 대기열 처리(콘서트ID, 콘서트날짜ID)
+        QS->>Redis: 상위 사용자 조회(대기열키, 처리 batch 크기)
+        Redis-->>QS: 상위 사용자 목록
         loop 각 사용자에 대해
-            대기열 서비스->>대기열 서비스: 예약 페이지 접근 권한 부여(사용자ID, 콘서트ID, 콘서트날짜ID)
-            대기열 서비스->>레디스: 액세스 토큰 설정(토큰키, 액세스토큰, 만료시간)
-            대기열 서비스->>레디스: 시도 횟수 설정(카운트키, 초기 카운트, 만료시간)
-            대기열 서비스->>카프카: 예약 접근 권한 부여 이벤트 전송
+            QS->>QS: 예약 페이지 접근 권한 부여(사용자ID, 콘서트ID, 콘서트날짜ID)
+            QS->>Redis: 액세스 토큰 설정(토큰키, 액세스토큰, 만료시간)
+            QS->>Redis: 시도 횟수 설정(카운트키, 초기 카운트, 만료시간)
+            QS->>Kafka: 예약 접근 권한 부여 이벤트 전송
         end
     end
 
     사용자->>API: POST /api/reservations/token (TokenRequestDTO)
-    API->>예약 컨트롤러: 토큰 상태 조회(사용자ID, 요청)
-    예약 컨트롤러->>예약 서비스: 토큰 상태 조회(사용자ID, 요청)
-    예약 서비스->>레디스: 액세스 토큰 조회(토큰키)
-    레디스-->>예약 서비스: 토큰 반환
-    예약 서비스->>레디스: 액세스 토큰 TTL 조회(토큰키)
-    레디스-->>예약 서비스: TTL 초 반환
-    예약 서비스-->>예약 컨트롤러: 토큰 응답 DTO
-    예약 컨트롤러-->>API: API 결과<토큰 응답 DTO>
+    API->>RC: 토큰 상태 조회(사용자ID, 요청)
+    RC->>RS: 토큰 상태 조회(사용자ID, 요청)
+    RS->>Redis: 액세스 토큰 조회(토큰키)
+    Redis-->>RS: 토큰 반환
+    RS->>Redis: 액세스 토큰 TTL 조회(토큰키)
+    Redis-->>RS: TTL 초 반환
+    RS-->>RC: 토큰 응답 DTO
+    RC-->>API: API 결과<토큰 응답 DTO>
     API-->>사용자: 토큰 상태 응답
-
 ```
 
 </div>
