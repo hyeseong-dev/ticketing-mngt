@@ -5,11 +5,10 @@
 ### 목차
 
 - [1. 요구사항 분석](##one)
-- [2. 동시성 제어 처리 로직 비교 구현](https://iwannabarmus.tistory.com/30)
-- [3. DB Index 사용과 비교](https://iwannabarmus.tistory.com/36)
-- [4. 대기열 설계 및 구현]()
-- [5. Transaction 범위와 책임 분리 방안 설계](https://iwannabarmus.tistory.com/38)
-- [6. 부하테스트 & 장애 대응](https://iwannabarmus.tistory.com/41)
+- [2. 동시성 제어 처리 로직 비교 구현 작성중...]()
+- [3. 대기열 설계 및 구현]()
+- [4. Transaction 범위와 책임 분리 방안 설계 작성중...]()
+- [5. 부하테스트 작성중...]()
 - [Trouble Shooting](##4.-Trouble-Shooting)
 - [주차별 인사이트](##5.-개발하면서-끄적)
 - [기술 스택](##6.-기술-스택)
