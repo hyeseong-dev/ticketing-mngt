@@ -1,6 +1,4 @@
-# 콘서트 좌석 예매
-
-# [항해 취업 리부트 백엔드 3기] 서버 구축
+# 콘서트 티켓 좌석 예매
 
 ### *시나리오 - 콘서트 좌석 예매 서비스*
 
@@ -11,8 +9,7 @@
 - [3. DB Index 사용과 비교](https://iwannabarmus.tistory.com/36)
 - [4. 대기열 설계 및 구현]()
 - [5. Transaction 범위와 책임 분리 방안 설계](https://iwannabarmus.tistory.com/38)
-- [6. 좌석 예약 정보를 데이터 플랫폼으로 전송 로직 구현](https://iwannabarmus.tistory.com/39)
-- [7. 부하테스트 & 장애 대응](https://iwannabarmus.tistory.com/41)
+- [6. 부하테스트 & 장애 대응](https://iwannabarmus.tistory.com/41)
 - [Trouble Shooting](##4.-Trouble-Shooting)
 - [개발하면서 끄적](##5.-개발하면서-끄적)
 - [기술 스택](##6.-기술-스택)
@@ -27,6 +24,79 @@
 ### POSTMAN UI
 
 [POSTMAN UI](https://documenter.getpostman.com/view/14042841/2sA3kSoPGR)
+
+### 시스템 아키텍처
+
+```mermaid
+graph TD
+    subgraph API_Gateway
+        A[API Gateway Container]
+    end
+
+    subgraph Broker
+        B[Kafka Broker Container]
+    end
+
+    subgraph Discovery_Server
+        C[Eureka Discovery Server Container]
+    end
+
+    subgraph Inmemory_Database
+        D[Redis Container]
+    end
+
+    subgraph User_Service
+        S1[User Service Container]
+        DB1[MySQL Database Container]
+        S1 --> DB1
+    end
+
+    subgraph Reservation_Service
+        S2[Reservation Service Container]
+        DB2[MySQL Database Container]
+        S2 --> DB2
+    end
+
+    subgraph Concert_Service
+        S3[Consert Service Container]
+        DB3[MySQL Database Container]
+        S3 --> DB3
+    end
+
+    subgraph Payment_Service
+        S4[Payment Service Container]
+        DB4[MySQL Database Container]
+        S4 --> DB4
+    end
+
+    A -->|API Requests| S1
+    A -->|API Requests| S2
+    A -->|API Requests| S3
+    A -->|API Requests| S4
+
+    C -->|Service Registration| S1
+    C -->|Service Registration| S2
+    C -->|Service Registration| S3
+    C -->|Service Registration| S4
+
+    S1 -->|Event Producer| B
+    S2 -->|Event Producer| B
+    S3 -->|Event Producer| B
+    S4 -->|Event Producer| B
+
+    B -->|Event Consumer| S1
+    B -->|Event Consumer| S2
+    B -->|Event Consumer| S3
+    B -->|Event Consumer| S4
+
+    S1 -->|Cache| D
+    S2 -->|Cache| D
+    S3 -->|Cache| D
+    S4 -->|Cache| D
+
+    C -->|Status Check| A
+    A -->|Service Status| C
+```
 
 ### UML 다이어그램
 
@@ -409,53 +479,79 @@ erDiagram
 
 ## 4. 대기열 설계 및 구현
 
-0. 유즈 케이스 설정
+1. 유즈 케이스 설정
 
-- 콘서트 조회, 콘서트 날짜 조회 api는 대기열 X
-- 콘서트 날짜를 선택하여 [예매하기] 버튼을 눌러 콘서트 좌석 조회 api 호출하는데,
-  해당 좌석 조회 api에 대기열을 붙인다.
+* 콘서트 목록 조회, 콘서트 상세 정보 조회, 콘서트 날짜 조회 API는 대기열 적용 제외
+* 특정 콘서트 날짜의 좌석 조회 API에 대기열 적용
+* 사용자가 콘서트 날짜를 선택하고 '좌석 선택' 버튼을 클릭할 때 대기열 진입
 
-1. api 목록
+2. API 목록
 
-- 대기열 토큰 활성여부 조회
-    - GET /token
-        - request: token
-        - response : token, isActive, waitingInfo(대기순서, 잔여 시간)
-        - 토큰 request가 없으면 새로 생성하여 응답 반환
-        - 반환된 isActive값이 true일 때까지 클라이언트에서 5초마다 polling 방식으로 호출하며,
-          반환된 isActive값이 true면 페이지에 진입한다.
-- 페이지에 진입시, Header에 token을 넣어 관리한다.
+* 대기열 진입 및 상태 조회
+    * POST /api/queue
+        * request: QueueEntryRequest (concertId, concertDateId)
+        * response: QueueEntryResponse (userId, position, concertId, concertDateId)
+        * 새로운 대기열 진입 요청 시 Redis에 사용자 추가 및 대기 순서 반환
+* 대기열 상태 조회
+    * GET /api/queue/status
+        * request: QueueEntryRequest (concertId, concertDateId)
+        * response: QueueStatusResponse (userId, concertId, concertDateId, status, position, token)
+        * 현재 대기 상태, 순서, 접근 토큰(발급된 경우) 반환
+* 토큰 상태 조회
+    * POST /api/reservations/token
+        * request: TokenRequestDTO (concertId, concertDateId)
+        * response: TokenResponseDTO (userId, concertId, concertDateId, status, position, token, expiryTime)
+        * 토큰의 유효성, 만료 시간, 대기 상태 정보 반환
+* 클라이언트는 QueueStatusResponse의 status가 READY가 될 때까지 주기적으로 상태 조회 API를 호출
+* READY 상태가 되면 좌석 조회 페이지로 이동, 이후 요청 시 헤더에 토큰 포함
 
-2. 대기열 토큰 구현
+3. 대기열 및 토큰 구현
 
-- 대기열 토큰은 Redis를 활용하여 관리한다.
-- API 당 대기열 기능을 붙일 수 있다.
-- 해당 API 호출의 작업이 완료되거나 기한이 만료된 토큰은 삭제로 관리한다.
-- 대기열 토큰은 두 가지 상태를 가진다.
-    - waiting
-        - sorted set 자료구조로 저장 (key: WAIT_KEY/ score: 요청시간/ member: token)
-    - active
-        - sorted set 자료구조로 저장 (key: ACTIVE_KEY/ score: 요청시간/ member: token)
-        - 작업이 완료되거나 만료 일시가 지나면 삭제 처리
+* Redis를 사용하여 대기열과 토큰 관리
+* 대기열: Sorted Set 사용 (key: queue:{concertId}:{concertDateId}, score: 진입 시간, member: userId)
+* 토큰: String 사용 (key: token:{userId}:{concertId}:{concertDateId}, value: 생성된 토큰)
+* 토큰 상태:
+    * WAITING: 대기열에 있는 상태
+    * READY: 접근 권한이 부여된 상태
+    * NOT_IN_QUEUE: 대기열에 없는 상태
+* 토큰 만료: 발급 후 일정 시간(예: 10분) 경과 시 자동 삭제
 
-3. Active token 전환 방식
+4. 대기열 처리 및 토큰 활성화 방식
 
-- N초마다 M개의 토큰을 활성 토큰으로 전환하는 방식 선택
-    - 대기열이 필요한 이유는 대규모 트래픽이 한번에 서비스로 유입되는 것을 방지하기 위함이므로,
-      정확한 유저 수를 일정하게 유지하기보다는 사용자에게 제공한 대기 잔여 시간을 일관성 있게 보장하여
-      사용자의 경험에 대한 만족도를 주는 것이 서비스 목적에 더 적합하다고 판단하였다.
+* 주기적으로(예: 10초마다) 일정 수(예: 100명)의 사용자를 대기열에서 제거하고 접근 토큰 발급
+* Kafka를 사용하여 대기열 처리 이벤트 발행 및 소비
+* 처리 과정:
+    1. Redis에서 상위 N명의 사용자 조회
+    2. 각 사용자에 대해 접근 토큰 생성 및 저장
+    3. 대기열에서 해당 사용자 제거
+    4. Kafka를 통해 접근 권한 부여 이벤트 발송
 
-4. 동시 접속자와 대기열 잔여 시간 계산 방식
+5. 동시 접속자 및 대기 시간 계산
 
-- 한 유저가 콘서트 예약 사이클을 완료하는 데 걸리는 예상 시간
-    - 1분
-- DB에 동시에 접근할 수 있는 트래픽의 최대치를 계산
-    - 약 100 TPS(초당 트랜잭션 수) ⇒ 1분당 6,000
-- 콘서트 예약 사이클 동안 호출하는 api
-    - 2(콘서트 좌석 조회 api, 좌석 예약 api) * 1.5(동시성 이슈에 의해 예약에 실패하는 케이스를 위한 재시도 계수(예측치)) = 3
-- 분당 처리할 수 있는 동시접속자 수 = 2,000명
-    - 10초마다 200명씩 유효한 토큰으로 전환
-    - 전환되는 인원수로 대기열 순번 계산
+* 예상 좌석 선택 및 예약 완료 시간: 3분
+* 시스템 처리 용량: 분당 2,000명 (약 33 TPS)
+* 좌석 조회 및 예약 API 호출 횟수: 3회 (좌석 조회, 좌석 선택, 결제)
+* 분당 처리 가능한 실제 사용자 수: 약 660명
+* 대기열 처리: 10초마다 110명씩 접근 토큰 발급
+* 대기 순서 및 예상 대기 시간 계산:
+    - 대기 순서 = 현재 사용자의 대기열 위치
+    - 예상 대기 시간(분) = (대기 순서 / 110) * (10 / 60)
+
+6. 구현 상세
+
+* QueueService:
+    - enterQueue(): 사용자를 대기열에 추가
+    - getQueueStatus(): 현재 대기 상태 조회
+    - processQueue(): 대기열에서 사용자를 제거하고 접근 토큰 발급
+* ReservationService:
+    - getTokenStatus(): 토큰 상태 및 유효성 확인
+* Redis 작업:
+    - 대기열 추가/제거: ZADD, ZREM 명령어 사용
+    - 대기 순서 조회: ZRANK 명령어 사용
+    - 토큰 저장 및 조회: SET, GET 명령어 사용 (만료 시간 설정)
+* 동시성 처리:
+    - Redis의 원자적 작업을 활용하여 동시성 이슈 최소화
+    - 낙관적 락을 사용하여 동시 수정 충돌 방지
 
 ---
 
