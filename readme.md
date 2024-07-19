@@ -30,7 +30,197 @@
 
 ### UML 다이어그램
 
-<h3>예매 프로세스 다이어그램</h3>
+<details>
+<summary>인증&인가 프로세스</summary>
+<div markdown="1">
+
+```mermaid
+sequenceDiagram
+    actor Client
+    participant Gateway as API Gateway
+    participant UserService as User Service
+    participant Redis
+    participant DB as Database
+
+    %% 로그인 프로세스
+    Client->>Gateway: POST /api/auth/login
+    Gateway->>UserService: 로그인 요청 전달
+    UserService->>DB: 사용자 정보 조회
+    DB-->>UserService: 사용자 정보 반환
+    UserService->>UserService: 요청 데이터 유효성 검증
+    UserService->>UserService: JWT 토큰 생성 (Access + Refresh)
+    UserService->>Redis: Refresh 토큰 저장 (7일 유효)
+    UserService-->>Gateway: 로그인 응답 (토큰 포함)
+    Gateway-->>Client: 로그인 성공 응답
+
+    %% 보호된 리소스 접근
+    Client->>Gateway: 보호된 리소스 요청 (AccessToken 포함)
+    Gateway->>Gateway: AccessToken 검증
+    alt AccessToken 유효
+        Gateway->>UserService: 요청 전달 (User-Id, User-Role 헤더 추가)
+        UserService-->>Gateway: 응답
+        Gateway-->>Client: 응답 전달
+    else AccessToken 만료
+        Gateway-->>Client: 401 Unauthorized
+        Client->>Gateway: POST /api/auth/refresh (RefreshToken 포함)
+        Gateway->>UserService: Refresh 토큰 검증 요청
+        UserService->>Redis: RefreshToken 유효성 확인
+        Redis-->>UserService: RefreshToken 상태 반환
+        UserService->>UserService: 새 AccessToken 생성
+        UserService->>Redis: RefreshToken 업데이트
+        UserService-->>Gateway: 새 AccessToken 반환
+        Gateway-->>Client: 새 AccessToken 전달
+    end
+
+    %% 로그아웃 프로세스
+    Client->>Gateway: GET /api/auth/logout (AccessToken 포함)
+    Gateway->>UserService: 로그아웃 요청 전달
+    UserService->>Redis: RefreshToken 삭제
+    UserService->>Redis: AccessToken 블랙리스트에 추가
+    UserService-->>Gateway: 로그아웃 성공 응답
+    Gateway-->>Client: 로그아웃 완료 응답
+
+```
+
+</div>
+</details>
+
+<details>
+<summary>콘서트 서비스 프로세스</summary>
+<div markdown="2">
+
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant CC as 콘서트컨트롤러
+    participant CS as 콘서트서비스
+    participant SS as 좌석서비스
+    participant CR as 콘서트저장소
+    participant SR as 좌석저장소
+    participant Redis
+    participant MySQL
+
+    User->>CC: 콘서트 목록 요청
+    CC->>CS: 모든 콘서트 조회 요청
+    CS->>CR: 전체 콘서트 데이터 요청
+    CR->>MySQL: 콘서트 테이블에서 모든 데이터 조회
+    MySQL-->>CR: 콘서트 데이터 반환
+    CR-->>CS: 콘서트 목록 반환
+    CS-->>CC: 콘서트 응답 데이터 생성
+    CC-->>User: 콘서트 목록 응답
+
+    User->>CC: 특정 콘서트 정보 요청
+    CC->>CS: 콘서트 상세 정보 조회 요청
+    CS->>CR: 특정 콘서트 ID로 데이터 요청
+    CR->>MySQL: 해당 ID의 콘서트 데이터 조회
+    MySQL-->>CR: 콘서트 데이터 반환
+    CR-->>CS: 콘서트 정보 반환
+    CS-->>CC: 콘서트 상세 응답 데이터 생성
+    CC-->>User: 특정 콘서트 정보 응답
+
+    User->>CC: 콘서트 날짜 정보 요청
+    CC->>CS: 콘서트 날짜 조회 요청
+    CS->>CR: 콘서트 ID로 데이터 요청
+    CR->>MySQL: 해당 ID의 콘서트와 관련 날짜 데이터 조회
+    MySQL-->>CR: 콘서트 및 날짜 데이터 반환
+    CR-->>CS: 콘서트 (날짜 포함) 정보 반환
+    CS->>SR: 각 날짜별 가용 좌석 존재 여부 확인
+    SR->>MySQL: 날짜별 사용 가능한 좌석 수 조회
+    MySQL-->>SR: 가용 좌석 수 반환
+    SR-->>CS: 날짜별 좌석 가용 여부 반환
+    CS-->>CC: 날짜 정보 응답 데이터 생성
+    CC-->>User: 콘서트 날짜 정보 응답
+
+    User->>CC: 특정 날짜의 가용 좌석 요청
+    CC->>SS: 가용 좌석 조회 요청
+    SS->>Redis: 캐시된 가용 좌석 정보 요청
+    alt 캐시 히트
+        Redis-->>SS: 캐시된 가용 좌석 데이터 반환
+    else 캐시 미스
+        SS->>SR: 데이터베이스에서 가용 좌석 조회 요청
+        SR->>MySQL: 특정 날짜의 사용 가능한 좌석 데이터 조회
+        MySQL-->>SR: 가용 좌석 데이터 반환
+        SR-->>SS: 가용 좌석 목록 반환
+        SS->>Redis: 가용 좌석 정보 캐시 저장 (만료 시간 설정)
+    end
+    SS-->>CC: 가용 좌석 목록 반환
+    CC-->>User: 사용 가능한 좌석 목록 응답
+
+    User->>CC: 특정 날짜의 모든 좌석 요청
+    CC->>SS: 전체 좌석 조회 요청
+    SS->>Redis: 캐시된 전체 좌석 정보 요청
+    alt 캐시 히트
+        Redis-->>SS: 캐시된 전체 좌석 데이터 반환
+    else 캐시 미스
+        SS->>SR: 데이터베이스에서 전체 좌석 조회 요청
+        SR->>MySQL: 특정 날짜의 모든 좌석 데이터 조회
+        MySQL-->>SR: 전체 좌석 데이터 반환
+        SR-->>SS: 전체 좌석 목록 반환
+        SS->>Redis: 전체 좌석 정보 캐시 저장 (만료 시간 설정)
+    end
+    SS-->>CC: 전체 좌석 목록 반환
+    CC-->>User: 모든 좌석 목록 응답
+```
+
+</div>
+</details>
+
+<details>
+<summary>대기열 프로세스</summary>
+<div markdown="3">
+
+```mermaid
+sequenceDiagram
+    actor 사용자
+    participant API as API 게이트웨이
+    participant QueueController as 대기열 컨트롤러
+    participant QueueService as 대기열 서비스
+    participant Redis as 레디스
+    participant Kafka as 카프카
+    participant ReservationController as 예약 컨트롤러
+    participant ReservationService as 예약 서비스
+
+    사용자->>API: POST /api/queue (QueueEntryRequest)
+    API->>대기열 컨트롤러: 대기열 예약(사용자ID, 요청)
+    대기열 컨트롤러->>대기열 서비스: 대기열 진입(사용자ID, 요청)
+    대기열 서비스->>레디스: 대기열에 추가(대기열키, 사용자ID)
+    레디스-->>대기열 서비스: 위치 반환
+    대기열 서비스->>카프카: 대기열 이벤트 전송 (QUEUE_ENTRY)
+    대기열 서비스-->>대기열 컨트롤러: 대기열 진입 응답
+    대기열 컨트롤러-->>API: API 결과<대기열 진입 응답>
+    API-->>사용자: 대기열 진입 응답
+
+    loop 대기열 처리
+        카프카->>대기열 서비스: 대기열 처리(콘서트ID, 콘서트날짜ID)
+        대기열 서비스->>레디스: 상위 사용자 조회(대기열키, 처리 batch 크기)
+        레디스-->>대기열 서비스: 상위 사용자 목록
+        loop 각 사용자에 대해
+            대기열 서비스->>대기열 서비스: 예약 페이지 접근 권한 부여(사용자ID, 콘서트ID, 콘서트날짜ID)
+            대기열 서비스->>레디스: 액세스 토큰 설정(토큰키, 액세스토큰, 만료시간)
+            대기열 서비스->>레디스: 시도 횟수 설정(카운트키, 초기 카운트, 만료시간)
+            대기열 서비스->>카프카: 예약 접근 권한 부여 이벤트 전송
+        end
+    end
+
+    사용자->>API: POST /api/reservations/token (TokenRequestDTO)
+    API->>예약 컨트롤러: 토큰 상태 조회(사용자ID, 요청)
+    예약 컨트롤러->>예약 서비스: 토큰 상태 조회(사용자ID, 요청)
+    예약 서비스->>레디스: 액세스 토큰 조회(토큰키)
+    레디스-->>예약 서비스: 토큰 반환
+    예약 서비스->>레디스: 액세스 토큰 TTL 조회(토큰키)
+    레디스-->>예약 서비스: TTL 초 반환
+    예약 서비스-->>예약 컨트롤러: 토큰 응답 DTO
+    예약 컨트롤러-->>API: API 결과<토큰 응답 DTO>
+    API-->>사용자: 토큰 상태 응답
+
+```
+
+</div>
+</details>
+
+<details>
+<summary>예매 프로세스</summary>
+<div markdown="4">
 
 ```mermaid
 sequenceDiagram
@@ -90,7 +280,14 @@ sequenceDiagram
     end
 ```
 
+</div>
+</details>
+
 ### ERD 명세
+
+<details>
+<summary>데이터베이스 객체 관계 다이어그램</summary>
+<div markdown="1">
 
 ```mermaid
 erDiagram
@@ -192,6 +389,10 @@ erDiagram
     concert_date ||--o{ inventory : "has many"
 
 ```
+
+</div>
+</details>
+
 
 ---
 
