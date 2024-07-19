@@ -30,8 +30,65 @@
 
 ### UML 다이어그램
 
-*변경된 로직이 있어 추후 수정 예정입니다.*
-![uml.png](image/uml.png)
+<h3>예매 프로세스 다이어그램</h3>
+
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant API as API Gateway
+    participant Reservation as 예약 서비스
+    participant Concert as 콘서트 서비스
+    participant Redis
+    participant MySQL
+    participant Kafka
+
+    User->>API: 콘서트, 회차 및 좌석 리스트 요청
+    API->>Concert: 좌석 정보 요청
+    Concert->>Redis: 좌석 정보 조회 (ALL_SEATS_KEY)
+    alt Redis에 데이터 있음
+        Redis-->>Concert: 캐시된 좌석 정보 반환
+    else Redis에 데이터 없음
+        Concert->>MySQL: 좌석 정보 조회
+        MySQL-->>Concert: 좌석 정보 반환
+        Concert->>Redis: 좌석 정보 캐싱 (ALL_SEATS_KEY)
+    end
+    Concert-->>API: 좌석 정보 응답
+    API-->>User: 좌석 정보 표시
+
+    User->>API: 좌석 선택 요청
+    API->>Reservation: 좌석 선택 처리
+    Reservation->>Redis: 좌석 상태 확인 (SEAT_KEY_PREFIX)
+    alt 좌석 가능
+        Reservation->>Redis: 좌석 상태 업데이트 (TEMP_RESERVED)
+        Reservation->>Redis: 임시 예약 키 설정 (TEMP_RESERVATION_KEY)
+        Reservation->>Redis: 만료 키 설정 (EXPIRY_KEY)
+        Reservation->>Kafka: 좌석 TEMP_RESERVED 이벤트 발행
+        Kafka->>Concert: 좌석 상태 업데이트 이벤트 수신
+        Concert->>MySQL: 좌석 상태 업데이트 (TEMP_RESERVED)
+        Concert->>Redis: ALL_SEATS_KEY 업데이트
+        Reservation-->>API: 좌석 선택 성공 응답
+        API-->>User: 좌석 선택 완료 알림
+    else 좌석 불가능
+        Reservation-->>API: 좌석 선택 실패 응답
+        API-->>User: 다른 좌석 선택 요청
+    end
+
+    alt 5분 내 예약 완료
+        User->>API: 예약 완료 요청
+        API->>Reservation: 예약 처리
+        Reservation->>Kafka: 예약 완료 이벤트 발행
+        Kafka->>Concert: 예약 완료 이벤트 수신
+        Concert->>MySQL: 좌석 상태 업데이트 (예약 완료)
+        Concert->>Redis: 좌석 상태 업데이트 (예약 완료, ALL_SEATS_KEY)
+        Reservation-->>API: 예약 완료 응답
+        API-->>User: 예약 완료 알림
+    else 5분 초과
+        Redis->>Kafka: TEMP_RESERVED 만료 이벤트 발행
+        Kafka->>Concert: TEMP_RESERVED 만료 이벤트 수신
+        Concert->>MySQL: 좌석 상태 복원 (AVAILABLE)
+        Concert->>Redis: 좌석 상태 복원 (AVAILABLE, ALL_SEATS_KEY)
+    end
+```
 
 ### ERD 명세
 
@@ -111,6 +168,17 @@ erDiagram
         DATETIME updated_at "수정 일시"
     }
 
+    inventory {
+        BIGINT inventory_id PK "기본 키 (자동 증가)"
+        BIGINT concert_id FK "관련된 콘서트 ID"
+        BIGINT concert_date_id FK "관련된 콘서트 날짜 ID"
+        BIGINT total "총 좌석 수 (기본값: 0)"
+        BIGINT remaining "남은 좌석 수 (기본값: 0)"
+        BIGINT version "버전 관리 (기본값: 0)"
+        DATETIME created_at "생성 일시 (기본값: 현재 시간)"
+        DATETIME updated_at "수정 일시 (업데이트 시 현재 시간)"
+    }
+
     users ||--o{ reservation : "has many"
     reservation ||--o| concert : "includes"
     reservation ||--o| concert_date : "includes"
@@ -120,17 +188,10 @@ erDiagram
     concert_date ||--o{ seat : "has many"
     payment ||--o{ users : "has many"
     payment ||--o| reservation : "includes"
-
-
+    concert ||--o{ inventory : "has many"
+    concert_date ||--o{ inventory : "has many"
 
 ```
-
----
-
-### Dummy data - postman 호출
-
-- API: http://localhost:8080/concerts/
-  ![postman_getConcerts.PNG](image/postman_getConcerts.PNG)
 
 ---
 
