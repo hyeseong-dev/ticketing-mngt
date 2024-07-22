@@ -5,10 +5,9 @@
 ### 목차
 
 - [1. 요구사항 분석](##one)
-- [2. 동시성 제어 처리 로직 비교 구현 작성중...](https://thoughtful-shovel-8c4.notion.site/README-c3a2edd0b1174fc58973509009995720)
+- [2. 동시성 제어 처리 로직 비교 구현 작성중...]()
 - [3. 대기열 설계 및 구현]()
-- [4. Transaction 범위와 책임 분리 방안 설계 작성중...]()
-- [5. 부하테스트 작성중...]()
+- [4. 부하테스트 작성중...]()
 - [Trouble Shooting](##4.-Trouble-Shooting)
 - [주차별 인사이트](##5.-개발하면서-끄적)
 - [기술 스택](##6.-기술-스택)
@@ -26,70 +25,7 @@
 
 ### 시스템 아키텍처
 
-```mermaid
-C4Container
-    title 이벤트 기반 아키텍처 - 마이크로서비스 티켓팅 시스템
-
-    Container_Boundary(gateway, "API 계층") {
-        Container(api_gateway, "API 게이트웨이", "Spring Cloud Gateway", "요청 라우팅 및 인증")
-    }
-
-    Container_Boundary(discovery, "서비스 디스커버리") {
-        Container(eureka, "유레카 서버", "Spring Cloud Netflix", "서비스 등록 및 발견")
-    }
-
-    Container_Boundary(message_broker, "메시지 브로커") {
-        Container(kafka, "카프카", "Apache Kafka", "이벤트 스트리밍 플랫폼")
-    }
-
-    Container_Boundary(cache, "캐싱 계층") {
-        Container(redis, "레디스", "인메모리 데이터 저장소", "캐싱 및 세션 관리")
-    }
-
-    Container_Boundary(services, "마이크로서비스 계층") {
-        Container(service1, "사용자 서비스", "Spring Boot", "사용자 관리")
-        Container(service2, "예약 서비스", "Spring Boot", "티켓 예약")
-        Container(service3, "콘서트 서비스", "Spring Boot", "콘서트 정보")
-        Container(service4, "결제 서비스", "Spring Boot", "결제 처리")
-    }
-
-    Container_Boundary(databases, "데이터베이스 계층") {
-        ContainerDb(db1, "사용자 DB", "MySQL", "사용자 데이터")
-        ContainerDb(db2, "예약 DB", "MySQL", "예약 데이터")
-        ContainerDb(db3, "콘서트 DB", "MySQL", "콘서트 데이터")
-        ContainerDb(db4, "결제 DB", "MySQL", "결제 데이터")
-    }
-
-    Rel(api_gateway, service1, "요청 라우팅", "HTTP/REST")
-    Rel(api_gateway, service2, "요청 라우팅", "HTTP/REST")
-    Rel(api_gateway, service3, "요청 라우팅", "HTTP/REST")
-    Rel(api_gateway, service4, "요청 라우팅", "HTTP/REST")
-
-    Rel(service1, eureka, "서비스 등록", "HTTP")
-    Rel(service2, eureka, "서비스 등록", "HTTP")
-    Rel(service3, eureka, "서비스 등록", "HTTP")
-    Rel(service4, eureka, "서비스 등록", "HTTP")
-
-    Rel(service1, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
-    Rel(service2, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
-    Rel(service3, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
-    Rel(service4, kafka, "이벤트 발행/구독", "Kafka 프로토콜")
-
-    Rel(api_gateway, redis, "캐싱", "Redis 프로토콜")
-    Rel(service1, redis, "캐싱", "Redis 프로토콜")
-    Rel(service2, redis, "캐싱", "Redis 프로토콜")
-    Rel(service3, redis, "캐싱", "Redis 프로토콜")
-    Rel(service4, redis, "캐싱", "Redis 프로토콜")
-
-    Rel(service1, db1, "읽기/쓰기", "JDBC")
-    Rel(service2, db2, "읽기/쓰기", "JDBC")
-    Rel(service3, db3, "읽기/쓰기", "JDBC")
-    Rel(service4, db4, "읽기/쓰기", "JDBC")
-
-    Rel(eureka, api_gateway, "서비스 레지스트리 제공", "HTTP")
-
-    UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")
-```
+![시스템아키텍처](./docs/MSA-EDA-구조.drawio.svg)
 
 ### UML 다이어그램
 
@@ -464,13 +400,7 @@ erDiagram
 
 ---
 
-## 3. DB Index 사용과 비교
-
-[성능 향상을 위한 DB Index 사용과 비교](https://iwannabarmus.tistory.com/36)
-
----
-
-## 4. 대기열 설계 및 구현
+## 3. 대기열 설계 및 구현
 
 1. 유즈 케이스 설정
 
@@ -550,13 +480,13 @@ erDiagram
 
 ## 5. Transaction 범위와 책임 분리 방안 설계
 
-[Transaction 범위와 책임 분리 방안 설계](https://iwannabarmus.tistory.com/38)
+[Transaction 범위와 책임 분리 방안 설계]()
 
 ---
 
 ## 6. 부하테스트 & 장애 대응
 
-[k6로 부하테스트 해보기](https://iwannabarmus.tistory.com/41)
+[부하테스트 해보기]()
 
 
 ---
@@ -565,7 +495,7 @@ erDiagram
 
 *모든 과정을 기록할 수는 없었지만, 5주차 진행 과정에서의 나의 트러블 슈팅 과정을 기록하였다.*
 
-[Trouble Shooting 기록 바로가기](https://iwannabarmus.tistory.com/27)
+[Trouble Shooting 기록 바로가기]()
 
 
 
