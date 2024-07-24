@@ -63,6 +63,11 @@ spring:
     consumer:
       group-id: concert-service-group
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 eureka:
   client:
     register-with-eureka: true
