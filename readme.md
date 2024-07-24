@@ -1,33 +1,30 @@
 # 콘서트 티켓 좌석 예매
 
-### *시나리오 - 콘서트 좌석 예매 서비스*
-
 ### 목차
 
-- [1. 요구사항 분석](##one)
-- [2. 동시성 제어 처리 로직 비교 구현 작성중...]()
-- [3. 대기열 설계 및 구현]()
-- [4. 부하테스트 작성중...]()
-- [Trouble Shooting](##4.-Trouble-Shooting)
-- [주차별 인사이트](##5.-개발하면서-끄적)
-- [기술 스택](##6.-기술-스택)
+- [1. 프로젝트 Milestone](###1.프로젝트 Milestone)
+- [2. POSTMAN API Docs](###2.POSTMAN API Docs)
+- [3. 시스템 아키텍처](###3.시스템 아키텍처)
+- [4. UML 다이어그램](##4.UML 다이어그램)
+- [5. 대기열 설계 및 구현](##5.대기열 설계 및 구현)
+- [6. 주차별 인사이트](###6.주차별 인사이트)
+- [7. 기술 스택](###7.기술 스택)
 
 ---
-<h2 id="one">1. 요구사항 분석</h2>
 
-### 프로젝트 Milestone & 요구사항 명세서 & API 명세서
+### 1.프로젝트 Milestone
 
 [구글닥스 문서 바로가기](https://docs.google.com/spreadsheets/d/17yUn-cEa9uq2jE7_bTpjfXoeaXIAGt_91FmHhMm2BJo/edit?gid=0#gid=0)
 
-### POSTMAN UI
+### 2.POSTMAN API Docs
 
 [POSTMAN UI](https://documenter.getpostman.com/view/14042841/2sA3kSoPGR)
 
-### 시스템 아키텍처
+### 3.시스템 아키텍처
 
 ![시스템아키텍처](./docs/MSA-EDA-구조.drawio.svg)
 
-### UML 다이어그램
+### 4.UML 다이어그램
 
 <details>
 <summary>인증&인가 프로세스</summary>
@@ -394,13 +391,7 @@ erDiagram
 
 ---
 
-## 2. 동시성 제어 처리 로직 비교 구현
-
-[콘서트 예약 서비스에서 발생할 수 있는 동시성 이슈와 처리 방안](https://iwannabarmus.tistory.com/30)
-
----
-
-## 3. 대기열 설계 및 구현
+### 5.대기열 설계 및 구현
 
 1. 유즈 케이스 설정
 
@@ -478,32 +469,7 @@ erDiagram
 
 ---
 
-## 5. Transaction 범위와 책임 분리 방안 설계
-
-[Transaction 범위와 책임 분리 방안 설계]()
-
----
-
-## 6. 부하테스트 & 장애 대응
-
-[부하테스트 해보기]()
-
-
----
-
-## Trouble Shooting
-
-*모든 과정을 기록할 수는 없었지만, 5주차 진행 과정에서의 나의 트러블 슈팅 과정을 기록하였다.*
-
-[Trouble Shooting 기록 바로가기]()
-
-
-
-
-
----
-
-## 주차별 인사이트
+### 6.주차별 인사이트
 
 <details>
 <summary>1주차 인사이트</summary>
@@ -819,7 +785,7 @@ erDiagram
 
 ---
 
-## 기술 스택
+### 7. 기술 스택
 
 1. 주요 프레임워크 및 라이브러리:
     - Spring Boot 3.3.0
@@ -870,7 +836,4 @@ erDiagram
 9. Java 버전:
     - Java 17
 
-## 테스트
-
-- 테스트 코드 주석 참고
  
