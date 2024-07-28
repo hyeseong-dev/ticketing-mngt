@@ -1,4 +1,4 @@
-package com.mgnt.reservationservice.utils;
+package com.mgnt.core.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

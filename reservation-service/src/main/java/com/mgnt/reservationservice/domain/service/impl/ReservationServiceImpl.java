@@ -1,6 +1,5 @@
 package com.mgnt.reservationservice.domain.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
@@ -8,8 +7,8 @@ import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
 import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
 import com.mgnt.core.event.reservation_service.QueueEventStatus;
 import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
-import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.exception.CustomException;
+import com.mgnt.core.util.JsonUtil;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
@@ -20,7 +19,6 @@ import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import com.mgnt.reservationservice.domain.service.ReservationService;
 import com.mgnt.reservationservice.domain.service.ReservationValidator;
-import com.mgnt.reservationservice.utils.JsonUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -192,19 +189,16 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
         try {
 
-            Reservation reservation = reservationRepository.save(request.toEntity(userId));
+            // Redis에서 고유 ID 생성
+            Long reservationId = reservationRedisRepository.createIncr(RESERVATION_INCR_KEY);
 
-            // Redis에 저장
-            String reservationId = reservation.getReservationId().toString();
+            // 예약 정보 객체 생성
+            Reservation reservation = request.toEntity(userId);
+            reservation.updateReservationId(reservationId);
+
+            // 예약 정보를 JSON으로 직렬화하여 Redis에 저장
             String reservationJson = JsonUtil.convertToJson(reservation);
-
-            // Redis에 저장 (Hash 구조 사용)
-            Boolean keyExists = reservationRedisRepository.hasKey(ALL_RESERVATION_KEY);
-            if (!keyExists) {
-                // 키가 존재하지 않으면 새로 생성
-                reservationRedisRepository.createHash(ALL_RESERVATION_KEY);
-            }
-            reservationRedisRepository.hSet(ALL_RESERVATION_KEY, reservationId, reservationJson);
+            reservationRedisRepository.hSet(ALL_RESERVATION_KEY, reservationId.toString(), reservationJson);
 
             // Kafka 이벤트 발행
             kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_REQUESTS, new InventoryReservationRequestEvent(

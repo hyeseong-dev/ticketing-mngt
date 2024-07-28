@@ -6,7 +6,6 @@ import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.concertservice.domain.repository.InventoryRepository;
 import com.mgnt.concertservice.domain.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;

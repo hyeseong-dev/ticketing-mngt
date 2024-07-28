@@ -10,6 +10,7 @@ public class Constants {
     public static final String ALL_RESERVATION_KEY = "all_reservations";
     public static final String ALL_SEATS_KEY = "all_seats";
     public static final String ALL_INVENTORY_KEY = "all_inventory";
+    public static final String RESERVATION_INCR_KEY = "reservation:next_id";
     public static final long CACHE_TTL_SECONDS = 3600; // 1시간
 
     // 새로 추가할 상수들

@@ -8,9 +8,9 @@ import com.mgnt.core.dto.SeatDTO;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.exception.CustomException;
+import com.mgnt.core.util.JsonUtil;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
-import com.mgnt.reservationservice.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
@@ -32,6 +32,12 @@ public class ReservationRedisRepositoryImpl implements ReservationRedisRepositor
     private final ObjectMapper objectMapper;
 
     private static final String USER_RESERVATIONS_KEY = "user:%d:reservations";
+
+
+    @Override
+    public Long createIncr(String RESERVATION_INCR_KEY) {
+        return redisTemplate.opsForValue().increment(RESERVATION_INCR_KEY);
+    }
 
     @Override
     public Boolean hasKey(String key) {

@@ -70,6 +70,10 @@ public class Reservation extends BaseDateTimeEntity {
         this.expiresAt = expiresAt;
     }
 
+    public void updateReservationId(Long reservationId) {
+        this.reservationId = reservationId;
+    }
+
     public void updateStatus(ReservationStatus status) {
         this.status = status;
     }
