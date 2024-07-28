@@ -1,5 +1,6 @@
 package com.mgnt.concertservice.domain.repository;
 
+import com.mgnt.concertservice.domain.entity.Inventory;
 import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.core.enums.SeatStatus;
 
@@ -8,9 +9,17 @@ import java.util.Optional;
 
 public interface RedisRepository {
 
+    void saveInventory(Long concertId, Long concertDateId, Inventory inventory);
+
+    Optional<Inventory> getInventory(Long concertId, Long concertDateId);
+
+    boolean updateInventory(Long concertId, Long concertDateId, Long change);
+
+    boolean updateSeatStatus(Long seatId, SeatStatus newStatus);
+
     Optional<Seat> getSeatById(Long seatId);
 
-    void updateSeatStatus(Long seatId, SeatStatus status);
+    List<Seat> getAllSeats();
 
     void setex(String key, long seconds, String value);
 
@@ -23,12 +32,10 @@ public interface RedisRepository {
     boolean setAccessToken(String key, String value, long expirationMinutes);
 
     void removeFromQueue(String queueKey, String userId);
+    
+    Optional<Seat> getCachedSeat(Long seatId);
 
     List<Seat> getCachedSeats(Long concertDateId);
 
     void cacheSeats(Long concertDateId, List<Seat> seats);
-
-    Optional<Seat> getCachedSeat(Long concertDateId, Long seatId);
-
-    void updateCachedSeatStatus(Long concertDateId, Long seatId, SeatStatus status);
 }

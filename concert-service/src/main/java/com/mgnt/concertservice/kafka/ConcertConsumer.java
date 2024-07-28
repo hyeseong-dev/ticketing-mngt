@@ -3,6 +3,8 @@ package com.mgnt.concertservice.kafka;
 import com.mgnt.concertservice.domain.entity.*;
 import com.mgnt.concertservice.domain.repository.*;
 import com.mgnt.concertservice.domain.service.ConcertService;
+import com.mgnt.core.constants.Constants;
+import com.mgnt.core.dto.SeatDTO;
 import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.concert_service.*;
@@ -14,13 +16,19 @@ import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static com.mgnt.core.constants.Constants.*;
 
 @Slf4j
 @Service
@@ -35,43 +43,48 @@ public class ConcertConsumer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ConcertService concertService;
     private final RedisRepository redisRepository;
+    private final RedissonClient redissonClient;
 
-    // Kafka 토픽 이름을 상수로 정의
-    private static final String TOPIC_SEAT_RESERVATION_REQUESTS = "seat-reservation-requests";
-    private static final String TOPIC_SEAT_RESERVATION_RESPONSES = "seat-reservation-responses";
-    private static final String TOPIC_CONCERT_INFO_REQUESTS = "concert-info-requests";
-    private static final String TOPIC_CONCERT_INFO_RESPONSES = "concert-info-responses";
-    private static final String TOPIC_RESERVATION_REQUESTS = "reservation-requests";
-    private static final String TOPIC_SEAT_STATUS_UPDATES = "seat-status-updates";
-    private static final String TOPIC_RESERVATION_FAILED = "reservation-failed";
-    private static final String TOPIC_RESERVATION_CONFIRMED = "reservation-confirmed";
-    private static final String TOPIC_INVENTORY_RESERVATION_REQUESTS = "inventory-reservation-requests";
-    private static final String TOPIC_INVENTORY_RESERVATION_RESPONSES = "inventory-reservation-responses";
+    private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
+    private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
+
 
     @KafkaListener(topics = TOPIC_SEAT_RESERVATION_REQUESTS)
     @Transactional
     public void handleSeatReservationRequest(SeatStatusUpdatedEvent event) {
-        log.info("Received seat reservation request: {}", event);
-        try {
-            Seat seat = redisRepository.getSeatById(event.seatId()).orElseThrow(
-                    () -> new CustomException(ErrorCode.SEAT_NOT_FOUND, "Seat not found", Level.WARN));
+        log.info("Received inventory reservation request: {}", event);
+        String inventoryKey = String.format("%d:%d", event.concertId(), event.concertDateId());
+        String lockKey = "lock:seat:" + event.seatId();
+        RLock lock = redissonClient.getLock(lockKey);
 
-            boolean success = false;
-            if (seat.getStatus() == SeatStatus.AVAILABLE) {
-                redisRepository.updateSeatStatus(event.seatId(), SeatStatus.RESERVED);
-                success = true;
-                log.info("Successfully reserved seat: {}", event.seatId());
-            } else {
-                log.warn("Seat {} is not available for reservation", event.seatId());
+        try {
+            boolean isLocked = lock.tryLock(5, 10, TimeUnit.SECONDS);
+            if (!isLocked) {
+                log.warn("Failed to acquire lock for seat {}", event.seatId());
+                sendFailureResponse(event);
+                return;
             }
 
-            SeatReservationResponseEvent responseEvent = new SeatReservationResponseEvent(
-                    event.reservationId(),
-                    success,
-                    seat.getPrice()
-            );
-            kafkaTemplate.send(TOPIC_SEAT_RESERVATION_RESPONSES, responseEvent);
-            log.info("Sent seat reservation response: {}", responseEvent);
+            Seat seat = redisRepository.getSeatById(event.seatId()).orElseThrow(
+                    () -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
+
+            if (seat.getStatus() == SeatStatus.AVAILABLE) {
+                redisRepository.updateSeatStatus(event.seatId(), SeatStatus.TEMP_RESERVED);
+
+                // 임시 예약 키 설정
+                String tempReservationKey = String.format(TEMP_RESERVATION_KEY, event.seatId());
+                redisRepository.setex(tempReservationKey, TEMP_RESERVATION_SECONDS, event.userId().toString());
+
+                // 만료 키 설정
+                String expiryKey = String.format(EXPIRY_KEY, event.seatId());
+                redisRepository.setex(expiryKey, TEMP_RESERVATION_SECONDS, event.userId().toString());
+
+                log.info("Successfully reserved seat: {}", event.seatId());
+                sendSuccessResponse(event, seat.getPrice());
+            } else {
+                log.warn("Seat {} is not available for reservation", event.seatId());
+                sendFailureResponse(event);
+            }
         } catch (Exception e) {
             log.error("Error processing seat reservation request", e);
             SeatReservationResponseEvent failureEvent = new SeatReservationResponseEvent(
@@ -82,6 +95,26 @@ public class ConcertConsumer {
             kafkaTemplate.send(TOPIC_SEAT_RESERVATION_RESPONSES, failureEvent);
             log.info("Sent seat reservation failure response: {}", failureEvent);
         }
+    }
+
+    private void sendSuccessResponse(SeatStatusUpdatedEvent event, BigDecimal price) {
+        SeatReservationResponseEvent responseEvent = new SeatReservationResponseEvent(
+                event.reservationId(),
+                true,
+                price
+        );
+        kafkaTemplate.send(TOPIC_SEAT_RESERVATION_RESPONSES, responseEvent);
+        log.info("Sent seat reservation success response: {}", responseEvent);
+    }
+
+    private void sendFailureResponse(SeatStatusUpdatedEvent event) {
+        SeatReservationResponseEvent failureEvent = new SeatReservationResponseEvent(
+                event.reservationId(),
+                false,
+                null
+        );
+        kafkaTemplate.send(TOPIC_SEAT_RESERVATION_RESPONSES, failureEvent);
+        log.info("Sent seat reservation failure response: {}", failureEvent);
     }
 
     @KafkaListener(topics = TOPIC_CONCERT_INFO_REQUESTS)
@@ -131,39 +164,58 @@ public class ConcertConsumer {
 
         try {
             Optional<Seat> seatOpt = redisRepository.getSeatById(event.seatId());
+
             if (seatOpt.isEmpty()) {
-                log.warn("Seat not found: seatId={}", event.seatId());
                 throw new CustomException(ErrorCode.SEAT_NOT_FOUND, "Seat not found", Level.WARN);
             }
 
             Seat seat = seatOpt.get();
             if (seat.getStatus() != SeatStatus.AVAILABLE) {
-                log.warn("Seat not available: seatId={}, status={}", event.seatId(), seat.getStatus());
                 throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, "Seat not available", Level.WARN);
             }
 
-            redisRepository.updateSeatStatus(seat.getSeatId(), SeatStatus.RESERVED);
-            log.info("Updated seat status to RESERVED: seatId={}", seat.getSeatId());
-            sendSeatStatusUpdate(seat, event);
-        } catch (Exception e) {
+            // 좌석 상태를 TEMP_RESERVED로 업데이트
+            boolean updateSuccess = redisRepository.updateSeatStatus(event.seatId(), SeatStatus.TEMP_RESERVED);
+            if (!updateSuccess) {
+                throw new CustomException(ErrorCode.SEAT_UPDATE_FAILED, "Failed to update seat status", Level.ERROR);
+            }
+
+            // 임시 예약 키 설정
+            String tempReservationKey = String.format(Constants.TEMP_RESERVATION_KEY, event.seatId());
+            redisRepository.setex(tempReservationKey, TEMP_RESERVATION_MINUTES * 60, event.userId().toString());
+
+            // 만료 키 설정
+            String expiryKey = String.format(Constants.EXPIRY_KEY, event.seatId());
+            redisRepository.setex(expiryKey, TEMP_RESERVATION_MINUTES * 60, event.userId().toString());
+
+            // 좌석 상태 업데이트 이벤트 발행
+            SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
+                    null, event.userId(), event.concertId(), event.concertDateId(), event.seatId(), seat.getPrice(), SeatStatus.TEMP_RESERVED);
+            kafkaTemplate.send(TOPIC_SEAT_STATUS_UPDATES, updateEvent);
+
+            log.info("Temporary reservation set successfully for user {} for seat {}", event.userId(), event.seatId());
+
+        } catch (CustomException e) {
             log.error("Error handling reservation request", e);
             handleReservationError(e, event);
+        } catch (Exception e) {
+            log.error("Unexpected error during reservation process", e);
+            handleReservationError(new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage(), Level.ERROR), event);
         }
     }
 
-    private void sendSeatStatusUpdate(Seat seat, ReservationRequestedEvent event) {
-        SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(
-                null, event.userId(), event.concertId(), event.concertDateId(),
-                event.seatId(), seat.getPrice()
-        );
-        kafkaTemplate.send(TOPIC_SEAT_STATUS_UPDATES, updateEvent)
-                .whenComplete((result, ex) -> {
-                    if (ex == null) {
-                        log.info("Successfully sent seat status update: {}", updateEvent);
-                    } else {
-                        log.error("Failed to send seat status update: {}", ex.toString());
-                    }
-                });
+    private void handleReservationError(CustomException e, ReservationRequestedEvent event) {
+        log.warn("Reservation process exception: {}", e.getMessage());
+        // 에러 발생 시 좌석 상태를 AVAILABLE로 복구
+        redisRepository.updateSeatStatus(event.seatId(), SeatStatus.AVAILABLE);
+        sendReservationFailureNotification(event);
+    }
+
+    private void sendReservationFailureNotification(ReservationRequestedEvent event) {
+//        ReservationFailedEvent failedEvent = new ReservationFailedEvent(
+//                event.userId(), event.concertId(), event.concertDateId(), event.seatId());
+//        kafkaTemplate.send(TOPIC_RESERVATION_FAILED, failedEvent);
+//        log.info("Sent reservation failure notification: {}", failedEvent);
     }
 
     private void handleReservationError(Exception e, ReservationRequestedEvent event) {
@@ -175,13 +227,6 @@ public class ConcertConsumer {
             log.error("Unexpected error during reservation process", e);
         }
         sendReservationFailureNotification(event);
-    }
-
-    private void sendReservationFailureNotification(ReservationRequestedEvent event) {
-//        ReservationFailedEvent failedEvent = new ReservationFailedEvent(
-//                event.userId(), event.concertId(), event.concertDateId(), event.seatId());
-//        kafkaTemplate.send(TOPIC_RESERVATION_FAILED, failedEvent);
-        log.info("Sent reservation failure notification: {}", event.toString());
     }
 
     @KafkaListener(topics = TOPIC_RESERVATION_FAILED)
@@ -209,13 +254,29 @@ public class ConcertConsumer {
     public void handleInventoryReservationRequest(InventoryReservationRequestEvent event) {
         log.info("Received inventory reservation request: {}", event);
         try {
-            boolean isSuccess = updateInventoryRemainingOptimisticLock(event.concertId(), event.concertDateId(), -1L);
+            // MySQL 인벤토리 업데이트
+            boolean mysqlSuccess = updateInventoryRemainingOptimisticLock(event.concertId(), event.concertDateId(), -1L);
+            // Redis 인벤토리 업데이트
+            boolean redisSuccess = redisRepository.updateInventory(event.concertId(), event.concertDateId(), -1L);
+            boolean isSuccess = mysqlSuccess && redisSuccess;
+
+            if (!isSuccess) {
+                // MySQL과 Redis 업데이트 중 하나라도 실패했다면 롤백
+                if (mysqlSuccess) {
+                    updateInventoryRemainingOptimisticLock(event.concertId(), event.concertDateId(), 1L);
+                }
+                if (redisSuccess) {
+                    redisRepository.updateInventory(event.concertId(), event.concertDateId(), 1L);
+                }
+            }
+
             InventoryReservationResponseEvent responseEvent = new InventoryReservationResponseEvent(
                     event.reservationId(),
                     event.concertId(),
                     event.concertDateId(),
                     isSuccess
             );
+
             kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_RESPONSES, responseEvent);
             log.info("Sent inventory reservation response: {}", responseEvent);
         } catch (CustomException e) {

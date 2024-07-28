@@ -133,7 +133,7 @@ public class ReservationConsumer {
 
             // Redis 캐시 업데이트
             ReservationResponseDTO updatedDto = ReservationResponseDTO.from(reservation);
-            reservationRedisRepository.saveReservation(reservation.getUserId(), reservation.getReservationId(), updatedDto);
+            reservationRedisRepository.updateReservationInventory(reservation.getUserId(), reservation.getReservationId(), updatedDto);
             log.info("Updated reservation in Redis cache: userId={}, reservationId={}", reservation.getUserId(), reservation.getReservationId());
 
             // 클라이언트에게 결과 통지 (예: WebSocket 또는 SSE를 통해)

@@ -18,11 +18,9 @@ public class FilterConfig {
     @Bean
     public FilterRegistrationBean<ReservationTokenFilter> reservationTokenFilter() {
         FilterRegistrationBean<ReservationTokenFilter> registrationBean = new FilterRegistrationBean<>();
-
         registrationBean.setFilter(new ReservationTokenFilter(jwtUtil));
-        registrationBean.addUrlPatterns("/api/concerts/*"); // 필터를 적용할 URL 패턴 설정
+        registrationBean.addUrlPatterns("/api/concerts/*"); // URL 패턴 점검
         registrationBean.setOrder(1); // 필터 체인에서의 순서 설정
-
         return registrationBean;
     }
 }

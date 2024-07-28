@@ -11,6 +11,7 @@ import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
 import com.mgnt.reservationservice.domain.service.ReservationService;
+import com.mgnt.reservationservice.kafka.ReservationProducer;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.PathParam;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final ReservationProducer reservationProducer;
 
     @PostMapping("/select-seat/{seatId}")
     public ApiResult<String> selectSeat(
@@ -37,7 +39,7 @@ public class ReservationController {
             @PathParam(value = "seatId") @NotNull Long seatId
     ) {
 
-        reservationService.initiateReservation(userId, reservationToken, xUserId, concertId, concertDateId, seatId);
+        reservationProducer.initiateReservation(userId, reservationToken, xUserId, concertId, concertDateId, seatId);
         return ApiResult.success("좌석 선택이 접수되었으며 처리 중입니다.");
     }
 
@@ -65,13 +67,13 @@ public class ReservationController {
 //        return ApiResult.success("예약이 접수되었으며 진행중입니다.");
 //    }
 
-//    @PostMapping("/test")
-//    public ApiResult<ReservationInventoryCreateResponseDTO> reserveTest(
-//            @RequestHeader("User-Id") Long userId,
-//            @RequestBody ReservationRequest request
-//    ) {
-//        return ApiResult.success(reservationService.createReservationWithoutPayment(userId, request));
-//    }
+    @PostMapping("/test")
+    public ApiResult<ReservationInventoryCreateResponseDTO> reserveTest(
+            @RequestHeader("User-Id") Long userId,
+            @RequestBody ReservationRequest request
+    ) {
+        return ApiResult.success(reservationService.createReservationWithoutPayment(userId, request));
+    }
 
 }
 

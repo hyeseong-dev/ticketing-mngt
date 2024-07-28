@@ -17,13 +17,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.mgnt.reservationservice.utils.Constants.*;
+import static com.mgnt.core.constants.Constants.*;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class QueueServiceImpl implements QueueService {
 
+    public static final String QUEUE_PROCESS = "queue-process";
+    public static final String QUEUE_EVENTS = "queue-events";
     private final JwtUtil jwtUtil;
     private final QueueRedisRepository queueRedisRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -49,8 +52,8 @@ public class QueueServiceImpl implements QueueService {
 
         QueueEvent event = new QueueEvent(userId, request.concertId(), request.concertDateId(),
                 QueueEventType.QUEUE_ENTRY, QueueEventStatus.WAITING, position);
-        kafkaTemplate.send("queue-events", event);
-        kafkaTemplate.send("queue-process", event);
+        kafkaTemplate.send(QUEUE_EVENTS, event);
+        kafkaTemplate.send(QUEUE_PROCESS, event);
 
         log.info("Queue entry event sent for user {}", userId);
 
@@ -84,16 +87,16 @@ public class QueueServiceImpl implements QueueService {
         return String.format(WAITING_QUEUE_KEY, concertId, concertDateId);
     }
 
-    @KafkaListener(topics = "queue-process")
+    @KafkaListener(topics = QUEUE_PROCESS)
     public void handleEventQueue(QueueEvent event) {
-        processQueue(event.concertId(), event.concertDateId());
+        processQueue(event);
     }
 
     @Override
     @Transactional
-    public void processQueue(Long concertId, Long concertDateId) {
-        String queueKey = generateQueueKey(concertId, concertDateId);
-        log.info("Processing queue for concert {} on date {}", concertId, concertDateId);
+    public void processQueue(QueueEvent event) {
+        String queueKey = generateQueueKey(event.concertId(), event.concertDateId());
+        log.info("Processing queue for concert {} on date {}", event.concertId(), event.concertDateId());
 
         for (int i = 0; i < BATCH_SIZE; i++) {
             Set<String> userIds = queueRedisRepository.getTopUsers(queueKey, 1);
@@ -105,7 +108,7 @@ public class QueueServiceImpl implements QueueService {
             log.info("Processing user {} from queue", userId);
 
             try {
-                allowAccessToReservationPage(userId, concertId, concertDateId);
+                allowAccessToReservationPage(userId, event.concertId(), event.concertDateId());
                 queueRedisRepository.removeFromQueue(queueKey, userId.toString());
                 log.info("User {} processed and removed from queue", userId);
             } catch (CustomException e) {

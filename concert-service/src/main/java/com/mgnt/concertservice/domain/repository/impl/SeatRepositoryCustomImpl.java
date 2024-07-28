@@ -81,9 +81,9 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
     }
 
     @Override
-    public int updateSeatStatus(Long concertDateId, Long seatId, SeatStatus seatStatus) {
-        if (concertDateId == null || seatId == null || seatStatus == null) {
-            throw new IllegalArgumentException("concertDateId, seatId, and seatStatus must not be null");
+    public int updateSeatStatus(Long seatId, SeatStatus seatStatus) {
+        if (seatId == null || seatStatus == null) {
+            throw new IllegalArgumentException("seatId, and seatStatus must not be null");
         }
 
         QSeat seat = QSeat.seat;
@@ -92,21 +92,20 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
             long updatedCount = queryFactory
                     .update(seat)
                     .set(seat.status, seatStatus)
-                    .where(seat.concertDateId.eq(concertDateId)
-                            .and(seat.seatId.eq(seatId)))
+                    .where(seat.seatId.eq(seatId))
                     .execute();
 
-            log.info("Updated seat status: concertDateId={}, seatId={}, newStatus={}, updatedCount={}",
-                    concertDateId, seatId, seatStatus, updatedCount);
+            log.info("Updated seat status: seatId={}, newStatus={}, updatedCount={}",
+                    seatId, seatStatus, updatedCount);
 
             return (int) updatedCount;
         } catch (Exception e) {
-            log.error("Failed to update seat status: concertDateId={}, seatId={}, newStatus={}",
-                    concertDateId, seatId, seatStatus, e);
+            log.error("Failed to update seat status: seatId={}, newStatus={}",
+                    seatId, seatStatus, e);
             throw new RuntimeException("Failed to update seat status", e);
         }
     }
-    
+
     @Override
     public Optional<Seat> findSeatByConcertDateIdAndSeatId(Long concertDateId, Long seatId) {
         QSeat seat = QSeat.seat;

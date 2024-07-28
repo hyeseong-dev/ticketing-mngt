@@ -26,7 +26,8 @@ public enum ErrorCode implements MessageCommInterface {
     HTTP_METHOD_NOT_FOUND(405, "C015", "HTTP method not found."),
     PHONE_NUMBER_DUPLICATED(409, "C017", "Phone number duplicated."),
     CONCURRENT_MODIFICATION(400, "C018", "Concurrent Modification."),
-
+    REDIS_OPERATION_FAILED(500, "C019", "Redis operation failed."),
+    JSON_PROCESSING_ERROR(400, "C020", "JSON processing error."),
     // User Errors
     USER_NOT_FOUND(404, "U001", "This user does not exist."),
     EMAIL_ALREADY_EXISTS(409, "U002", "Duplicate email."),
@@ -85,7 +86,10 @@ public enum ErrorCode implements MessageCommInterface {
     INSUFFICIENT_INVENTORY(404, "I002", "콘서트 티켓 재고가 충분하지 않습니다."),
 
     // Queue
-    QUEUE_ENTRY_FAILED(400, "Q001", "대기열 진입에 실패했습니다.");
+    QUEUE_ENTRY_FAILED(400, "Q001", "대기열 진입에 실패했습니다."),
+
+    // Lock
+    LOCK_ACQUISITION_FAILED(400, "L001", "분산락 획득에 실패했습니다.");
 
     private final int status;
     private final String code;

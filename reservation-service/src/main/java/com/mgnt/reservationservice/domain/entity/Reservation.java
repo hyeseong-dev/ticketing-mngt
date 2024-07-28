@@ -55,7 +55,11 @@ public class Reservation extends BaseDateTimeEntity {
     }
 
     @Builder
-    public Reservation(Long userId, Long concertId, Long concertDateId, Long seatId, ReservationStatus status, ZonedDateTime reservedAt, BigDecimal price) {
+    public Reservation(
+            Long userId, Long concertId, Long concertDateId, Long seatId,
+            ReservationStatus status, ZonedDateTime reservedAt, BigDecimal price,
+            ZonedDateTime expiresAt
+    ) {
         this.userId = userId;
         this.concertId = concertId;
         this.concertDateId = concertDateId;
@@ -63,6 +67,7 @@ public class Reservation extends BaseDateTimeEntity {
         this.status = status;
         this.reservedAt = reservedAt;
         this.price = price;
+        this.expiresAt = expiresAt;
     }
 
     public void updateStatus(ReservationStatus status) {

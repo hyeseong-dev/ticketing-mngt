@@ -1,5 +1,6 @@
 package com.mgnt.core.event.reservation_service;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 public record ReservationInventoryCreateResponseDTO(Long reservationId,
@@ -7,5 +8,8 @@ public record ReservationInventoryCreateResponseDTO(Long reservationId,
                                                     Long concertId,
                                                     Long concertDateId,
                                                     Long seatId,
-                                                    ZonedDateTime createdAt) {
+                                                    BigDecimal price,
+                                                    ZonedDateTime createdAt,
+                                                    ZonedDateTime expiresAt
+) {
 }

@@ -5,21 +5,27 @@ import com.mgnt.reservationservice.domain.entity.Reservation;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
 public record ReservationRequest(
         @NotNull Long concertId,
         @NotNull Long concertDateId,
         @NotNull Long seatId,
-        @NotNull BigDecimal price
+        @NotNull BigDecimal price,
+        @NotNull ReservationStatus status,
+        @NotNull ZonedDateTime expiresAt
 ) {
 
-    public Reservation toEntity() { // 예약 엔티티를 만들기 위해서는 concertId, concertDateId,
+    public Reservation toEntity(Long userId) {
         return Reservation.builder()
-                .concertId(concertId)  //
+                .userId(userId)  // userId 추가
+                .concertId(concertId)
                 .concertDateId(concertDateId)
                 .seatId(seatId)
                 .price(price)
-                .status(ReservationStatus.ING)
+                .status(status)
+                .reservedAt(ZonedDateTime.now())  // 예약 시간 설정
+                .expiresAt(expiresAt)
                 .build();
     }
 }

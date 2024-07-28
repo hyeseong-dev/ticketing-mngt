@@ -2,6 +2,7 @@ package com.mgnt.reservationservice.domain.service;
 
 import com.mgnt.core.event.reservation_service.QueueEntryRequest;
 import com.mgnt.core.event.reservation_service.QueueEntryResponse;
+import com.mgnt.core.event.reservation_service.QueueEvent;
 import com.mgnt.core.event.reservation_service.QueueStatusResponse;
 
 public interface QueueService {
@@ -11,5 +12,5 @@ public interface QueueService {
 
     void removeFromQueue(Long userId, QueueEntryRequest request);
 
-    void processQueue(Long concertId, Long concertDateId);
+    void processQueue(QueueEvent event);
 }

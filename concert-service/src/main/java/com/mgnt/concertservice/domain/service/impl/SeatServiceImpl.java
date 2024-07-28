@@ -50,13 +50,13 @@ public class SeatServiceImpl implements SeatService {
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN));
     }
 
-    @Transactional
-    public void updateSeatStatus(Long concertDateId, Long seatId, SeatStatus newStatus) {
-        int updatedCount = seatRepository.updateSeatStatus(concertDateId, seatId, newStatus);
-        if (updatedCount == 0) {
-            throw new CustomException(ErrorCode.SEAT_UPDATE_FAILED, null, Level.ERROR);
-        }
-    }
+//    @Transactional
+//    public void updateSeatStatus(Long concertDateId, Long seatId, SeatStatus newStatus) {
+//        int updatedCount = seatRepository.updateSeatStatus(concertDateId, seatId, newStatus);
+//        if (updatedCount == 0) {
+//            throw new CustomException(ErrorCode.SEAT_UPDATE_FAILED, null, Level.ERROR);
+//        }
+//    }
 
     @Transactional(readOnly = true)
     public List<Seat> getAllSeatsByConcertDateId(Long concertDateId) {

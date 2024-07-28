@@ -1,10 +1,16 @@
 package com.mgnt.reservationservice.domain.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mgnt.core.enums.ReservationStatus;
+import com.mgnt.core.enums.SeatStatus;
 import com.mgnt.core.error.ErrorCode;
+import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
+import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
 import com.mgnt.core.event.reservation_service.QueueEventStatus;
+import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
 import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.exception.CustomException;
+import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
@@ -14,10 +20,13 @@ import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import com.mgnt.reservationservice.domain.service.ReservationService;
 import com.mgnt.reservationservice.domain.service.ReservationValidator;
+import com.mgnt.reservationservice.utils.JsonUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +35,18 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.mgnt.reservationservice.utils.Constants.ACCESS_TOKEN_KEY;
+import static com.mgnt.core.constants.Constants.*;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
+    private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationValidator reservationValidator;
@@ -43,6 +55,58 @@ public class ReservationServiceImpl implements ReservationService {
     private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
     private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
 
+    @Override
+    public void handleTempReservationExpiration(String expiredKey) {
+        try {
+            String[] keyParts = expiredKey.split(":");
+            if (keyParts.length != 3) {
+                log.error("Invalid key format: {}", expiredKey);
+                return;
+            }
+
+            Long seatId = Long.parseLong(keyParts[2]);
+            String lockKey = "lock:seat:" + seatId;
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                boolean isLocked = lock.tryLock(5, 10, TimeUnit.SECONDS);
+                if (!isLocked) {
+                    log.warn("Failed to acquire lock for seat {} expiration handling", seatId);
+                    return;
+                }
+
+                String seatKey = "seat:" + seatId;
+                String seatInfo = reservationRedisRepository.get(seatKey);
+                if (seatInfo == null) {
+                    log.warn("Seat information not found in Redis for key: {}", seatKey);
+                    return;
+                }
+
+                // 좌석 상태를 AVAILABLE로 변경
+                reservationRedisRepository.updateSeatStatus(seatId, SeatStatus.AVAILABLE);
+
+                // Kafka 이벤트 발행
+                SeatStatusUpdatedEvent event = new SeatStatusUpdatedEvent(
+                        null, null, null, null, seatId, null, SeatStatus.AVAILABLE
+                );
+                kafkaTemplate.send(TOPIC_SEAT_STATUS_UPDATES, event);
+
+                log.info("Temporary reservation expired and seat status reset for seatId: {}", seatId);
+
+                // 여기에 예약 만료에 대한 추가 로직 (예: 관련 예약 정보 삭제) 을 구현할 수 있습니다.
+                // 예를 들어, 임시 예약 정보를 Redis에서 삭제
+                String tempReservationKey = "temp_reservation:" + seatId;
+                reservationRedisRepository.delete(tempReservationKey);
+
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error handling temporary reservation expiration", e);
+        }
+    }
 
     @Override
     public TokenResponseDTO getTokenStatus(Long userId, TokenRequestDTO request) {
@@ -123,51 +187,46 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    // ========================================================================= API 구분선
     @Override
-    public void initiateReservation(Long userId, String reservationToken, Long xUserId, Long concertId, Long concertDateId, Long seatId) {
-
-        String seatKey = String.format("seat:%d:%d", seatId, concertDateId);
-        log.info("Initiating reservation for user {} for seat {}", userId, seatKey);
-
+    @Transactional
+    public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
         try {
-            // Redis에서 현재 좌석 상태 확인
-            String currentStatus = reservationRedisRepository.get(seatKey);
 
-            if (currentStatus == null) {
-                log.warn("Seat {} not found in Redis", seatKey);
-                throw new CustomException(ErrorCode.SEAT_NOT_FOUND, null, Level.WARN);
+            Reservation reservation = reservationRepository.save(request.toEntity(userId));
+
+            // Redis에 저장
+            String reservationId = reservation.getReservationId().toString();
+            String reservationJson = JsonUtil.convertToJson(reservation);
+
+            // Redis에 저장 (Hash 구조 사용)
+            Boolean keyExists = reservationRedisRepository.hasKey(ALL_RESERVATION_KEY);
+            if (!keyExists) {
+                // 키가 존재하지 않으면 새로 생성
+                reservationRedisRepository.createHash(ALL_RESERVATION_KEY);
             }
+            reservationRedisRepository.hSet(ALL_RESERVATION_KEY, reservationId, reservationJson);
 
-            if (!currentStatus.equals("AVAILABLE")) {
-                log.warn("Seat {} is not available. Current status: {}", seatKey, currentStatus);
-                throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, null, Level.WARN);
-            }
+            // Kafka 이벤트 발행
+            kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_REQUESTS, new InventoryReservationRequestEvent(
+                    reservation.getReservationId(),
+                    request.concertId(),
+                    request.concertDateId(),
+                    true
+            ));
 
-            // Redis에 임시로 좌석 상태 및 사용자 정보 저장
-            String pendingValue = String.format("PENDING:%d", userId);
-            boolean setSuccess = reservationRedisRepository.setTempSeat(seatKey, pendingValue, TEMP_RESERVATION_MINUTES);
-
-            if (!setSuccess) {
-                log.warn("Failed to set temporary reservation for seat {}", seatKey);
-                throw new CustomException(ErrorCode.RESERVATION_ALREADY_RESERVED, null, Level.WARN);
-            }
-
-            // Kafka를 통해 ConcertService에 좌석 상태 업데이트 요청
-            ReservationRequestedEvent event = new ReservationRequestedEvent(concertDateId, userId, concertId, seatId);
-            kafkaTemplate.send("reservation-requests", event)
-                    .thenAccept(result -> log.info("Successfully sent reservation request event for seat {}", seatKey))
-                    .exceptionally(ex -> {
-                        log.error("Failed to send reservation request event for seat {}", seatKey, ex);
-                        // 여기서 Redis에 저장된 임시 예약 정보를 롤백해야 할 수 있습니다.
-                        reservationRedisRepository.delete(seatKey);
-                        throw new CompletionException(new CustomException(ErrorCode.SEAT_RESERVATION_REQUEST_FAILED, null, Level.ERROR));
-                    });
-
-            log.info("Reservation initiated successfully for user {} for seat {}", userId, seatKey);
+            return new ReservationInventoryCreateResponseDTO(
+                    reservation.getReservationId(),
+                    reservation.getUserId(),
+                    reservation.getConcertId(),
+                    reservation.getConcertDateId(),
+                    reservation.getSeatId(),
+                    reservation.getPrice(),
+                    reservation.getCreatedAt(),
+                    reservation.getExpiresAt()
+            );
         } catch (Exception e) {
-            log.error("Error during reservation initiation for user {} for seat {}", userId, seatKey, e);
-            throw e;
+            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
         }
     }
+
 }

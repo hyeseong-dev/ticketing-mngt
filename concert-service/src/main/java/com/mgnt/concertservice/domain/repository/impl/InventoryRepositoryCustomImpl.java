@@ -51,7 +51,7 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
         return (int) affectedRows;
     }
 
-    //    @Override
+//        @Override
 //    public Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
 //        QInventory inventory = QInventory.inventory;
 //
@@ -64,15 +64,16 @@ public class InventoryRepositoryCustomImpl implements InventoryRepositoryCustom 
 //                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
 //                .execute();
 //    }
-    
+
     @Transactional
     public Long updateRemainingInventoryWithPessimisticLock(Long concertId, Long concertDateId, Long remainingChange) {
         // 1. 비관적 락으로 엔티티를 먼저 조회
         Inventory inventory = queryFactory
                 .selectFrom(QInventory.inventory)
                 .where(QInventory.inventory.concertId.eq(concertId)
-                        .and(QInventory.inventory.concertDateId.eq(concertDateId)))
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                        .and(QInventory.inventory.concertDateId.eq(concertDateId))
+                        .and(QInventory.inventory.remaining.add(remainingChange).goe(0))) // 재고가 음수가 되지 않도록 체크
+                .setLockMode(LockModeType.OPTIMISTIC)
                 .fetchOne();
 
         if (inventory == null) {

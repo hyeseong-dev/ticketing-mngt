@@ -1,12 +1,10 @@
 package com.mgnt.gatewayservice.config;
 
 import com.mgnt.gatewayservice.filter.AuthorizationHeaderFilter;
-import com.mgnt.gatewayservice.filter.RequestBodyFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 
 @Configuration
 public class GatewayConfig {

@@ -18,10 +18,9 @@ import java.util.List;
 public interface ReservationService {
     List<ReservationResponseDTO> getMyReservations(Long userId);
 
-
     TokenResponseDTO getTokenStatus(Long userId, TokenRequestDTO request);
 
-    void initiateReservation(Long userId, String reservationToken, Long xUserId, Long concertId, Long concertDateId, Long seatId);
+    void handleTempReservationExpiration(String expiredKey);
 
-//    ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
+    ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request);
 }
