@@ -18,10 +18,10 @@ public abstract class BaseDateTimeEntity {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private ZonedDateTime createdAt;
+    ZonedDateTime createdAt;
 
     @LastModifiedDate
-    private ZonedDateTime updatedAt;
+    ZonedDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {

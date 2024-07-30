@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface ReservationRedisRepository {
 
+    boolean deleteReservation(String key, String hashKey);
+
     Long createIncr(String RESERVATION_INCR_KEY);
 
     Boolean hasKey(String key);

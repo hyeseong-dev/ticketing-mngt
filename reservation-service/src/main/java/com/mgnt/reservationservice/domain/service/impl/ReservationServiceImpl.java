@@ -28,10 +28,14 @@ import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -49,6 +53,8 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationValidator reservationValidator;
     private final ReservationRedisRepository reservationRedisRepository;
     private final QueueRedisRepository queueRedisRepository;
+    private final TransactionTemplate transactionTemplate;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
     private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
 
@@ -185,7 +191,6 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
     public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
         try {
 
@@ -195,18 +200,43 @@ public class ReservationServiceImpl implements ReservationService {
             // 예약 정보 객체 생성
             Reservation reservation = request.toEntity(userId);
             reservation.updateReservationId(reservationId);
+            reservation.setCreatedAt(ZonedDateTime.now());
+            reservation.setUpdatedAt(ZonedDateTime.now());
 
             // 예약 정보를 JSON으로 직렬화하여 Redis에 저장
             String reservationJson = JsonUtil.convertToJson(reservation);
             reservationRedisRepository.hSet(ALL_RESERVATION_KEY, reservationId.toString(), reservationJson);
 
-            // Kafka 이벤트 발행
-            kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_REQUESTS, new InventoryReservationRequestEvent(
-                    reservation.getReservationId(),
-                    request.concertId(),
-                    request.concertDateId(),
-                    true
-            ));
+            // 비동기로 MySQL에 예약 정보 저장 및 Redis 롤백 처리
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                transactionTemplate.execute(status -> {
+                    try {
+                        reservationRepository.save(reservation);
+                    } catch (Exception e) {
+                        // MySQL 저장 실패 시 Redis 롤백 처리
+                        reservationRedisRepository.deleteReservation(ALL_RESERVATION_KEY, reservationId.toString());
+                        status.setRollbackOnly();
+                        throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage(), Level.ERROR);
+                    }
+                    return null;
+                });
+            }, executorService);
+
+            // 비동기 작업이 완료된 후 kafka 이벤트 발행
+            future.thenRun(() -> {
+                // Kafka 이벤트 발행
+                kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_REQUESTS, new InventoryReservationRequestEvent(
+                        reservation.getReservationId(),
+                        request.concertId(),
+                        request.concertDateId(),
+                        true
+                ));
+            }).exceptionally(error -> {
+                // 예외 처리 로직
+                log.error("Error occurred while saving reservation to MySQL or sending Kafka event", error);
+                throw new CustomException(ErrorCode.RESERVATION_FAILED, error.getMessage(), Level.ERROR);
+            });
+
 
             return new ReservationInventoryCreateResponseDTO(
                     reservation.getReservationId(),

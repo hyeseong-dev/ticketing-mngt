@@ -33,6 +33,10 @@ public class ReservationRedisRepositoryImpl implements ReservationRedisRepositor
 
     private static final String USER_RESERVATIONS_KEY = "user:%d:reservations";
 
+    @Override
+    public boolean deleteReservation(String key, String hashKey) {
+        return redisTemplate.opsForHash().delete(key, hashKey) > 0;
+    }
 
     @Override
     public Long createIncr(String RESERVATION_INCR_KEY) {
