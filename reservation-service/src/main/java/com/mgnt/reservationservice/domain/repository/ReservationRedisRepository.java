@@ -7,6 +7,9 @@ import com.mgnt.reservationservice.domain.entity.Reservation;
 import java.util.List;
 
 public interface ReservationRedisRepository {
+    long countAllReservations();
+    
+    String hGet(String key, String hashKey);
 
     boolean deleteReservation(String key, String hashKey);
 

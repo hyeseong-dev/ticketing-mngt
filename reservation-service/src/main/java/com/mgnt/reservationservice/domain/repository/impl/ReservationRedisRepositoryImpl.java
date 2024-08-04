@@ -14,6 +14,7 @@ import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
+import org.redisson.api.RMap;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -32,6 +33,18 @@ public class ReservationRedisRepositoryImpl implements ReservationRedisRepositor
     private final ObjectMapper objectMapper;
 
     private static final String USER_RESERVATIONS_KEY = "user:%d:reservations";
+
+    @Override
+    public long countAllReservations() {
+        return redisTemplate.opsForHash().size(ALL_RESERVATION_KEY);
+    }
+
+
+    @Override
+    public String hGet(String key, String hashKey) {
+        return (String) redisTemplate.opsForHash().get(key, hashKey);
+    }
+
 
     @Override
     public boolean deleteReservation(String key, String hashKey) {
@@ -62,7 +75,7 @@ public class ReservationRedisRepositoryImpl implements ReservationRedisRepositor
     public void updateSeatStatus(Long seatId, SeatStatus newStatus) {
         try {
             String seatKey = SEAT_KEY_PREFIX + seatId;
-            String currentSeatJson = redisTemplate.opsForValue().get(seatKey);
+            String currentSeatJson = hGet(ALL_RESERVATION_KEY, seatId.toString());
 
             if (currentSeatJson != null) {
                 SeatDTO updatedSeat = objectMapper.readValue(currentSeatJson, SeatDTO.class);

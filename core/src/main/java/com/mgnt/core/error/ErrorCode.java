@@ -28,6 +28,7 @@ public enum ErrorCode implements MessageCommInterface {
     CONCURRENT_MODIFICATION(400, "C018", "Concurrent Modification."),
     REDIS_OPERATION_FAILED(500, "C019", "Redis operation failed."),
     JSON_PROCESSING_ERROR(400, "C020", "JSON processing error."),
+    RESERVATION_LOCK_FAILED(400, "C021", "Reservation lock failed."),
     // User Errors
     USER_NOT_FOUND(404, "U001", "This user does not exist."),
     EMAIL_ALREADY_EXISTS(409, "U002", "Duplicate email."),

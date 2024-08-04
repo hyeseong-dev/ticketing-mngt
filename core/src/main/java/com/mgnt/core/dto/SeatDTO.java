@@ -1,9 +1,12 @@
 package com.mgnt.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mgnt.core.enums.SeatStatus;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record SeatDTO(
         Long seatId,
         int seatNum,

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ReservationStatus {
+    UNAVAILABLE("UNAVAILABLE"),
     ING("ING"),
     RESERVED("RESERVED"),
     CANCEL("CANCEL");

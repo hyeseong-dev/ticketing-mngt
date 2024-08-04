@@ -19,12 +19,15 @@ import org.apache.logging.log4j.Level;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -41,12 +44,10 @@ public class ConcertConsumer {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ConcertService concertService;
     private final RedisRepository redisRepository;
     private final RedissonClient redissonClient;
 
-    private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
-    private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
+    private final RedisTemplate redisTemplate;
 
 
     @KafkaListener(topics = TOPIC_SEAT_RESERVATION_REQUESTS)
@@ -161,15 +162,21 @@ public class ConcertConsumer {
     @Transactional
     public void handleReservationRequest(ReservationRequestedEvent event) {
         log.info("Received reservation request: {}", event);
+        String lockKey = "lock:seat:" + event.seatId();
+        RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            Optional<Seat> seatOpt = redisRepository.getSeatById(event.seatId());
-
-            if (seatOpt.isEmpty()) {
-                throw new CustomException(ErrorCode.SEAT_NOT_FOUND, "Seat not found", Level.WARN);
+            // 락 획득 시도
+            boolean isLocked = lock.tryLock(10, 30, TimeUnit.SECONDS);
+            if (!isLocked) {
+                log.warn("Failed to acquire lock for seat {}", event.seatId());
+                sendReservationFailureNotification(event);
+                return;
             }
+            // 좌석 상태 확인 및 업데이트
+            Seat seat = redisRepository.getSeatById(event.seatId()).orElseThrow(() ->
+                    new CustomException(ErrorCode.SEAT_NOT_FOUND, "Seat not found", Level.WARN));
 
-            Seat seat = seatOpt.get();
             if (seat.getStatus() != SeatStatus.AVAILABLE) {
                 throw new CustomException(ErrorCode.SEAT_NOT_AVAILABLE, "Seat not available", Level.WARN);
             }
@@ -182,11 +189,11 @@ public class ConcertConsumer {
 
             // 임시 예약 키 설정
             String tempReservationKey = String.format(Constants.TEMP_RESERVATION_KEY, event.seatId());
-            redisRepository.setex(tempReservationKey, TEMP_RESERVATION_MINUTES * 60, event.userId().toString());
+            redisRepository.setex(tempReservationKey, TEMP_RESERVATION_SECONDS, event.userId().toString());
 
             // 만료 키 설정
             String expiryKey = String.format(Constants.EXPIRY_KEY, event.seatId());
-            redisRepository.setex(expiryKey, TEMP_RESERVATION_MINUTES * 60, event.userId().toString());
+            redisRepository.setex(expiryKey, TEMP_RESERVATION_SECONDS, event.userId().toString());
 
             // 좌석 상태 업데이트 이벤트 발행
             SeatStatusUpdatedEvent updateEvent = new SeatStatusUpdatedEvent(

@@ -1,7 +1,5 @@
 package com.mgnt.concertservice.domain.repository.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgnt.concertservice.domain.entity.Inventory;
 import com.mgnt.concertservice.domain.entity.Seat;
 import com.mgnt.concertservice.domain.repository.RedisRepository;

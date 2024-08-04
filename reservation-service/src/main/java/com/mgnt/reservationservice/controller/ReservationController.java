@@ -1,12 +1,10 @@
 package com.mgnt.reservationservice.controller;
 
-import com.mgnt.core.event.reservation_service.QueueEntryRequest;
-import com.mgnt.core.event.reservation_service.QueueEntryResponse;
-import com.mgnt.core.event.reservation_service.QueueStatusResponse;
+import com.mgnt.core.error.ErrorCode;
 import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
 import com.mgnt.core.exception.ApiResult;
+import com.mgnt.reservationservice.controller.dto.request.ReservationInventoryRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
-import com.mgnt.reservationservice.controller.dto.request.ReserveRequest;
 import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
 import com.mgnt.reservationservice.controller.dto.response.TokenResponseDTO;
@@ -19,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequestMapping("/api/reservations")
@@ -36,11 +35,15 @@ public class ReservationController {
             @RequestHeader(value = "X-User-Id") Long xUserId,
             @RequestHeader(value = "User-Id") Long userId,
             @RequestHeader("X-Reservation-Token") @NotNull String reservationToken,
-            @PathParam(value = "seatId") @NotNull Long seatId
+            @PathVariable(value = "seatId") @NotNull Long seatId
     ) {
 
-        reservationProducer.initiateReservation(userId, reservationToken, xUserId, concertId, concertDateId, seatId);
-        return ApiResult.success("좌석 선택이 접수되었으며 처리 중입니다.");
+        boolean isSuccess = reservationService.initiateReservation(userId, concertId, concertDateId, seatId);
+        if (isSuccess) {
+            return ApiResult.success("좌석 예약 요청이 진행되었습니다.");
+        } else {
+            return ApiResult.error("좌석 예약 요청이 실패되었습니다.");
+        }
     }
 
     @PostMapping("/token")
@@ -68,11 +71,13 @@ public class ReservationController {
 //    }
 
     @PostMapping("/test")
-    public ApiResult<ReservationInventoryCreateResponseDTO> reserveTest(
+    public CompletableFuture<ApiResult<ReservationInventoryCreateResponseDTO>> reserveTest(
             @RequestHeader("User-Id") Long userId,
             @RequestBody ReservationRequest request
     ) {
-        return ApiResult.success(reservationService.createReservationWithoutPayment(userId, request));
+        return reservationService.createReservationWithoutPayment(userId, request)
+                .thenApply(ApiResult::success)
+                .exceptionally(ex -> ApiResult.error(ErrorCode.RESERVATION_FAILED.getCode(), ex.getMessage(), null));
     }
 
 }

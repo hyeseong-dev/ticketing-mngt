@@ -19,7 +19,7 @@ public class FilterConfig {
     public FilterRegistrationBean<ReservationTokenFilter> reservationTokenFilter() {
         FilterRegistrationBean<ReservationTokenFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new ReservationTokenFilter(jwtUtil));
-        registrationBean.addUrlPatterns("/api/concerts/*"); // URL 패턴 점검
+        registrationBean.addUrlPatterns("/api/reservations/*"); // URL 패턴 점검
         registrationBean.setOrder(1); // 필터 체인에서의 순서 설정
         return registrationBean;
     }

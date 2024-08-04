@@ -1,14 +1,14 @@
 package com.mgnt.reservationservice.domain.service.impl;
 
+import com.mgnt.core.dto.SeatDTO;
 import com.mgnt.core.enums.ReservationStatus;
 import com.mgnt.core.enums.SeatStatus;
-import com.mgnt.core.error.ErrorCode;
-import com.mgnt.core.event.concert_service.InventoryReservationRequestEvent;
 import com.mgnt.core.event.concert_service.SeatStatusUpdatedEvent;
 import com.mgnt.core.event.reservation_service.QueueEventStatus;
 import com.mgnt.core.event.reservation_service.ReservationInventoryCreateResponseDTO;
-import com.mgnt.core.exception.CustomException;
+import com.mgnt.core.event.reservation_service.ReservationRequestedEvent;
 import com.mgnt.core.util.JsonUtil;
+import com.mgnt.reservationservice.controller.dto.request.ReservationInventoryRequest;
 import com.mgnt.reservationservice.controller.dto.request.ReservationRequest;
 import com.mgnt.reservationservice.controller.dto.request.TokenRequestDTO;
 import com.mgnt.reservationservice.controller.dto.response.ReservationResponseDTO;
@@ -18,24 +18,20 @@ import com.mgnt.reservationservice.domain.repository.QueueRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRedisRepository;
 import com.mgnt.reservationservice.domain.repository.ReservationRepository;
 import com.mgnt.reservationservice.domain.service.ReservationService;
-import com.mgnt.reservationservice.domain.service.ReservationValidator;
+import com.mgnt.reservationservice.kafka.ReservationProducer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.Level;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -49,14 +45,41 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ReservationProducer reservationProducer;
     private final ReservationRepository reservationRepository;
-    private final ReservationValidator reservationValidator;
     private final ReservationRedisRepository reservationRedisRepository;
     private final QueueRedisRepository queueRedisRepository;
-    private final TransactionTemplate transactionTemplate;
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final Long TEMP_RESERVATION_SECONDS = 300L; // 5분
-    private final Long TEMP_RESERVATION_MINUTES = 5L; // 5분
+
+    @Override
+    public boolean initiateReservation(Long seatId, Long userId, Long concertId, Long concertDateId) {
+        String seatJson = reservationRedisRepository.hGet(ALL_SEATS_KEY, seatId.toString());
+
+        if (seatJson == null) {
+            log.warn("Seat {} not found in Redis", seatId);
+            // 좌석이 존재하지 않음을 클라이언트에게 반환
+            // 적절한 예외 처리 또는 메시지 반환 로직을 추가
+            return false;
+        }
+
+        try {
+            SeatDTO seat = JsonUtil.convertFromJson(seatJson, SeatDTO.class);
+            if (seat.status() != SeatStatus.AVAILABLE) {
+                log.warn("Seat {} is not available for reservation", seatId);
+                // 좌석이 예약 불가능하다는 메시지를 클라이언트에게 반환
+                // 적절한 예외 처리 또는 메시지 반환 로직을 추가
+                return false;
+            }
+
+            // Kafka를 통해 예약 요청 이벤트를 발행
+            reservationProducer.initiateReservation(userId, concertId, concertDateId, seatId);
+            log.info("Reservation request initiated for user {} for seat {}", userId, seatId);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to parse seat information from Redis for seat {}", seatId, e);
+            // 적절한 예외 처리 또는 메시지 반환 로직을 추가해야 합니다.
+            return false;
+        }
+    }
 
     @Override
     public void handleTempReservationExpiration(String expiredKey) {
@@ -191,66 +214,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationInventoryCreateResponseDTO createReservationWithoutPayment(Long userId, ReservationRequest request) {
-        try {
-
-            // Redis에서 고유 ID 생성
-            Long reservationId = reservationRedisRepository.createIncr(RESERVATION_INCR_KEY);
-
-            // 예약 정보 객체 생성
-            Reservation reservation = request.toEntity(userId);
-            reservation.updateReservationId(reservationId);
-            reservation.setCreatedAt(ZonedDateTime.now());
-            reservation.setUpdatedAt(ZonedDateTime.now());
-
-            // 예약 정보를 JSON으로 직렬화하여 Redis에 저장
-            String reservationJson = JsonUtil.convertToJson(reservation);
-            reservationRedisRepository.hSet(ALL_RESERVATION_KEY, reservationId.toString(), reservationJson);
-
-            // 비동기로 MySQL에 예약 정보 저장 및 Redis 롤백 처리
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                transactionTemplate.execute(status -> {
-                    try {
-                        reservationRepository.save(reservation);
-                    } catch (Exception e) {
-                        // MySQL 저장 실패 시 Redis 롤백 처리
-                        reservationRedisRepository.deleteReservation(ALL_RESERVATION_KEY, reservationId.toString());
-                        status.setRollbackOnly();
-                        throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage(), Level.ERROR);
-                    }
-                    return null;
-                });
-            }, executorService);
-
-            // 비동기 작업이 완료된 후 kafka 이벤트 발행
-            future.thenRun(() -> {
-                // Kafka 이벤트 발행
-                kafkaTemplate.send(TOPIC_INVENTORY_RESERVATION_REQUESTS, new InventoryReservationRequestEvent(
-                        reservation.getReservationId(),
-                        request.concertId(),
-                        request.concertDateId(),
-                        true
-                ));
-            }).exceptionally(error -> {
-                // 예외 처리 로직
-                log.error("Error occurred while saving reservation to MySQL or sending Kafka event", error);
-                throw new CustomException(ErrorCode.RESERVATION_FAILED, error.getMessage(), Level.ERROR);
-            });
-
-
-            return new ReservationInventoryCreateResponseDTO(
-                    reservation.getReservationId(),
-                    reservation.getUserId(),
-                    reservation.getConcertId(),
-                    reservation.getConcertDateId(),
-                    reservation.getSeatId(),
-                    reservation.getPrice(),
-                    reservation.getCreatedAt(),
-                    reservation.getExpiresAt()
-            );
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.RESERVATION_FAILED, e.getMessage(), Level.ERROR);
-        }
+    public CompletableFuture<ReservationInventoryCreateResponseDTO> createReservationWithoutPayment(Long userId, ReservationRequest request) {
+        kafkaTemplate.send(RESERVATION_INVENTORY_TOPIC, new ReservationInventoryRequest(
+                userId,
+                request.concertId(),
+                request.concertDateId(),
+                request.seatId(),
+                request.price(),
+                request.status(),
+                request.expiresAt()
+        ));
+        return CompletableFuture.completedFuture(null); // 비동기 처리를 위해 즉시 반환
     }
+
 
 }

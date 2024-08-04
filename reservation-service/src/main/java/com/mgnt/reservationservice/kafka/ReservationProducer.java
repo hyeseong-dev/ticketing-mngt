@@ -19,9 +19,8 @@ import static com.mgnt.core.constants.Constants.TOPIC_RESERVATION_REQUESTS;
 public class ReservationProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void initiateReservation(Long userId, String reservationToken, Long xUserId, Long concertId, Long concertDateId, Long seatId) {
-        ReservationRequestedEvent event = new ReservationRequestedEvent(
-                null, concertDateId, userId, concertId, seatId);
+    public void initiateReservation(Long userId, Long concertId, Long concertDateId, Long seatId) {
+        ReservationRequestedEvent event = new ReservationRequestedEvent(null, concertDateId, userId, concertId, seatId);
         kafkaTemplate.send(TOPIC_RESERVATION_REQUESTS, event)
                 .thenAccept(result -> log.info("Successfully sent reservation request event for seat {}", seatId))
                 .exceptionally(ex -> {

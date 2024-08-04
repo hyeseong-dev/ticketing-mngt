@@ -94,7 +94,7 @@ eureka:
     prefer-ip-address: true
 
 gateway:
-  ip: 172.30.1.0/24
+  ip: 192.168.0.2/24
 
 logging:
   level:

@@ -52,7 +52,7 @@ public class QueueServiceImpl implements QueueService {
 
         QueueEvent event = new QueueEvent(userId, request.concertId(), request.concertDateId(),
                 QueueEventType.QUEUE_ENTRY, QueueEventStatus.WAITING, position);
-        kafkaTemplate.send(QUEUE_EVENTS, event);
+//        kafkaTemplate.send(QUEUE_EVENTS, event);
         kafkaTemplate.send(QUEUE_PROCESS, event);
 
         log.info("Queue entry event sent for user {}", userId);
