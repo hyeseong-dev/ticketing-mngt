@@ -59,7 +59,6 @@ sequenceDiagram
         UserService-->>Gateway: 응답
         Gateway-->>Client: 응답 전달
     else AccessToken 만료
-        Gateway-->>Client: 401 Unauthorized
         Client->>Gateway: POST /api/auth/refresh (RefreshToken 포함)
         Gateway->>UserService: Refresh 토큰 검증 요청
         UserService->>Redis: RefreshToken 유효성 확인
@@ -502,7 +501,7 @@ erDiagram
 - 또한, 이벤트 드리븐 방식은 복잡한 비즈니스 프로세스를 더 효과적으로 모델링하고 관리할 수 있게 해주었습니다. 이는 시스템의 유지보수성을 높이고, 새로운 기능 추가를 용이하게 만들었습니다.
 
 5. 성능 테스트 및 최적화
-   다양한 부하 테스트 도구(JMeter, Locust, K6, Python's requests)를 사용하여 체계적인 성능 테스트를 수행했습니다. 이를 통해 시스템의 병목 지점을 정확히 식별하고, 구체적인 최적화
+   JMeter 부하 테스트 도구를 사용하여 체계적인 성능 테스트를 수행했습니다. 이를 통해 시스템의 병목 지점을 정확히 식별하고, 구체적인 최적화
    방안을 도출할 수 있었습니다.
 
 - 성능 테스트 결과를 바탕으로 응답 시간, 처리량, 오류율 등을 종합적으로 분석하여 시스템 성능을 최적화했습니다. 이는 실제 운영 환경에서의 안정성과 사용자 경험 향상으로 이어졌습니다.
